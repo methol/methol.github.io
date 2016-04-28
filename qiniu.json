@@ -1,0 +1,5 @@
+{
+    "src": "public",
+    "dest": "qiniu:access_key=68zPb-cBlPycp85hwe6p1C0kGxKwC4Cp5M7F3PZv&secret_key=vDcidGeeaoNO1bfomyY2Ug2HOKpOM9N2gx_4IBza&bucket=methol",
+    "debug_level": 1
+}
