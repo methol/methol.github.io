@@ -32,10 +32,10 @@ open_in_new: false
 
 # Miscellaneous
 google_analytics: 'UA-62589762-1'
-favicon: /favicon.ico
+favicon: http://static.tuzhihao.com/blog/favicon.ico
 
 #你的头像url
-avatar: /avatar.jpg
+avatar: http://static.tuzhihao.com/blog/avatar.jpg
 #是否开启分享
 share_jia: false
 share_addthis: false
