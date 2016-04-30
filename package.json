@@ -16,6 +16,8 @@
     "hexo-renderer-marked": "^0.2.10",
     "hexo-renderer-stylus": "^0.3.1",
     "hexo-server": "^0.2.0",
+    "hexo-generator-seo-friendly-sitemap": "",
+    "hexo-generator-feed": "^1.x",
 
     "gulp": "^3.9.1",
     "gulp-concat": "^2.6.0",

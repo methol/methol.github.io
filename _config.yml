@@ -68,4 +68,14 @@ theme: yilia
 # Deployment
 ## Docs: https://hexo.io/docs/deployment.html
 deploy:
-  
+
+# hexo-generator-feed  rss
+feed:
+  type: atom  # Feed type. (atom/rss2)
+  path: atom.xml   # Feed path. (Default: atom.xml/rss2.xml)
+  limit: 0   # Maximum number of posts in the feed (Use 0 or false to show all posts)
+  hub:    # URL of the PubSubHubbub hubs (Leave it empty if you don't use it)
+
+# hexo-generator-seo-friendly-sitemap
+sitemap:
+  path: sitemap.xml
