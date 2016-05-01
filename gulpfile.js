@@ -35,7 +35,7 @@ gulp.task('css', function () {
       //       .pipe(gulp.dest('dist'))
       //       .pipe(rename({suffix: '.min'}))
       .pipe(minifycss())
-//       .pipe(notify({message: 'Styles task complete'}))
+      //       .pipe(notify({message: 'Styles task complete'}))
       .pipe(gulp.dest('dist'));
 });
 
@@ -48,7 +48,7 @@ gulp.task('js', function () {
       //       .pipe(gulp.dest('dist'))
       //       .pipe(rename({suffix: '.min'}))
       .pipe(uglify())
-//       .pipe(notify({message: 'Scripts task complete'}))
+      //       .pipe(notify({message: 'Scripts task complete'}))
       .pipe(gulp.dest('dist'));
 });
 
@@ -56,7 +56,7 @@ gulp.task('js', function () {
 gulp.task('img', function () {
   return gulp.src(['public/**/*.png', 'public/**/*.jpg', 'public/**/*.gif'])
       .pipe(imagemin({optimizationLevel: 3, progressive: true, interlaced: true}))
-//       .pipe(notify({message: 'Images task complete'}))
+      //       .pipe(notify({message: 'Images task complete'}))
       .pipe(gulp.dest('dist'));
 });
 
@@ -64,7 +64,14 @@ gulp.task('img', function () {
 gulp.task('html', function () {
   return gulp.src('public/**/*.html')
       .pipe(useref())
-      .pipe(htmlmin({collapseWhitespace: true}))
+      .pipe(htmlmin({
+        minifyCSS: true,   // Minify CSS in style elements and style attributes (uses clean-css)
+        minifyJS: true,  // Minify JavaScript in script elements and event attributes (uses UglifyJS)
+        removeComments: true,  //  Strip HTML comments
+//         removeEmptyAttributes: true, // Remove all attributes with whitespace-only values
+//         removeEmptyElements: true,  // Remove all elements with empty contents
+        collapseWhitespace: true   // Collapse white space that contributes to text nodes in a document tree
+      }))
       .pipe(gulpif('*.js', uglify()))
       .pipe(gulpif('*.css', minifycss()))
       .pipe(gulp.dest('dist'));
@@ -72,9 +79,10 @@ gulp.task('html', function () {
 
 // 移动其他文件
 gulp.task('copy', function () {
-  return gulp.src(['public/**/*','!public/**/*.css', '!public/**/*.js', '!public/**/*.png', '!public/**/*.jpg',
+  return gulp.src(
+      ['public/**/*', '!public/**/*.css', '!public/**/*.js', '!public/**/*.png', '!public/**/*.jpg',
         '!public/**/*.gif', '!public/**/*.html'])
-//       .pipe(notify({message: 'copy task complete'}))
+      //       .pipe(notify({message: 'copy task complete'}))
       .pipe(gulp.dest('dist'));
 
 });
