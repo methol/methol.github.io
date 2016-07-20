@@ -2,7 +2,9 @@ title: "自动给QQ好友发消息–mfc"
 date: 2014-12-24 01:47:00
 tags: [c语言]
 ---
->用vc6.0就可以运行，自动给好友发消息
+  
+>用vc6.0就可以运行，自动给好友发消息  
+  
 ``` c
 	#include <windows.h>
 	#include <stdlib.h>
@@ -37,3 +39,4 @@ tags: [c语言]
 		SendMessage(qqhand, WM_KEYDOWN, VK_RETURN, 0);//发送enter,设置QQ为按enter发送
 	}
 ``` 
+  
