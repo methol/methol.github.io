@@ -262,7 +262,6 @@ public class MyEntityUtils {
 ## 适合我们的项目
 更改上面的工具类，优化了方法，写了适用自己项目的工具类。
 ```java
-import javax.swing.filechooser.FileSystemView;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -320,7 +319,6 @@ public class DBEntityUtils {
   }
 
   private static void setData() {
-    FileSystemView fsv = FileSystemView.getFileSystemView();
     getConnection = getConnections();
     try {
       DatabaseMetaData dbmd = getConnection.getMetaData();
