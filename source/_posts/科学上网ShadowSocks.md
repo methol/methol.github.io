@@ -9,7 +9,7 @@ https://github.com/shadowsocks/shadowsocks/wiki/Configuration-via-Config-File
 
 
 Server:
-``` shell
+```shell
 apt-get update
 apt-get -y install python-pip
 pip install shadowsocks
@@ -17,7 +17,7 @@ pip install shadowsocks
 
 设置多个用户<br />
 Create a config file /etc/shadowsocks.json. Example:
-``` linux
+```shell
 touch /etc/shadowsocks.json
 vim /etc/shadowsocks.json
 
@@ -38,7 +38,7 @@ vim /etc/shadowsocks.json
 }
 ```
 ---
-```linux
+```shell
 # To run in the foreground:
 ssserver -c /etc/shadowsocks.json
 

@@ -25,7 +25,7 @@ struts里面用到了*commons-fileupload-x.x.x.jar*和*commons-io-x.x.jar*，自
 
 ####3.jsp页面要修改
 kindeditor\jsp文件夹下面的upload_json.jsp文件改为如下代码就可以了：
-``` jsp
+```html
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ page import="java.util.*,java.io.*" %>
 <%@ page import="java.text.SimpleDateFormat" %>
@@ -160,7 +160,7 @@ kindeditor\jsp文件夹下面的upload_json.jsp文件改为如下代码就可以
 
 **这个页面不用更改**<br />
 file_manager_json.jsp(文件管理)
-```jsp
+```html
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ page import="java.util.*,java.io.*" %>
 <%@ page import="java.text.SimpleDateFormat" %>
@@ -317,16 +317,16 @@ public class TypeComparator implements Comparator {
 }
 %>
 ```
-<br />
-这个页面加了一个js函数，用来同步textarea框中数据用的，要不然点击提交按钮之后，post上去是空的内容。
-```js
+  
+这个页面加了一个js函数，用来同步textarea框中数据用的，要不然点击提交按钮之后，post上去是空的内容。  
+```
 function fromsubmit(){
     content1.sync();
     document.forms['example'].submit();
 }
 ```
-demo.jsp(演示页面,开发中修改这个页面即可)
-```jsp
+demo.jsp(演示页面,开发中修改这个页面即可)  
+```html
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%
 request.setCharacterEncoding("UTF-8");
@@ -388,7 +388,7 @@ private String htmlspecialchars(String str) {
 }
 %>
 ```
-
-
+  
+  
 已经写好，完整的代码，百度云打包下载。<br />
 [点击下载(密码kof3)](http://pan.baidu.com/s/1mg41jEK)

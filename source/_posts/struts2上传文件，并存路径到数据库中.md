@@ -3,11 +3,9 @@ date: 2015-05-13 04:37:12
 tags: [java web]
 ---
 jsp页面
-``` jsp
+```html
 <%@ page contentType="text/html;charset=UTF-8" pageEncoding="UTF-8" language="java"%>
 <%@ taglib prefix="s" uri="/struts-tags"%>
-
-
 <html>
     <head>
         <title>资源上传</title>
@@ -30,10 +28,10 @@ jsp页面
     </body>
 </html>
 ```
-
-action:UploadResource
-(注：baseaction中就是简单的把session变为属性，没有别的内容)
-``` java
+  
+action:UploadResource  
+(注：baseaction中就是简单的把session变为属性，没有别的内容)  
+```java
 package com.methol.action;
 
 import com.methol.service.ResourceService;
@@ -145,11 +143,11 @@ public class UploadResource extends BaseAction{
 }
 
 ```
-
-Resource，通过hibernate逆向工程生成，有下面这些属性
+  
+Resource，通过hibernate逆向工程生成，有下面这些属性  
 ```java
-    private int id;
-    private Integer teacherId;
-    private String filename;
-    private String filepath;
+private int id;
+private Integer teacherId;
+private String filename;
+private String filepath;
 ```

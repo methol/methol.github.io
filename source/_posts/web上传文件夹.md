@@ -4,7 +4,7 @@ date: 2016-04-11 22:03:58
 tags: [js, 前端]
 ---
 使用html5的api来上传文件夹，只有chrome支持。  
-``` html
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -228,7 +228,7 @@ tags: [js, 前端]
 服务器采用java，用了接受文件和创建文件夹。  
 文件夹也是虚拟的，采用在当前记录增加parentId来存储父节点，实现树的结构。
 表结构：  
-``` sql
+```sql
 CREATE TABLE t_project_resource_folder
 (
     id BIGINT(20) PRIMARY KEY NOT NULL COMMENT '主键',
@@ -245,7 +245,7 @@ CREATE TABLE t_project_resource
 ```
 
 服务器端接口的代码：  
-``` java
+```java
 @RequestMapping(value = "", method = RequestMethod.POST)
 public ResponseEntity<String> upload(MultipartFile text) throws Exception {
   String fileName = text.getOriginalFilename();
