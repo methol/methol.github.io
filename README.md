@@ -3,15 +3,12 @@ http://tuzhihao.com
 
 
 
-打包部署
-`hexo clean`
-`hexo generate`
-`gulp`
-切换到当前目录，执行`qrsync.exe qiniu.json`可以上传文件到七牛空间
-linux 下执行 `./qrsync qiniu.json`
-
-
-第一次使用
+打包部署  
+`hexo clean`  
+`hexo generate`  
+通过java工具类上传  
+  
+第一次使用  
 ```
 # 全局安装gulp
 npm install --global gulp
