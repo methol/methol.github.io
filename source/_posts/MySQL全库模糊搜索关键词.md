@@ -77,4 +77,4 @@ DELIMITER ;
 ```
 
 执行效果如下：
-![查询结果](../upload/image/mysql全库模糊搜索关键词1.png)
+![查询结果](/upload/image/mysql全库模糊搜索关键词1.png)

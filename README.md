@@ -7,11 +7,9 @@ http://tuzhihao.com
 `hexo clean`  
 `hexo generate`  
 通过java工具类上传  
-  
+
 第一次使用  
 ```
-# 全局安装gulp
-npm install --global gulp
 
 # 全局安装hexo
 npm install --global hexo

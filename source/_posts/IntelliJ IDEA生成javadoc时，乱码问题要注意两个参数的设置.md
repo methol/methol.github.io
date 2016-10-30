@@ -8,4 +8,4 @@ tags: [idea]
 
 Other command line arguments `-encoding utf-8 -charset utf-8`
 
-![图片](../upload/image/2015/04/javadoc.jpg)
+![图片](/upload/image/2015/04/javadoc.jpg)
