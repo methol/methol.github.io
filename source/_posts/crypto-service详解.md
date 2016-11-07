@@ -28,16 +28,52 @@ RSA公钥用来加密，私钥用来解密。
 资料加密标准（英语：Data Encryption Standard，缩写为 DES）是一种对称加密演算法。  
 DES加密速度比RSA快很多，适合加密大量数据的情况。但是DES算法没有RSA算法安全。  
 ## 主要流程图
-1. 加密流程图
+1. 应用-服务交互图
+![应用-服务交互图](http://tuzhihao.com/upload/image/crypto-service/app-server.png)    
+2. 加密流程图
 ![加密流程图](http://tuzhihao.com/upload/image/crypto-service/encrypt.png)  
-2. 解密流程图
+3. 解密流程图
 ![解密流程图](http://tuzhihao.com/upload/image/crypto-service/decrypt.png)  
-3. 获取加密数据唯一值的流程图
-![数据唯一值](http://tuzhihao.com/upload/image/crypto-service/dataIdentifier.png)  
+4. 获取加密数据唯一值的流程图
+![数据唯一值](http://tuzhihao.com/upload/image/crypto-service/dataIdentifier.png)   
 
-## 核心类图
-![加密工具类](http://tuzhihao.com/upload/image/crypto-service/crypto-class.png)
-## 核心类介绍
+## 加解密服务核心类图
+![加密工具类](http://tuzhihao.com/upload/image/crypto-service/crypto-class.png)  
+## 加解密服务核心类介绍
+`ICryptProcess`这是一个接口，规定了  
+```java
+String encrypt(String data);
+
+String decrypt(String data);
+
+String[] batchEncrypt(String[] datas);
+
+String[] batchDecrypt(String[] datas);
+```
+这四个方法，分别是加密，解密，批量加密，批量解密。  
+`AbstractCryptProcessor`实现了`ICryptProcess`这个接口，并对`encrypt`和`batchEncrypt`进行简单的封装。  
+```java
+/**
+ * 封装被加密的数据，如加密后数据为<code>null</code>或为空字符串，则不做封装，直接原样返回
+ *
+ * @param encryptedData 被加密的数据
+ * @return 封装后的数据
+ */
+private String wrapEncryptData(String encryptedData) {
+    if (StringUtils.isEmpty(encryptedData)) {
+        return encryptedData;
+    }
+    CryptData cryptData = new CryptData(serviceInfo.getServiceId(), encryptedData, CryptUtil.getVersion());
+    return Encodes.encodeBase64(JSONObject.toJSONString(cryptData).getBytes(Charset.forName("UTF-8")));
+}
+```
+主要是把加密后的数据，封装成为`CryptData`对象，里面包含了加密的服务ID，加密的数据，以及当前加密工具的版本，并把对象转为json字符串，进行base64转换，返回给上层应用。  
+`AbstractCryptProcessor`增加了两个抽象的方法，`doEncrypt`和`doBatchEncrypt`，继承的子类实现父类的抽象方法。同时又一个成员变量`private ServiceInfoDto serviceInfo;`，用来存储调用加密服务上层应用的信息，包含服务的ID和加解密的key等。    
+子类`RsaCryptProcessor`和`DesCryptProcessor`集成抽象类`AbstractCryptProcessor`，并实现了父类的抽象方法，主要是对具体加解密的实现过程。  
+## 加解密工具类图
+![加密工具类](http://tuzhihao.com/upload/image/crypto-service/crypt-util-class.png)  
+## 加解密工具类介绍
+对DES和RSA进行加解密的封装，使用的是`java.security.*`和`javax.crypto.*`里面的一些工具类，在这些工具类的基础上，根据我们的业务，做的一个工具类。
 
 # 使用方法
 ## 服务注册

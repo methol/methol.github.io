@@ -81,21 +81,21 @@ sitemap:
   path: sitemap.xml
 
 # Hexo-all-minifier
-# html_minifier:
+#html_minifier:
 #   enable: true
 #   exclude:
-# css_minifier:
+#css_minifier:
 #   enable: true
 #   exclude:
 #     - '*.min.css'
-# js_minifier:
+#js_minifier:
 #   enable: true
 #   mangle: true
 #   output:
 #   compress:
 #   exclude:
 #     - '*.min.js'
-# image_minifier:
+#image_minifier:
 #   enable: true
 #   interlaced: false
 #   multipass: false
@@ -104,7 +104,7 @@ sitemap:
 #   progressive: false
 
 # https://github.com/Rozbo/hexo-neat
-neat_enable: false
+neat_enable: true
 neat_html:
   enable: true
   exclude:
