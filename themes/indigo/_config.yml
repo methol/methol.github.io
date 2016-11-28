@@ -80,7 +80,7 @@ copyright: 这里写留言或版权声明：<a href="<%- url_for(page.path).repl
 cnzz: false
 
 # Miscellaneous
-google_analytics: true
+google_analytics: false
 google_site_verification: UA-62589762-1
 
 # less

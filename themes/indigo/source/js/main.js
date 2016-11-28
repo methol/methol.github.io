@@ -252,9 +252,9 @@
             })
 
         },
-        tabBar(el) {
-            el.parentNode.classList.toggle('expand')
-        }
+        // tabBar(el) {
+        //     el.parentNode.classList.toggle('expand')
+        // }
     };
 
     w.addEventListener('load', function() {
