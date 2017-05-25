@@ -1,6 +1,6 @@
 title: "struts2上传文件，并存路径到数据库中"
 date: 2015-05-13 04:37:12
-tags: [java web]
+tags: [Java web]
 ---
 jsp页面
 ```html

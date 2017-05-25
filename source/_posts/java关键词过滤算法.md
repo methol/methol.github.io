@@ -1,6 +1,6 @@
 title: "java关键词过滤算法"
 date: 2015-01-06 22:47:00
-tags: [java]
+tags: [Java]
 ---
 ```java
 /**

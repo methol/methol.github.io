@@ -1,6 +1,6 @@
 title: "Hibernate中Session.load与Session.get的区别"
 date: 2015-04-22 06:50:00
-tags: [java web]
+tags: [Java web]
 ---
 `Session.load()/get()`方法均可以根据指定的实体类和id从数据库读取记录，并返回与之对应的实体对象。
 

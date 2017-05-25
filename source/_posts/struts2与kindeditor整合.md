@@ -1,6 +1,6 @@
 title: "struts2与kindeditor整合"
 date: 2015-05-28 04:20:15
-tags: [java web]
+tags: [Java web]
 ---
 之前也谈到过使用kindeditor这个非常好用的编辑器，文章也发在博客里面了。<br />
 [KindEditor——textarer](/kindeditor-textarer/)<br />

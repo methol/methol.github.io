@@ -1,6 +1,6 @@
 title: "Struts2中的ModelDriven机制及其运用"
 date: 2015-04-22 05:50:00
-tags: [java web]
+tags: [Java web]
 ---
 所谓ModelDriven，意思是直接把实体类当成页面数据的收集对象。比如，有实体类User如下(通过hibernate逆向工程生成)：
 ```java

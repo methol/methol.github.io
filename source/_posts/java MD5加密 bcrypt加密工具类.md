@@ -1,6 +1,6 @@
 title: "java MD5加密 bcrypt加密工具类"
 date: 2015-05-26 04:30:54
-tags: [java, 工具类]
+tags: [Java, 工具类]
 ---
 
 ## md5  

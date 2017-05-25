@@ -1,6 +1,6 @@
 title: "k-means聚类算法"
 date: 2015-05-10 08:29:53
-tags: [java]
+tags: [Java]
 ---
 聚类分析算法的一个java代码，我的项目中应用了这个代码。
 ```java
