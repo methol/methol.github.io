@@ -5,7 +5,7 @@ branches:
   - master
 env:
   global:
-    - GH_REF: github.com:Methol/blog.git  #设置GH_REF，注意更改yourname
+    - GH_REF: github.com/Methol/blog.git  #设置GH_REF，注意更改yourname
 cache:
   apt: true
   yarn: true
