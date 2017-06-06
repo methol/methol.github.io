@@ -3,23 +3,35 @@ node_js: stable
 branches:
   only:
   - master
+env:
+  global:
+    - GH_REF: github.com:Methol/blog.git  #设置GH_REF，注意更改yourname
 cache:
   apt: true
   yarn: true
   directories:
-  - node_modules
+    - node_modules
 before_install:
-# AK SK将来会设置到travis的环境变量中
-- chmod +x qshell_linux_amd64
-- ./qshell_linux_amd64 account $AK $SK
-- curl -o- -L https://yarnpkg.com/install.sh | bash
-- export PATH=$HOME/.yarn/bin:$PATH
-- npm install -g hexo-cli
+  # AK SK将来会设置到travis的环境变量中
+  - chmod +x qshell_linux_amd64
+  - ./qshell_linux_amd64 account $AK $SK
+  - curl -o- -L https://yarnpkg.com/install.sh | bash
+  - export PATH=$HOME/.yarn/bin:$PATH
+  - npm install -g hexo-cli
 install:
-- yarn
+- ya  rn
 script:
-- hexo clean
-- hexo generate
+  # 生成静态网页文件
+  - hexo clean
+  - hexo generate
+after_script:
+  - cd ./public
+  - git init
+  - git config user.name "travis"
+  - git config user.email "methol@tuzhihao.cn"
+  - git add .
+  - git commit -m "travis update"
+  - git push --force --quiet "https://${GH_TOKEN}@${GH_REF}" html:html  #GH_TOKEN是在Travis中配置token的名称
 after_success:
 # 使用七牛的工具进行上传，并输出debug log
 - ./qshell_linux_amd64 qupload 10 qiniu.json
