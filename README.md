@@ -7,7 +7,8 @@ http://tuzhihao.com
 打包部署  
 `hexo clean`  
 `hexo generate`  
-通过java工具类上传  
+
+通过travis-ci构建并自动上传到七牛云
 
 第一次使用  
 ```
