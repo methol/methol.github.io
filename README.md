@@ -18,3 +18,5 @@ npm install --global hexo
 npm install --save-dev
 
 ```
+
+ci build status [![Build Status](https://travis-ci.org/Methol/blog.svg?branch=master)](https://travis-ci.org/Methol/blog)

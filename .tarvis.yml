@@ -1,0 +1,24 @@
+language: node_js
+node_js: stable
+branches:
+  only:
+  - master
+cache:
+  apt: true
+  yarn: true
+  directories:
+  - node_modules
+before_install:
+# AK SK将来会设置到travis的环境变量中
+- ./qshell_linux_amd64 account $AK $SK
+- curl -o- -L https://yarnpkg.com/install.sh | bash
+- export PATH=$HOME/.yarn/bin:$PATH
+- npm install -g hexo-cli
+install:
+- yarn
+script:
+- hexo clean
+- hexo generate
+after_success:
+# 使用七牛的工具进行上传
+-  ./qshell_linux_amd64 qupload qiniu.json
