@@ -10,6 +10,7 @@ cache:
   - node_modules
 before_install:
 # AK SK将来会设置到travis的环境变量中
+- chmod +x qshell_linux_amd64
 - ./qshell_linux_amd64 account $AK $SK
 - curl -o- -L https://yarnpkg.com/install.sh | bash
 - export PATH=$HOME/.yarn/bin:$PATH
