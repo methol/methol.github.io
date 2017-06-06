@@ -76,34 +76,9 @@ private String wrapEncryptData(String encryptedData) {
 对DES和RSA进行加解密的封装，使用的是`java.security.*`和`javax.crypto.*`里面的一些工具类，在这些工具类的基础上，根据我们的业务，做的一个工具类。
 
 # 使用方法
-## 服务注册
-使用SDK之前，需要先申请注册服务，请发送一下信息到邮件:**tuzhihao@mucang.cn**
-需要提供的字段：  
-
-字段  | 说明         |是否必须
---------- | --------|---
-项目名  | |是
-项目描述  | |否
-提醒接收人| (姓名、手机、邮箱)可以设置多个接收人|是
-加密算法 | RSA 或 DES | 是
-服务名| 一个项目可以有多个服务 |是
-服务的项目名称| 该服务的项目名称 |是
-解密频率| 日/小时/分钟 三个参考频率|是
-ip白名单|可以有多个|是
-生产环境|当前项目是否在生产环境|是
-测试状态|如果是测试状态，不会有ip限制|是
-
-返回的数据：  
-一个32位长的key，例如：1f44ffd08b568ee056d044c0c4a768a5
 ## SDK集成
 1. pom.xml引入maven依赖
-```xml
-<dependency>
-    <groupId>cn.mucang.crypt</groupId>
-    <artifactId>crypto-client</artifactId>
-    <version>1.0-SNAPSHOT</version>
-</dependency>
-```
+
 2. 加密
 ```java
 // PHONE_ENCRYPT_KEY 是返回的32位的key
