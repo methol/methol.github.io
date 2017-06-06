@@ -1,5 +1,6 @@
-# blog
+# blog  [![Build Status](https://travis-ci.org/Methol/blog.svg?branch=master)](https://travis-ci.org/Methol/blog)
 http://tuzhihao.com
+
 
 
 
@@ -19,4 +20,3 @@ npm install --save-dev
 
 ```
 
-ci build status [![Build Status](https://travis-ci.org/Methol/blog.svg?branch=master)](https://travis-ci.org/Methol/blog)
