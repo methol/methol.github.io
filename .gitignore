@@ -7,3 +7,5 @@ node_modules/
 public/
 /.idea
 .deploy*/
+package-lock.json
+blog.iml
