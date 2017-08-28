@@ -8,15 +8,12 @@
 #    target: _blank    是否跳出，省略则在当前页面打开
 menu:
   home:
-    text: 主页
+    text: Home
     url: /
-  # archives:
-  #   url: /archives
+  archives:
+    url: /archives
   tags:
     url: /tags
-  # th-list:
-  #   text: Categories
-  #   url: /categories
   github:
     url: https://github.com/methol
     target: _blank
@@ -51,16 +48,16 @@ excerpt_render: true
 # excerpt_length: 200
 # excerpt_link: 阅读全文...
 mathjax: false
-archive_yearly: true
+archive_yearly: false
 
 #是否开启分享
 share: true
 
 #是否开启打赏，关闭 reward: false
-reward: false
-  # title: 谢谢大爷~
-  # wechat: /img/wechat.jpg     #微信，关闭设为 false
-  # alipay: /img/alipay.jpg     #支付宝，关闭设为 false
+reward:
+  title: 谢谢大爷~
+  wechat: /img/wechat.png     #微信，关闭设为 false
+  alipay: /img/alipay.png     #支付宝，关闭设为 false
 
 #是否开启搜索
 search: true
@@ -127,8 +124,8 @@ visit_counter:
 
 # 动态定义title
 title_change:
-  normal: (つェ⊂)咦!又好了!
-  leave: 死鬼去哪里了！
+  normal:
+  leave:
 
 # 设置为 true 发布后将使用 unpkg cdn
 cdn: false
