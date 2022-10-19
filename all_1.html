@@ -1,0 +1,1312 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>  
+	  
+  	Methol
+  	
+	</title>
+
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<link href="atom.xml" rel="alternate" title="Methol" type="application/atom+xml">
+
+	<link href="asset/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+	<link href="asset/stylesheets/font-awesome.min.css" media="screen, projection" rel="stylesheet" type="text/css">
+	<script src="asset/javascripts/jquery.min.js"></script>
+	
+
+	<!--[if lt IE 9]><script src="asset/javascripts/html5.js"></script><![endif]-->
+	<!-- <link href='http://fonts.googleapis.com/css?family=Nunito:400,300,700' rel='stylesheet' type='text/css'> -->
+	<style type="text/css">
+/* latin */
+@font-face {
+  font-family: 'Nunito';
+  font-style: normal;
+  font-weight: 300;
+  src: local('Nunito-Light'), url(asset/font/1TiHc9yag0wq3lDO9cw0voX0hVgzZQUfRDuZrPvH3D8.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2212, U+2215, U+E0FF, U+EFFD, U+F000;
+}
+/* latin */
+@font-face {
+  font-family: 'Nunito';
+  font-style: normal;
+  font-weight: 400;
+  src: local('Nunito-Regular'), url(asset/font/6TbRXKWJjpj6V2v_WyRbMX-_kf6ByYO6CLYdB4HQE-Y.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2212, U+2215, U+E0FF, U+EFFD, U+F000;
+}
+/* latin */
+@font-face {
+  font-family: 'Nunito';
+  font-style: normal;
+  font-weight: 700;
+  src: local('Nunito-Bold'), url(asset/font/TttUCfJ272GBgSKaOaD7KoX0hVgzZQUfRDuZrPvH3D8.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2212, U+2215, U+E0FF, U+EFFD, U+F000;
+}
+	</style>
+	
+	<style type="text/css">
+	.container .left-col{ opacity: 1;}
+	#pagenavi a{ font-size: 1.3em;}
+	#pagenavi .next:before{ top: 3px;}
+	#pagenavi .prev:before{ top: 3px;}
+	.container .mid-col .mid-col-container #content .archives .title{ font-size: 1.5em;}
+	.container .mid-col .mid-col-container #content article{ padding: 15px 0px;}
+	#header .subtitle {
+		line-height: 1.2em;
+		padding-top: 8px;
+	}
+	article pre{ background: none; border: none; padding: 0;}
+	article .entry-content{text-align: left;}
+	.share-comment{ padding: 25px 0px; clear: both;}
+	hr{ margin: 20px 0px;border: 0; border-top:solid 1px #ddd;}
+	</style>
+  
+
+</head>
+
+
+<body>
+	<div class="container">
+		<div class="left-col">
+			<div class="intrude-less">
+				<header id="header" class="inner">
+				 
+					
+					<h1><a href="index.html">Methol</a></h1>
+					<p class="subtitle"></p>
+					<nav id="main-nav">
+						<ul class="main">
+						
+						  <li id=""><a target="_self" href="index.html">Home</a></li>
+						
+						  <li id=""><a target="_self" href="archives.html">Archives</a></li>
+						
+						</ul>
+					</nav>
+
+					<nav id="sub-nav">
+						<div class="social">
+
+
+
+
+
+
+
+
+
+
+
+
+
+								
+
+								<a class="rss" href="atom.xml" title="RSS">RSS</a>
+							
+						</div>
+					</nav>
+				</header>				
+			</div>
+		</div>	
+		<div class="mid-col">
+			<div class="mid-col-container"> <div id="content" class="inner">
+<div itemscope itemtype="http://schema.org/Blog">
+
+
+	<article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
+		<div class="meta">
+			<div class="date">
+				<time datetime="2017-08-19T09:00:45+08:00" itemprop="datePublished">2017/08/19</time>
+			</div>
+			
+			 
+			
+		</div>
+		<h1 class="title" itemprop="name"><a href="16661412451143.html" itemprop="url">
+		CountDownLatch和CyclicBarrier</a></h1>
+		<div class="entry-content" itemprop="articleBody">
+			
+			<h2><a id="%E4%BD%BF%E7%94%A8%E5%9C%BA%E6%99%AF" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>使用场景</h2>
+<h3><a id="%E5%9C%BA%E6%99%AF%E4%B8%80" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>场景一</h3>
+<p>工作中需要在web服务对外之前，spring的bean初始化的时候加载数据到缓存中。<br />
+但是由于数据量过大，需要多线程加载。要求所有的缓存加载成功之后，这个bean才初始化成功，程序继续往下走。</p>
+<h3><a id="%E5%9C%BA%E6%99%AF%E4%BA%8C" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>场景二</h3>
+<p>商务合作的需求，需要显示的数据来自合作方和我们自己的数据库中。<br />
+之前是只显示我们数据库点数据，现在合作方提供了一个接口让我实时调用对方的接口，并把两部分的数据合并后返回给前端。<br />
+但是由于合作方的接口不是特别稳定，而且也不能保证高可用，所以可以考虑同时从我们和合作方取数据，设置超时时间，如果都返回了数据就合并给前端，如果对方未能返回数据，还是有我们自己的数据能显示给用户的。</p>
+<h2><a id="countdownlatch%E5%92%8Ccyclicbarrier" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>CountDownLatch和CyclicBarrier</h2>
+<p>综合上述两个场景，我看了CountDownLatch和CyclicBarrier，看说明觉得比较适合我的使用。</p>
+<h3><a id="countdownlatch" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>CountDownLatch</h3>
+<pre><code class="language-plain_text">package countdownlatchtest;
+
+import com.google.common.collect.Maps;
+
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.CountDownLatch;
+
+public class CountDownLatchService {
+
+    private CountDownLatch countDownLatch = new CountDownLatch(4);
+
+    /**
+     * 用来存储所有线程的运行结果
+     */
+    private ConcurrentMap&lt;String, String&gt; resultMap = Maps.newConcurrentMap();
+
+
+
+    public CountDownLatch getCountDownLatch() {
+        return countDownLatch;
+    }
+
+    public ConcurrentMap&lt;String, String&gt; getResultMap() {
+        return resultMap;
+    }
+}
+</code></pre>
+<pre><code class="language-plain_text">package countdownlatchtest;
+
+import org.apache.commons.lang3.RandomUtils;
+
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.CountDownLatch;
+
+public class Worker implements Runnable {
+
+    private ConcurrentMap&lt;String, String&gt; map;
+    private CountDownLatch countDownLatch;
+
+    public Worker(ConcurrentMap&lt;String, String&gt; map, CountDownLatch countDownLatch) {
+        this.map = map;
+        this.countDownLatch = countDownLatch;
+    }
+
+    @Override
+    public void run() {
+
+        // 这里写代码做某些事
+        System.out.println(Thread.currentThread().getName() + &quot;\t开始了...&quot;);
+        final int sleep = RandomUtils.nextInt(5, 20);
+        try {
+            Thread.sleep(sleep * 1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        // 添加结果到map中
+        map.putIfAbsent(Thread.currentThread().getName(), String.valueOf(sleep));
+
+        // 告诉 countDownLatch ，当前线程完成了
+        System.out.println(Thread.currentThread().getName() + &quot;\t结束了...&quot;);
+        countDownLatch.countDown();
+    }
+}
+
+</code></pre>
+<pre><code class="language-plain_text">package countdownlatchtest;
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+public class Main {
+
+    public static void main(String[] args) {
+        final ExecutorService executorService = Executors.newFixedThreadPool(6);
+        for (int i = 0; i &lt; 3; i++) {
+            // 模拟多次执行任务
+            doTask(executorService);
+        }
+    }
+
+    private static void doTask(ExecutorService executorService) {
+        CountDownLatchService countDownLatchService = new CountDownLatchService();
+        for (int i = 0; i &lt; 4; i++) {
+            Worker worker = new Worker(countDownLatchService.getResultMap(), countDownLatchService.getCountDownLatch());
+            executorService.submit(worker);
+        }
+        try {
+            // 阻塞在这里，等待其他线程执行完成
+            countDownLatchService.getCountDownLatch().await();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        System.out.println(&quot;所有线程执行成功&quot;);
+        System.out.println(&quot;打印结果如下：\n&quot; + countDownLatchService.getResultMap());
+    }
+
+}
+</code></pre>
+<h3><a id="cyclicbarrier" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>CyclicBarrier</h3>
+<pre><code class="language-plain_text">package cyclicbarriertest;
+
+import com.google.common.collect.Maps;
+
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.CyclicBarrier;
+
+public class CyclicBarrierService implements Runnable {
+
+    /**
+     * 表示当有4个线程执行完的时候，会调用第二个参数 barrierAction 的start()方法
+     *
+     * 所以本类实现 Runnable 接口，传入this
+     */
+    private CyclicBarrier cyclicBarrier = new CyclicBarrier(4, this);
+
+    /**
+     * 用来存储所有线程的运行结果
+     */
+    private ConcurrentMap&lt;String, String&gt; resultMap = Maps.newConcurrentMap();
+
+    @Override
+    public void run() {
+        System.out.println(&quot;所有线程执行成功&quot;);
+        System.out.println(&quot;打印结果如下：\n&quot; + resultMap);
+    }
+
+    public ConcurrentMap&lt;String, String&gt; getResultMap() {
+        return resultMap;
+    }
+
+    public CyclicBarrier getCyclicBarrier() {
+        return cyclicBarrier;
+    }
+}
+</code></pre>
+<pre><code class="language-plain_text">package cyclicbarriertest;
+
+import org.apache.commons.lang3.RandomUtils;
+
+import java.util.concurrent.BrokenBarrierException;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.CyclicBarrier;
+
+public class Worker implements Runnable {
+
+    private ConcurrentMap&lt;String, String&gt; map;
+    private CyclicBarrier cyclicBarrier;
+
+    public Worker(ConcurrentMap&lt;String, String&gt; map, CyclicBarrier cyclicBarrier) {
+        this.map = map;
+        this.cyclicBarrier = cyclicBarrier;
+    }
+
+    @Override
+    public void run() {
+
+        // 这里写代码做某些事
+        System.out.println(Thread.currentThread().getName() + &quot;\t开始了...&quot;);
+        final int sleep = RandomUtils.nextInt(5, 20);
+        try {
+            Thread.sleep(sleep * 1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        // 添加结果到map中
+        map.putIfAbsent(Thread.currentThread().getName(), String.valueOf(sleep));
+
+        try {
+            // 告诉 cyclicBarrier ，当前线程完成了
+            System.out.println(Thread.currentThread().getName() + &quot;\t结束了...&quot;);
+            cyclicBarrier.await();
+        } catch (InterruptedException | BrokenBarrierException e) {
+            e.printStackTrace();
+        }
+    }
+}
+</code></pre>
+<pre><code class="language-plain_text">package cyclicbarriertest;
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+public class Main {
+
+    public static void main(String[] args) {
+        final ExecutorService executorService = Executors.newFixedThreadPool(6);
+        for (int j = 0; j &lt; 3; j++) {
+            // 模拟多次任务执行
+            doTask(executorService);
+        }
+    }
+
+    private static void doTask(ExecutorService executorService) {
+        CyclicBarrierService cyclicBarrierService = new CyclicBarrierService();
+        for (int i = 0; i &lt; 4; i++) {
+            Worker worker = new Worker(cyclicBarrierService.getResultMap(), cyclicBarrierService.getCyclicBarrier());
+            executorService.submit(worker);
+        }
+    }
+}
+
+</code></pre>
+<h2><a id="%E6%80%BB%E7%BB%93" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>总结</h2>
+<p>写了上面两个例子，后面发现场景一适合用<code>CountDownLatch</code>，场景二适合用<code>CyclicBarrier</code>。场景一我们基本上不存在有任务不能执行完的情况，基本上做到计数器不归0，即使服务启动了也没办法正常使用，场景二很多情况都是任务不能正常的执行完成。</p>
+
+
+			
+			
+		</div>
+
+	</article>
+ 
+	<article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
+		<div class="meta">
+			<div class="date">
+				<time datetime="2017-05-21T09:00:44+08:00" itemprop="datePublished">2017/05/21</time>
+			</div>
+			
+			 
+			
+		</div>
+		<h1 class="title" itemprop="name"><a href="16661412449263.html" itemprop="url">
+		设计模式 简单工厂 工厂方法 抽象工厂</a></h1>
+		<div class="entry-content" itemprop="articleBody">
+			
+			<p>针对实体user，希望写一系列的功能，能够实现数据库的增删改查等功能。</p>
+<pre><code class="language-java">    public static void main(String[] args) {
+        User u = new User();
+        u.setName(&quot;methol&quot;);
+
+        add(u);
+        edit(u);
+    }
+    
+    public static void add(User user){
+        System.out.println(&quot;save user【&quot; + user.getName() + &quot;】 to db&quot;);
+    }
+    
+    public static void edit(User user){
+        System.out.println(&quot;edit user【&quot; + user.getName() + &quot;】, and save to db&quot;);
+    }
+</code></pre>
+<p>上面的方法虽然基本上实现了功能，但是不利于程序以后的扩展和复用，代码也不容易维护。<br />
+通过封装、继承、多态把程序的耦合度降低，使用设计模式可以使得程序更加灵活，后期容易修改，也更加易于复用。<br />
+有了如下的代码：</p>
+<pre><code class="language-plain_text">package mode.factory.simple;
+
+import mode.factory.bean.User;
+
+public interface Operation {
+
+    void operate(User user);
+
+}
+</code></pre>
+<pre><code class="language-plain_text">
+package mode.factory.simple;
+
+import mode.factory.bean.User;
+
+public class AddOperate implements Operation {
+
+    @Override
+    public void operate(User user) {
+        System.out.println(&quot;save user【&quot; + user.getName() + &quot;】 to db&quot;);
+    }
+}
+</code></pre>
+<pre><code class="language-plain_text">package mode.factory.simple;
+
+import mode.factory.bean.User;
+
+public class EditOperate implements Operation {
+
+    @Override
+    public void operate(User user) {
+        System.out.println(&quot;edit user【&quot; + user.getName() + &quot;】, and save to db&quot;);
+    }
+}
+</code></pre>
+<pre><code class="language-plain_text">    public static void main(String[] args) {
+        User u = new User();
+        u.setName(&quot;methol&quot;);
+
+        // 不同的操作需要new不同的类操作
+        Operation addOperate = new AddOperate();
+        addOperate.operate(u);
+        Operation editOperate = new EditOperate();
+        editOperate.operate(u);
+    }
+</code></pre>
+<p>上述代码已经经过封装，并且也适合之后的代码扩展，但是还是有一个问题，如果后期想通过不同的参数（事先不知道是要执行edit还是add），那么就要通过条件判断要做的操作，这时简单工厂模式可能就是一个比较好的选择。</p>
+<h2><a id="%E7%AE%80%E5%8D%95%E5%B7%A5%E5%8E%82%E6%A8%A1%E5%BC%8F%E4%B8%8E%E5%B7%A5%E5%8E%82%E6%A8%A1%E5%BC%8F" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>简单工厂模式与工厂模式</h2>
+<pre><code class="language-plain_text">package mode.factory.simple;
+
+public class OperateFactory {
+    public static Operation findOperation(String operation) {
+        switch (operation) {
+            case &quot;add&quot;:
+                return new AddOperate();
+            case &quot;edit&quot;:
+                return new EditOperate();
+            default:
+                return null;
+        }
+    }
+}
+</code></pre>
+<p>通过工厂类来帮我们new一个对象，而不是直接在代码中需要的地方new一个对象，在同一个地方管理，后期的代码维护和扩展性都强了很多。<br />
+或者这时想增加一个delete方法，只需要继承<code>Operation</code>类，写一个方法，然后在<code>OperateFactory</code>增加一个case即可。<br />
+<strong>简单工厂模式</strong>，就是一个简单的创建产品(<code>Operation</code>)的工具，可以是<code>AddOperate</code>类，也可以是<code>EditOperate</code>类，甚至他们之间没有任何关系也是没问题的。<br />
+<strong>工厂模式</strong>，他也是一个简单的创建产品(<code>Operation</code>)的工具，但是他有一个区别是所有的产品(<code>AddOperate</code>，<code>EditOperate</code>)都是继承(实现)<code>Operation</code>这个父类的，父类中有抽象的方法，之后都是调用同一个方法来做操作。<br />
+使用中，很少使用简单工厂模式，大多都是工厂模式，谈到工厂模式，基本上都是指的工厂模式。</p>
+<pre><code class="language-java">    public static void main(String[] args) {
+        User u = new User();
+        u.setName(&quot;methol&quot;);
+
+        // 不同的操作需要new不同的类操作
+        Operation addOperate = new AddOperate();
+        addOperate.operate(u);
+        Operation editOperate = new EditOperate();
+        editOperate.operate(u);
+
+        // 使用一个简单的工厂，让工厂来帮我们选择
+        OperateFactory.findOperation(&quot;add&quot;).operate(u);
+        OperateFactory.findOperation(&quot;edit&quot;).operate(u);
+    }
+</code></pre>
+<h2><a id="%E5%B7%A5%E5%8E%82%E6%96%B9%E6%B3%95" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>工厂方法</h2>
+<p>对<code>Operation</code>做了一些小的修改，增加了一个方法</p>
+<pre><code class="language-plain_text">public interface Operation {
+
+    void operate(User user);
+
+    Operation createDefault(String operationType);
+}
+</code></pre>
+<pre><code class="language-plain_text">public class AddOperate implements Operation {
+
+    @Override
+    public void operate(User user) {
+        System.out.println(&quot;save user【&quot; + user.getName() + &quot;】 to db&quot;);
+    }
+
+    @Override
+    public Operation createDefault(String operationType) {
+        return OperateFactory.findOperation(operationType);
+    }
+}
+</code></pre>
+<pre><code class="language-plain_text">public class EditOperate implements Operation {
+
+    @Override
+    public void operate(User user) {
+        System.out.println(&quot;edit user【&quot; + user.getName() + &quot;】, and save to db&quot;);
+    }
+
+    @Override
+    public Operation createDefault(String operationType) {
+        return OperateFactory.findOperation(operationType);
+    }
+}
+</code></pre>
+<p>工厂方法主要系是两个元素，产品(<code>Operation</code>)和创建者(<code>OperateFactory</code>)。<br />
+而工厂方法就是一个创建者这个类的一个方法而已，这个方法就是用来封装产品的创建。<br />
+和工厂模式的区别是，工厂模式的最大优点在于工厂类中包含了逻辑判断，根据(客户端)传入的参数动态实例化相关的类，那么对于客户端来说，他是不需要关心产品(<code>Operation</code>)的，他只需要关心传入的参数。而工厂模式这时把这一动作延后，接口定义了一个用来创建对象的接口，让子类决定实例化哪个类，工厂方法使一个类的实例化过程延迟到其子类。</p>
+<h2><a id="%E6%8A%BD%E8%B1%A1%E5%B7%A5%E5%8E%82" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>抽象工厂</h2>
+<p>抽象工厂，顾名思义，就是对工厂进行抽象。<br />
+工厂方法和工厂模式都是对产品抽象封装，通过一个工厂，生产多种产品。<br />
+抽象工厂就是通过不同的工厂生产不同的产品。<br />
+还是上面的例子，<code>OperateFactory</code>创建了新增和修改两种操作(产品)，此时有一个新的需求来了，之前用的数据库使mysql，现在想改成oracle，此时就对OperateFactory进行抽象。</p>
+<pre><code class="language-plain_text">package mode.factory.abstracs;
+
+import mode.factory.bean.User;
+import mode.factory.simple.Operation;
+
+public interface Factory {
+
+    void add(User user);
+
+    void edit(User user);
+
+    Operation createDefault(String operationType);
+}
+</code></pre>
+<p>接口申明了，不管是申明工厂，都需要有add和edit这两种产品的生产。不同的接口只需要实现这个接口，做自己的操作即可。同时不同的工厂还可以实现自己独有的产品的生产。</p>
+<pre><code class="language-plain_text">package mode.factory.abstracs;
+
+import mode.factory.bean.User;
+import mode.factory.simple.Operation;
+
+public class MysqlOperateFactory implements Factory {
+    @Override
+    public void add(User user) {
+        createDefault(&quot;add&quot;).operate(user);
+    }
+
+    @Override
+    public void edit(User user) {
+        createDefault(&quot;edit&quot;).operate(user);
+    }
+
+    @Override
+    public Operation createDefault(String operationType) {
+        return new MysqlOperate().findOperation(operationType);
+    }
+}
+</code></pre>
+<pre><code class="language-plain_text">package mode.factory.abstracs;
+
+import mode.factory.bean.User;
+import mode.factory.simple.Operation;
+
+public class OracleOperateFactory implements Factory {
+    @Override
+    public void add(User user) {
+        createDefault(&quot;add&quot;).operate(user);
+    }
+
+    @Override
+    public void edit(User user) {
+        createDefault(&quot;edit&quot;).operate(user);
+    }
+
+    @Override
+    public Operation createDefault(String operationType) {
+        return new OracleOperate().findOperation(operationType);
+    }
+}
+</code></pre>
+<p>这里也用了工厂方法的思想，抽象工厂的模式实现了工厂线的扩展。</p>
+<h2><a id="%E5%B0%8F%E7%BB%93" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>小结</h2>
+<ol>
+<li>工厂模式就是一个类，它用来根据客户端(参数)具体的实例化某个对象。</li>
+<li>工厂方法也是实例化对象，但是他把这个过程延迟到了子类，由子类决定具体实例化哪个对象。</li>
+<li>抽象工厂是对工厂的扩展。他是在工厂方法的上面做的进一步的抽象。</li>
+<li>工厂模式是用来生产产品的，不能增加产品；工厂方法是用来生产产品，同时也可以增加产品（实现接口，增加产品）；抽象工厂用来增加工厂的，他不能增加产品。</li>
+</ol>
+
+
+			
+			
+		</div>
+
+	</article>
+ 
+	<article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
+		<div class="meta">
+			<div class="date">
+				<time datetime="2017-05-14T09:00:44+08:00" itemprop="datePublished">2017/05/14</time>
+			</div>
+			
+			 
+			
+		</div>
+		<h1 class="title" itemprop="name"><a href="16661412449464.html" itemprop="url">
+		布隆过滤器和Guava的实现</a></h1>
+		<div class="entry-content" itemprop="articleBody">
+			
+			<h2><a id="%E4%BB%8B%E7%BB%8D" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>介绍</h2>
+<p>布隆过滤器实际上是一个很长的二进制向量和一系列的随机映射函数。可用于检索一个元素是否在一个集合中。</p>
+<h2><a id="%E4%BD%BF%E7%94%A8%E5%9C%BA%E6%99%AF" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>使用场景</h2>
+<ul>
+<li>一个大型的爬虫网络中，判断某一个网址是否被访问过。</li>
+<li>大数据量的词语(句子)去重。</li>
+</ul>
+<h2><a id="%E5%8E%9F%E7%90%86" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>原理</h2>
+<p>布隆过滤器的核心实现是一个超大的位数组和几个哈希函数。假设数组的长度为m，哈希函数的个数为k。<br />
+<img src="https://pic.tuzhihao.com/upic/20210418/214747-djSEpK.png" alt="布隆过滤器原理图" /><br />
+如上图：假设集合里面有x,y,z，通过hash函数计算后的结果为a,b,c，那么w[a],w[b],w[c]都会表标记为1。假设现在有3个hash函数，如图3个不同颜色的线，分别计算出不同的结果，并标记为1。当判断某一个元素是否在一个集合的时候，就通过判断这三个hash的结果，如果都是1，说明该元素在这个集合中。如果有一个为0，说明该元素不在此集合中。因此，这也是存在误判的原因。<br />
+总的来说，bloom filter是以极低的的错误去换取空间和时间。</p>
+<h2><a id="%E4%BC%98%E7%82%B9" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>优点</h2>
+<ul>
+<li>有很好的空间和时间效率。</li>
+<li>不存在漏报的问题，就是说如果元素存在的话，那必定的到的是正确的结果，这个元素确实是存在的。</li>
+<li>不是用原始数据进行的判断，对于某些敏感的数据也是可以适用的。</li>
+</ul>
+<h2><a id="%E7%BC%BA%E7%82%B9" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>缺点</h2>
+<ul>
+<li>误报率随着元素的增加，误报（将不存在的元素判定为存在）也会越严重。</li>
+<li>不能删除已添加的元素，因为是多个hash函数的结果值对应一个元素。</li>
+</ul>
+<h2><a id="%E8%87%AA%E5%B7%B1%E5%AE%9E%E7%8E%B0%E4%B8%80%E4%B8%AA%E7%AE%80%E5%8D%95%E7%9A%84bloomfilter" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>自己实现一个简单的BloomFilter</h2>
+<pre><code class="language-java">public interface BloomFilter&lt;T&gt; {
+
+    /**
+     * 添加一个数据到bloomfilter内
+     *
+     * @param element 要添加的元素
+     */
+    void add(T element);
+
+    /**
+     * 判断该过滤器内是否存在元素
+     *
+     * @param element 被判断的元素
+     * @return 是否存在
+     */
+    boolean contains(T element);
+}
+
+
+import java.util.BitSet;
+
+public class SimpleBloomFilter implements BloomFilter&lt;String&gt; {
+
+
+    /**
+     * 存储的bit容量
+     */
+    private static final int DEFAULT_SIZE = Integer.MAX_VALUE;
+
+    /**
+     * 存储标志位的bits
+     */
+    private BitSet bits = new BitSet(DEFAULT_SIZE);
+
+    /**
+     * 不同hash函数的种子
+     */
+    private static final int[] seeds = new int[]{113, 213, 3111, 397, 611, 532};
+    /**
+     * hash函数的数组
+     */
+    private SimpleHash[] hashFunction = new SimpleHash[seeds.length];
+
+    public SimpleBloomFilter() {
+        // 默认初始化 hashFunction
+        for (int i = 0; i &lt; seeds.length; i++) {
+            hashFunction[i] = new SimpleHash(DEFAULT_SIZE, seeds[i]);
+        }
+    }
+
+    @Override
+    public void add(String element) {
+        for (SimpleHash function : hashFunction) {
+            final int hash = function.hash(element);
+            bits.set(hash, true);
+        }
+    }
+
+    @Override
+    public boolean contains(String element) {
+        for (SimpleHash function : hashFunction) {
+            if (!bits.get(function.hash(element))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static class SimpleHash {
+
+        private int cap;
+        private int seed;
+
+        private SimpleHash(int cap, int seed) {
+            this.cap = cap;
+            this.seed = seed;
+        }
+
+        /**
+         * 简单的写一个hash算法
+         */
+        public int hash(String value) {
+            int result = 0;
+            int len = value.length();
+            for (int i = 0; i &lt; len; i++) {
+                result = seed * result + value.charAt(i) + value.hashCode();
+            }
+            // 把值的范围控制在cap内
+            return (cap - 1) &amp; result;
+        }
+    }
+}
+
+</code></pre>
+<h2><a id="guava%E4%B8%AD%E7%9A%84bloomfilter" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>Guava中的BloomFilter</h2>
+<p>主要是两个类，<code>com.google.common.hash.BloomFilter</code>和<code>com.google.common.hash.BloomFilterStrategies</code>。</p>
+<pre><code class="language-java">  /** The bit set of the BloomFilter (not necessarily power of 2!) */
+  private final BitArray bits;
+
+  /** Number of hashes per element */
+  private final int numHashFunctions;
+
+  /** The funnel to translate Ts to bytes */
+  private final Funnel&lt;? super T&gt; funnel;
+
+  /**
+   * The strategy we employ to map an element T to {@code numHashFunctions} bit indexes.
+   */
+  private final Strategy strategy;
+</code></pre>
+<p>四个成员变量，<code>BitArray</code>是<code>BloomFilterStrategies</code>中的静态内部类。作用和上面的<code>BitSet</code>类似。有基本的get和set方法，同时提供了一些其他常用的方法。</p>
+<pre><code class="language-java">  static final class BitArray {
+    final long[] data;
+    long bitCount;
+
+    BitArray(long bits) {
+      this(new long[Ints.checkedCast(LongMath.divide(bits, 64, RoundingMode.CEILING))]);
+    }
+
+    // Used by serialization
+    BitArray(long[] data) {
+      checkArgument(data.length &gt; 0, &quot;data length is zero!&quot;);
+      this.data = data;
+      long bitCount = 0;
+      for (long value : data) {
+        bitCount += Long.bitCount(value);
+      }
+      this.bitCount = bitCount;
+    }
+
+    /** Returns true if the bit changed value. */
+    boolean set(long index) {
+      if (!get(index)) {
+        data[(int) (index &gt;&gt;&gt; 6)] |= (1L &lt;&lt; index);
+        bitCount++;
+        return true;
+      }
+      return false;
+    }
+
+    boolean get(long index) {
+      return (data[(int) (index &gt;&gt;&gt; 6)] &amp; (1L &lt;&lt; index)) != 0;
+    }
+
+    /** Number of bits */
+    long bitSize() {
+      return (long) data.length * Long.SIZE;
+    }
+
+    /** Number of set bits (1s) */
+    long bitCount() {
+      return bitCount;
+    }
+
+    BitArray copy() {
+      return new BitArray(data.clone());
+    }
+
+    /** Combines the two BitArrays using bitwise OR. */
+    void putAll(BitArray array) {
+      checkArgument(
+          data.length == array.data.length,
+          &quot;BitArrays must be of equal length (%s != %s)&quot;,
+          data.length,
+          array.data.length);
+      bitCount = 0;
+      for (int i = 0; i &lt; data.length; i++) {
+        data[i] |= array.data[i];
+        bitCount += Long.bitCount(data[i]);
+      }
+    }
+
+    @Override
+    public boolean equals(@Nullable Object o) {
+      if (o instanceof BitArray) {
+        BitArray bitArray = (BitArray) o;
+        return Arrays.equals(data, bitArray.data);
+      }
+      return false;
+    }
+
+    @Override
+    public int hashCode() {
+      return Arrays.hashCode(data);
+    }
+  }
+</code></pre>
+<p><code>numHashFunctions</code>是表示一个元素对应了几个hash函数，和上面<code>hashFunction.length</code>是一个意思。<br />
+<code>strategy</code>是把元素映射为hash值的策略，类似上面的<code>hashFunction</code>。<code>BloomFilter</code>定了了<code>Strategy</code>接口。<code>put</code>方法把<code>numHashFunctions</code>个通过计算后的值放入bitArray中。<code>mightContain</code>返回该过滤器是否可能含有元素T。<code>ordinal</code>就是枚举类的<code>ordinal()</code>。</p>
+<pre><code class="language-java">  interface Strategy extends java.io.Serializable {
+
+    /**
+     * Sets {@code numHashFunctions} bits of the given bit array, by hashing a user element.
+     *
+     * &lt;p&gt;Returns whether any bits changed as a result of this operation.
+     */
+    &lt;T&gt; boolean put(T object, Funnel&lt;? super T&gt; funnel, int numHashFunctions, BitArray bits);
+
+    /**
+     * Queries {@code numHashFunctions} bits of the given bit array, by hashing a user element;
+     * returns {@code true} if and only if all selected bits are set.
+     */
+    &lt;T&gt; boolean mightContain(
+        T object, Funnel&lt;? super T&gt; funnel, int numHashFunctions, BitArray bits);
+
+    /**
+     * Identifier used to encode this strategy, when marshalled as part of a BloomFilter. Only
+     * values in the [-128, 127] range are valid for the compact serial form. Non-negative values
+     * are reserved for enums defined in BloomFilterStrategies; negative values are reserved for any
+     * custom, stateful strategy we may define (e.g. any kind of strategy that would depend on user
+     * input).
+     */
+    int ordinal();
+  }
+</code></pre>
+<p>并在<code>BloomFilterStrategies</code>中给出了两个实现的枚举。</p>
+<pre><code class="language-java">  MURMUR128_MITZ_32() {
+    @Override
+    public &lt;T&gt; boolean put(
+        T object, Funnel&lt;? super T&gt; funnel, int numHashFunctions, BitArray bits) {
+      long bitSize = bits.bitSize();
+      long hash64 = Hashing.murmur3_128().hashObject(object, funnel).asLong();
+      int hash1 = (int) hash64;
+      int hash2 = (int) (hash64 &gt;&gt;&gt; 32);
+
+      boolean bitsChanged = false;
+      for (int i = 1; i &lt;= numHashFunctions; i++) {
+        int combinedHash = hash1 + (i * hash2);
+        // Flip all the bits if it's negative (guaranteed positive number)
+        if (combinedHash &lt; 0) {
+          combinedHash = ~combinedHash;
+        }
+        bitsChanged |= bits.set(combinedHash % bitSize);
+      }
+      return bitsChanged;
+    }
+
+    @Override
+    public &lt;T&gt; boolean mightContain(
+        T object, Funnel&lt;? super T&gt; funnel, int numHashFunctions, BitArray bits) {
+      long bitSize = bits.bitSize();
+      long hash64 = Hashing.murmur3_128().hashObject(object, funnel).asLong();
+      int hash1 = (int) hash64;
+      int hash2 = (int) (hash64 &gt;&gt;&gt; 32);
+
+      for (int i = 1; i &lt;= numHashFunctions; i++) {
+        int combinedHash = hash1 + (i * hash2);
+        // Flip all the bits if it's negative (guaranteed positive number)
+        if (combinedHash &lt; 0) {
+          combinedHash = ~combinedHash;
+        }
+        if (!bits.get(combinedHash % bitSize)) {
+          return false;
+        }
+      }
+      return true;
+    }
+  },
+  /**
+   * This strategy uses all 128 bits of {@link Hashing#murmur3_128} when hashing. It looks different
+   * than the implementation in MURMUR128_MITZ_32 because we're avoiding the multiplication in the
+   * loop and doing a (much simpler) += hash2. We're also changing the index to a positive number by
+   * AND'ing with Long.MAX_VALUE instead of flipping the bits.
+   */
+  MURMUR128_MITZ_64() {
+    @Override
+    public &lt;T&gt; boolean put(
+        T object, Funnel&lt;? super T&gt; funnel, int numHashFunctions, BitArray bits) {
+      long bitSize = bits.bitSize();
+      byte[] bytes = Hashing.murmur3_128().hashObject(object, funnel).getBytesInternal();
+      long hash1 = lowerEight(bytes);
+      long hash2 = upperEight(bytes);
+
+      boolean bitsChanged = false;
+      long combinedHash = hash1;
+      for (int i = 0; i &lt; numHashFunctions; i++) {
+        // Make the combined hash positive and indexable
+        bitsChanged |= bits.set((combinedHash &amp; Long.MAX_VALUE) % bitSize);
+        combinedHash += hash2;
+      }
+      return bitsChanged;
+    }
+
+    @Override
+    public &lt;T&gt; boolean mightContain(
+        T object, Funnel&lt;? super T&gt; funnel, int numHashFunctions, BitArray bits) {
+      long bitSize = bits.bitSize();
+      byte[] bytes = Hashing.murmur3_128().hashObject(object, funnel).getBytesInternal();
+      long hash1 = lowerEight(bytes);
+      long hash2 = upperEight(bytes);
+
+      long combinedHash = hash1;
+      for (int i = 0; i &lt; numHashFunctions; i++) {
+        // Make the combined hash positive and indexable
+        if (!bits.get((combinedHash &amp; Long.MAX_VALUE) % bitSize)) {
+          return false;
+        }
+        combinedHash += hash2;
+      }
+      return true;
+    }
+
+    private /* static */ long lowerEight(byte[] bytes) {
+      return Longs.fromBytes(
+          bytes[7], bytes[6], bytes[5], bytes[4], bytes[3], bytes[2], bytes[1], bytes[0]);
+    }
+
+    private /* static */ long upperEight(byte[] bytes) {
+      return Longs.fromBytes(
+          bytes[15], bytes[14], bytes[13], bytes[12], bytes[11], bytes[10], bytes[9], bytes[8]);
+    }
+  };
+</code></pre>
+<p>Guava就是选取了这两个hash算法中的一个，创建一个BloomFilter可以指定其中的一个算法，具体的算法逻辑可以参看<a href="http://www.cyhone.com/2017/02/07/Introduce-to-BloomFilter/">解读BloomFilter算法</a><br />
+使用实例：</p>
+<pre><code class="language-java">    private static void bloomFilter() throws Exception {
+        final BloomFilter&lt;String&gt; dealIdBloomFilter = BloomFilter.create(new Funnel&lt;String&gt;() {
+            @Override
+            public void funnel(String from, PrimitiveSink into) {
+                into.putString(from, Charsets.UTF_8);
+            }
+        }, 3000000, 0.0000001d);
+        BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(new File(&quot;C:\\Users\\Methol\\Desktop\\jiaokao-word.txt&quot;)), &quot;utf-8&quot;));
+        String line;
+        int i = 0;
+        StringBuilder sb = new StringBuilder();
+        while ((line = br.readLine()) != null) {
+            if (!dealIdBloomFilter.mightContain(line)) {
+                dealIdBloomFilter.put(line);
+                sb.append(line).append(&quot;\n&quot;);
+                i++;
+            }
+            if (i % 1000 == 0) {
+                FileUtils.write(new File(&quot;C:\\Users\\Methol\\Desktop\\bloomFilterDistinct.txt&quot;),
+                        sb.toString(), Charsets.UTF_8, true);
+                sb = new StringBuilder();
+            }
+        }
+        FileUtils.write(new File(&quot;C:\\Users\\Methol\\Desktop\\bloomFilterDistinct.txt&quot;),
+                sb.toString(), Charsets.UTF_8, true);
+    }
+</code></pre>
+<h2><a id="%E6%89%A9%E5%B1%95" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>扩展</h2>
+<p>同样对大数据量的内容进行滤重，当时还想到了用spark，不过这个真的有点大炮打小鸟的感觉，用起来代码是非常简单，但是单单就滤重这件事来说，还是BloomFilter好用。<br />
+800w行的句子，滤重后有200w，spark的用时比BloomFilter略多。<br />
+贴一段spark的代码：</p>
+<pre><code class="language-java">    private static void spark() {
+        System.setProperty(&quot;hadoop.home.dir&quot;, &quot;D:\\server\\hadoop-common-2.2.0\\&quot;);
+        SparkConf conf = new SparkConf().setAppName(&quot;Text String Distinct&quot;).setMaster(&quot;local&quot;).set(&quot;spark.executor.memory&quot;, &quot;1g&quot;);
+        JavaSparkContext sc = new JavaSparkContext(conf);
+        JavaRDD&lt;String&gt; textFile = sc.textFile(&quot;C:\\Users\\Methol\\Desktop\\jiaokao-word.txt&quot;);
+        final JavaRDD&lt;String&gt; distinct = textFile.distinct();
+        final long count = distinct.count();
+        System.out.println(count);
+        distinct.coalesce(1).saveAsTextFile(&quot;C:\\Users\\Methol\\Desktop\\distinct&quot;);
+    }
+</code></pre>
+
+
+			
+			
+		</div>
+
+	</article>
+  
+
+</div>
+<nav id="pagenavi">
+	 <a class="prev" href="all.html">Prev</a>  
+	 <a class="next" href="all_2.html">Next</a> 
+	<div class="center"><a href="archives.html">Blog Archives</a></div>
+
+</nav>
+
+</div>
+
+
+
+        </div>
+			<footer id="footer" class="inner">Copyright &copy; 2014
+Powered by <a target="_blank" href="http://www.mweb.im">MWeb</a> &nbsp;&nbsp; 
+Theme by <a href="http://shashankmehta.in/archive/2012/greyshade.html">Shashank Mehta</a>
+      </footer>
+		</div>
+	</div>
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<style type="text/css">
+figure{margin: 1em 0;padding: 0;}
+  figcaption{text-align:center;}
+
+/* PrismJS 1.14.0
+https://prismjs.com/download.html#themes=prism-coy&languages=markup+css+clike+javascript */
+/**
+ * prism.js Coy theme for JavaScript, CoffeeScript, CSS and HTML
+ * Based on https://github.com/tshedor/workshop-wp-theme (Example: http://workshop.kansan.com/category/sessions/basics or http://workshop.timshedor.com/category/sessions/basics);
+ * @author Tim  Shedor
+ */
+
+code[class*="language-"],
+pre[class*="language-"] {
+  color: black;
+  background: none;
+  font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+  text-align: left;
+  white-space: pre;
+  word-spacing: normal;
+  word-break: normal;
+  word-wrap: normal;
+  line-height: 1.5;
+
+  -moz-tab-size: 4;
+  -o-tab-size: 4;
+  tab-size: 4;
+
+  -webkit-hyphens: none;
+  -moz-hyphens: none;
+  -ms-hyphens: none;
+  hyphens: none;
+}
+
+/* Code blocks */
+pre[class*="language-"] {
+  position: relative;
+  margin: .5em 0;
+  overflow: visible;
+  padding: 0;
+}
+pre[class*="language-"]>code {
+  position: relative;
+  border-left: 10px solid #358ccb;
+  box-shadow: -1px 0px 0px 0px #358ccb, 0px 0px 0px 1px #dfdfdf;
+  background-color: #fdfdfd;
+  background-image: linear-gradient(transparent 50%, rgba(69, 142, 209, 0.04) 50%);
+  background-size: 3em 3em;
+  background-origin: content-box;
+  background-attachment: local;
+}
+
+code[class*="language"] {
+  max-height: inherit;
+  height: inherit;
+  padding: 0 1em;
+  display: block;
+  overflow: auto;
+}
+
+/* Margin bottom to accomodate shadow */
+:not(pre) > code[class*="language-"],
+pre[class*="language-"] {
+  background-color: #fdfdfd;
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+  margin-bottom: 1em;
+}
+
+/* Inline code */
+:not(pre) > code[class*="language-"] {
+  position: relative;
+  padding: .2em;
+  border-radius: 0.3em;
+  color: #c92c2c;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  display: inline;
+  white-space: normal;
+}
+
+pre[class*="language-"]:before,
+pre[class*="language-"]:after {
+  content: '';
+  z-index: -2;
+  display: block;
+  position: absolute;
+  bottom: 0.75em;
+  left: 0.18em;
+  width: 40%;
+  height: 20%;
+  max-height: 13em;
+  box-shadow: 0px 13px 8px #979797;
+  -webkit-transform: rotate(-2deg);
+  -moz-transform: rotate(-2deg);
+  -ms-transform: rotate(-2deg);
+  -o-transform: rotate(-2deg);
+  transform: rotate(-2deg);
+}
+
+:not(pre) > code[class*="language-"]:after,
+pre[class*="language-"]:after {
+  right: 0.75em;
+  left: auto;
+  -webkit-transform: rotate(2deg);
+  -moz-transform: rotate(2deg);
+  -ms-transform: rotate(2deg);
+  -o-transform: rotate(2deg);
+  transform: rotate(2deg);
+}
+
+.token.comment,
+.token.block-comment,
+.token.prolog,
+.token.doctype,
+.token.cdata {
+  color: #7D8B99;
+}
+
+.token.punctuation {
+  color: #5F6364;
+}
+
+.token.property,
+.token.tag,
+.token.boolean,
+.token.number,
+.token.function-name,
+.token.constant,
+.token.symbol,
+.token.deleted {
+  color: #c92c2c;
+}
+
+.token.selector,
+.token.attr-name,
+.token.string,
+.token.char,
+.token.function,
+.token.builtin,
+.token.inserted {
+  color: #2f9c0a;
+}
+
+.token.operator,
+.token.entity,
+.token.url,
+.token.variable {
+  color: #a67f59;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.token.atrule,
+.token.attr-value,
+.token.keyword,
+.token.class-name {
+  color: #1990b8;
+}
+
+.token.regex,
+.token.important {
+  color: #e90;
+}
+
+.language-css .token.string,
+.style .token.string {
+  color: #a67f59;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.token.important {
+  font-weight: normal;
+}
+
+.token.bold {
+  font-weight: bold;
+}
+.token.italic {
+  font-style: italic;
+}
+
+.token.entity {
+  cursor: help;
+}
+
+.namespace {
+  opacity: .7;
+}
+
+@media screen and (max-width: 767px) {
+  pre[class*="language-"]:before,
+  pre[class*="language-"]:after {
+    bottom: 14px;
+    box-shadow: none;
+  }
+
+}
+
+/* Plugin styles */
+.token.tab:not(:empty):before,
+.token.cr:before,
+.token.lf:before {
+  color: #e0d7d1;
+}
+
+/* Plugin styles: Line Numbers */
+pre[class*="language-"].line-numbers.line-numbers {
+  padding-left: 0;
+}
+
+pre[class*="language-"].line-numbers.line-numbers code {
+  padding-left: 3.8em;
+}
+
+pre[class*="language-"].line-numbers.line-numbers .line-numbers-rows {
+  left: 0;
+}
+
+/* Plugin styles: Line Highlight */
+pre[class*="language-"][data-line] {
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 0;
+}
+pre[data-line] code {
+  position: relative;
+  padding-left: 4em;
+}
+pre .line-highlight {
+  margin-top: 0;
+}
+
+pre[class*="language-"].line-numbers {
+    position: relative;
+    padding-left: 3.8em;
+    counter-reset: linenumber;
+}
+
+pre[class*="language-"].line-numbers > code {
+    position: relative;
+    white-space: inherit;
+}
+
+.line-numbers .line-numbers-rows {
+    position: absolute;
+    pointer-events: none;
+    top: 0;
+    font-size: 100%;
+    left: -3.8em;
+    width: 3em; /* works for line-numbers below 1000 lines */
+    letter-spacing: -1px;
+    border-right: 1px solid #999;
+
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+
+}
+
+    .line-numbers-rows > span {
+        pointer-events: none;
+        display: block;
+        counter-increment: linenumber;
+    }
+
+        .line-numbers-rows > span:before {
+            content: counter(linenumber);
+            color: #999;
+            display: block;
+            padding-right: 0.8em;
+            text-align: right;
+        }
+
+</style>
+  
+    
+
+
+</body>
+</html>

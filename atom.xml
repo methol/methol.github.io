@@ -1,0 +1,2614 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Methol]]></title>
+  <link href="https://tuzhihao.com/atom.xml" rel="self"/>
+  <link href="https://tuzhihao.com/"/>
+  <updated>2022-10-19T10:22:02+08:00</updated>
+  <id>https://tuzhihao.com/</id>
+  <author>
+    <name><![CDATA[]]></name>
+    
+  </author>
+  <generator uri="http://www.coderforart.com/">CoderForArt</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[使用backblaze B2 和 Cloudflare Wrokers做图床]]></title>
+    <link href="https://tuzhihao.com/16661426449923.html"/>
+    <updated>2022-10-19T09:24:04+08:00</updated>
+    <id>https://tuzhihao.com/16661426449923.html</id>
+    <content type="html"><![CDATA[
+<p><img src="https://file1.tuzhihao.com/20221019/Ybv0U0.jpg" alt="" /></p>
+<h2><a id="%E4%B8%BA%E4%BB%80%E4%B9%88%E4%BD%BF%E7%94%A8bcakblaze-b2" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>为什么使用bcakblaze B2</h2>
+<ul>
+<li>免费，有10G的免费空间</li>
+<li>API友好，支持s3 API</li>
+<li>带宽联盟。使用Cloudflare中转获取图片不计流量费用</li>
+</ul>
+<p>怎么传图片就不赘述了，我用的是uPic，你可以用你喜欢的工具</p>
+<h2><a id="%E4%BD%BF%E7%94%A8bcakblaze-b2" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>使用bcakblaze B2</h2>
+<p>先注册，创建一个bucket<br />
+<img src="https://file1.tuzhihao.com/20221019/wIbtCx.png" alt="" /><br />
+然后上传一张图(也可以配置使用你的工具上传，或者网页上传)，然后记录如下信息</p>
+<ol>
+<li>Bucket Name</li>
+<li>Friendly URL里面的host</li>
+</ol>
+<p><img src="https://file1.tuzhihao.com/20221019/q1ZnJ9.png" alt="" /></p>
+<h2><a id="%E4%BD%BF%E7%94%A8cloudflare-workers" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>使用Cloudflare Workers</h2>
+<p>为什么使用wokers而不用cname的方式接入</p>
+<ul>
+<li>去除URL中的 /file/<bucket-name> 部分</li>
+<li>去除一些从 Backblaze B2 响应的无用请求头</li>
+<li>加上基本的 CORS 请求头，以便允许图片嵌入到网站中</li>
+<li>为图片优化缓存 (浏览器的缓存, 以及 CDN 边界服务器上的缓存)</li>
+</ul>
+<p>先创建一个workers，然后写入如下脚本，只需要修改2个变量</p>
+<ol>
+<li>b2Bucket -&gt; 上述1</li>
+<li>b2Domain -&gt; 上述2</li>
+</ol>
+<pre><code class="language-js">'use strict';
+const b2Domain = 'f004.backblazeb2.com'; // configure this as per instructions above
+const b2Bucket = 'bucketName'; // configure this as per instructions above
+const b2UrlPath = `/file/${b2Bucket}/`;
+addEventListener('fetch', event =&gt; {
+	return event.respondWith(fileReq(event));
+});
+
+// define the file extensions we wish to add basic access control headers to
+const corsFileTypes = ['png', 'jpg', 'gif', 'jpeg', 'webp'];
+
+// backblaze returns some additional headers that are useful for debugging, but unnecessary in production. We can remove these to save some size
+const removeHeaders = [
+	'x-bz-content-sha1',
+	'x-bz-file-id',
+	'x-bz-file-name',
+	'x-bz-info-src_last_modified_millis',
+	'X-Bz-Upload-Timestamp',
+	'x-bz-server-side-encryption',
+	'x-bz-client-unauthorized-to-read',
+	'Expires'
+];
+const expiration = 31536000; // override browser cache for images - 1 year
+
+// define a function we can re-use to fix headers
+const fixHeaders = function(url, status, headers){
+	let newHdrs = new Headers(headers);
+	// add basic cors headers for images
+	if(corsFileTypes.includes(url.pathname.split('.').pop())){
+		newHdrs.set('Access-Control-Allow-Origin', '*');
+	}
+	// override browser cache for files when 200
+	if(status === 200){
+		newHdrs.set('Cache-Control', &quot;public, max-age=&quot; + expiration);
+	}else{
+		// only cache other things for 5 minutes
+		newHdrs.set('Cache-Control', 'public, max-age=300');
+	}
+	// set ETag for efficient caching where possible
+	const ETag = newHdrs.get('x-bz-content-sha1') || newHdrs.get('x-bz-info-src_last_modified_millis') || newHdrs.get('x-bz-file-id');
+	if(ETag){
+		newHdrs.set('ETag', ETag);
+	}
+	// remove unnecessary headers
+	removeHeaders.forEach(header =&gt; {
+		newHdrs.delete(header);
+	});
+	return newHdrs;
+};
+
+async function fileReq(event){
+	const cache = caches.default; // Cloudflare edge caching
+	const url = new URL(event.request.url);
+	if(!url.pathname.startsWith(b2UrlPath)){ 
+		url.pathname = b2UrlPath + url.pathname;
+        // console.log(url.pathname);
+	}
+    url.host = b2Domain;
+    // console.log(url);
+	let response = await cache.match(url); // try to find match for this request in the edge cache
+	if(response){
+		// use cache found on Cloudflare edge. Set X-Worker-Cache header for helpful debug
+		let newHdrs = fixHeaders(url, response.status, response.headers);
+		newHdrs.set('X-Worker-Cache', &quot;true&quot;);
+		return new Response(response.body, {
+			status: response.status,
+			statusText: response.statusText,
+			headers: newHdrs
+		});
+	}
+	// no cache, fetch image, apply Cloudflare lossless compression
+	response = await fetch(url, {cf: {polish: &quot;lossless&quot;}});
+	let newHdrs = fixHeaders(url, response.status, response.headers);
+
+  if(response.status === 200){
+
+    response = new Response(response.body, {
+      status: response.status,
+      statusText: response.statusText,
+      headers: newHdrs
+    });
+  }else{
+    response = new Response('File not found!', { status: 404 })
+  }
+
+	event.waitUntil(cache.put(url, response.clone()));
+	return response;
+}
+</code></pre>
+<p>脚本参考<br />
+<a href="https://blog.meow.page/archives/free-personal-image-hosting-with-backblaze-b2-and-cloudflare-workers/">https://blog.meow.page/archives/free-personal-image-hosting-with-backblaze-b2-and-cloudflare-workers/</a><br />
+<a href="https://jross.me/free-personal-image-hosting-with-backblaze-b2-and-cloudflare-workers/">https://jross.me/free-personal-image-hosting-with-backblaze-b2-and-cloudflare-workers/</a></p>
+<p>我在脚本上的修改是把<code>b2Domain</code>改为b2的host，这样脚本更容易理解一些。</p>
+<p>最后你可以使用自己的域名做一个route就可以使用自己的域名，cf workers的域名在国内墙的比较厉害...</p>
+<h2><a id="%E6%8E%A8%E8%8D%90%E4%B8%80%E4%B8%AA%E5%9B%BE%E7%89%87%E7%BD%91%E7%AB%99" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>推荐一个图片网站</h2>
+<p><a href="https://unsplash.com">https://unsplash.com</a></p>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[三星电视换区]]></title>
+    <link href="https://tuzhihao.com/16661412449981.html"/>
+    <updated>2022-10-19T09:00:44+08:00</updated>
+    <id>https://tuzhihao.com/16661412449981.html</id>
+    <content type="html"><![CDATA[
+<h2><a id="apple-tv-4k%E6%8C%82%E4%BA%86" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>Apple TV 4k 挂了</h2>
+<p>家里的Apple TV 4k突然自己就挂掉了，应该不是硬件的问题，感觉是软件的问题，但是背后一个接口都没有，也没办法自己升级系统。</p>
+<p>周末拿到Apple店里，给的理由大陆不卖，所以也不修，只能到香港修。</p>
+<p>这就GG了...</p>
+<p>因为我主要是看Youtube、Nas视频、emby视频、netflix，安卓盒子的性能都太弱了，只能看看流媒体。</p>
+<p>而且Apple TV的infuse神器，Youtube今年也支持4k了，真是唯一选择。</p>
+<p>好在快开发布会了，等下一代吧，所以只能先不买了。</p>
+<h2><a id="%E4%B8%89%E6%98%9F%E7%94%B5%E8%A7%86%E6%8D%A2%E5%8C%BA" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>三星电视换区</h2>
+<p>然后就研究起了我的电视，因为之前是有爱奇艺、腾讯那些视频的。所以看看能不能先装一个youtube看看。</p>
+<p>系统是三星自己的tizen系统，应用只能去自带的应用商店下载。那这没办法了，只能换区。</p>
+<p>果然，就搜到了2篇文章，已经说的很详细了，我这里只是对我自己的电视操作做一个备份。</p>
+<p><a href="https://sspai.com/post/59549">https://sspai.com/post/59549</a></p>
+<p><a href="https://joveng.myds.me:8888/tv-unlock/">https://joveng.myds.me:8888/tv-unlock/</a></p>
+<h3><a id="%E6%AD%A5%E9%AA%A4" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>步骤</h3>
+<ol>
+<li>带有红外的智能手机请下载「IR Service Remote」的APP。</li>
+</ol>
+<p><a href="media/16661412449981/IR_Service_Remote-com.wolf.servicercsam-v1.2-Android_4.4+.apk">IR_Service_Remote-com.wolf.servicercsam-v1.2-Android_4.4+.apk</a></p>
+<p>在电视处于亮屏的状态下，打开「IR Service remote」依次按下「S1」-「S2」即可进入工程模式菜单</p>
+<p><img src="https://pic.tuzhihao.com/upic/20210418/214505-x5fw8P.png" alt="image-20210418212716653" /></p>
+<ol start="2">
+<li>
+<p>使用电视遥控器「方向键」将光标移动到「Option」选项，按一下「确定键」进入，然后使用手机拍照当前画面。进入之后可以看到「Local Set」选项是「CHI_DTV」，意味当前系统是国区。</p>
+<p>将光标移动到「Local Set」选项并按下「确定键」进入，在弹出的「Local Set List」列表里移到你想要切换的地区代码，美区选择「AD_AU2」，港区选择「HKG_DTV」，之后按下遥控器「确定键」后会自动返回。</p>
+<p><img src="https://pic.tuzhihao.com/upic/20210418/214529-8B2zzw.png" alt="image-20210418212855744" /></p>
+</li>
+<li>
+<p>再次进入到「MRT Option」选项，进入「Language Set」选项并确保此处参数显示为「China」，返回并进入「Region」确保此处参数显示为「asia_dtv」，其余的参数按照之前拍的照片依次复原即可。「Production Option」和「Engineer Option」同理。</p>
+</li>
+<li>
+<p>重启电视。</p>
+</li>
+<li>
+<p>使用遥控器依次选择「设置」-「支持」-「自诊断」-「重置 Smart Hub」，输入 PIN 码「0000」后系统桌面会重启。</p>
+<p><img src="https://pic.tuzhihao.com/upic/20210418/214531-b2YyAM.png" alt="image-20210418213026402" /></p>
+</li>
+<li>
+<p>重启之后光标移动到「apps」会弹出「同意条款」页面，注意即便当前电视的系统语言为简体中文，但此页面应为英文界面。使用电视原厂遥控器在「同意条款」页面以此按下「静音」-「音量 +」-「频道 +」-「静音」按键，电视会弹出「Internet 服务位置设置」选项。选择香港。</p>
+<p><img src="https://pic.tuzhihao.com/upic/20210418/214533-6bqY6X.png" alt="image-20210418213101873" /></p>
+</li>
+<li>
+<p>最后同意协议，安装app就行了！</p>
+<p><img src="https://pic.tuzhihao.com/upic/20210418/214535-hHG7r1.png" alt="image-20210418213749906" /></p>
+</li>
+</ol>
+<h2><a id="%E5%A4%87%E4%BB%BD%E5%8F%82%E6%95%B0%E6%88%AA%E5%9B%BE" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>备份参数截图</h2>
+<h3><a id="%E4%BF%AE%E6%94%B9%E5%89%8D%E5%9B%BD%E5%8C%BA" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>修改前(国区)</h3>
+<p><img src="https://pic.tuzhihao.com/upic/20210418/214540-9KWi3f.png" alt="image-20210418213525967" /></p>
+<p><img src="https://pic.tuzhihao.com/upic/20210418/214545-wC0kFH.png" alt="image-20210418213536752" /></p>
+<p><img src="https://pic.tuzhihao.com/upic/20210418/214549-zvrLvw.png" alt="image-20210418213549420" /></p>
+<h3><a id="%E4%BF%AE%E6%94%B9%E5%90%8E%E6%B8%AF%E5%8C%BA" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>修改后(港区)</h3>
+<p><img src="https://pic.tuzhihao.com/upic/20210418/214551-2jMHOy.png" alt="image-20210418213446438" /></p>
+<p><img src="https://pic.tuzhihao.com/upic/20210418/214554-aMRDcj.png" alt="image-20210418213500655" /></p>
+<p><img src="https://pic.tuzhihao.com/upic/20210418/214558-B0a473.png" alt="image-20210418213510547" /></p>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[防止iPhone自动下载iOS11升级]]></title>
+    <link href="https://tuzhihao.com/16661412450320.html"/>
+    <updated>2022-10-19T09:00:45+08:00</updated>
+    <id>https://tuzhihao.com/16661412450320.html</id>
+    <content type="html"><![CDATA[
+<h3><a id="%E5%AE%89%E8%A3%85tvos-beta%E6%8F%8F%E8%BF%B0%E6%96%87%E4%BB%B6" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>安装tvOS Beta描述文件</h3>
+<p>使用 iOS 端的 Safari 浏览器点击  <strong><a href="https://tuzhihao.com/upload/tvos/tvos11.mobileconfig">https://tuzhihao.com/upload/tvos/tvos11.mobileconfig</a></strong> 安装，或是使用 PC 下载后邮件发送到 iOS 设备，用自带的 Mail 打开也可安装。安装完成后重启手机，便不会再收到任何的系统更新了。</p>
+<h2><a id="%E5%B1%8F%E8%94%BD%E6%9B%B4%E6%96%B0%E7%9A%84%E5%8E%9F%E7%90%86" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>屏蔽更新的原理</h2>
+<p>安装了<code>tvOS 11 Beta Software Profile</code>，设备便会去检测 tvOS 10 Beta 版的更新，显而易见的是，tvOS 系统仅能适用于 Apple TV，iOS 设备安装该描述文件后，检测到的更新无法适用，便会显示 : 您的软件是最新版本。</p>
+<h2><a id="%E6%B3%A8%E6%84%8F%E4%BA%8B%E9%A1%B9" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>注意事项</h2>
+<ol>
+<li>
+<p>该描述文件能用到2019年，估计到时候应该有tvOS 12的Beta文件了。</p>
+</li>
+<li>
+<p>如果之前装了可以升级测试版系统的描述文件，删除原来安装的描述文件，再安装本文件。</p>
+</li>
+<li>
+<p>安装之后连接 iTunes 时依然会提示有系统更新，忽略即可。</p>
+</li>
+<li>
+<p>已经自动下载好安装包的用户，可以进入设置——通用里面，找到【储存空间与iCloud用量】——【管理储存空间与iCloud用量】里面删除掉已安装的升级包，然后再安装描述文件。</p>
+<p>​</p>
+</li>
+</ol>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[CountDownLatch和CyclicBarrier]]></title>
+    <link href="https://tuzhihao.com/16661412451143.html"/>
+    <updated>2022-10-19T09:00:45+08:00</updated>
+    <id>https://tuzhihao.com/16661412451143.html</id>
+    <content type="html"><![CDATA[
+<h2><a id="%E4%BD%BF%E7%94%A8%E5%9C%BA%E6%99%AF" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>使用场景</h2>
+<h3><a id="%E5%9C%BA%E6%99%AF%E4%B8%80" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>场景一</h3>
+<p>工作中需要在web服务对外之前，spring的bean初始化的时候加载数据到缓存中。<br />
+但是由于数据量过大，需要多线程加载。要求所有的缓存加载成功之后，这个bean才初始化成功，程序继续往下走。</p>
+<h3><a id="%E5%9C%BA%E6%99%AF%E4%BA%8C" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>场景二</h3>
+<p>商务合作的需求，需要显示的数据来自合作方和我们自己的数据库中。<br />
+之前是只显示我们数据库点数据，现在合作方提供了一个接口让我实时调用对方的接口，并把两部分的数据合并后返回给前端。<br />
+但是由于合作方的接口不是特别稳定，而且也不能保证高可用，所以可以考虑同时从我们和合作方取数据，设置超时时间，如果都返回了数据就合并给前端，如果对方未能返回数据，还是有我们自己的数据能显示给用户的。</p>
+<h2><a id="countdownlatch%E5%92%8Ccyclicbarrier" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>CountDownLatch和CyclicBarrier</h2>
+<p>综合上述两个场景，我看了CountDownLatch和CyclicBarrier，看说明觉得比较适合我的使用。</p>
+<h3><a id="countdownlatch" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>CountDownLatch</h3>
+<pre><code class="language-plain_text">package countdownlatchtest;
+
+import com.google.common.collect.Maps;
+
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.CountDownLatch;
+
+public class CountDownLatchService {
+
+    private CountDownLatch countDownLatch = new CountDownLatch(4);
+
+    /**
+     * 用来存储所有线程的运行结果
+     */
+    private ConcurrentMap&lt;String, String&gt; resultMap = Maps.newConcurrentMap();
+
+
+
+    public CountDownLatch getCountDownLatch() {
+        return countDownLatch;
+    }
+
+    public ConcurrentMap&lt;String, String&gt; getResultMap() {
+        return resultMap;
+    }
+}
+</code></pre>
+<pre><code class="language-plain_text">package countdownlatchtest;
+
+import org.apache.commons.lang3.RandomUtils;
+
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.CountDownLatch;
+
+public class Worker implements Runnable {
+
+    private ConcurrentMap&lt;String, String&gt; map;
+    private CountDownLatch countDownLatch;
+
+    public Worker(ConcurrentMap&lt;String, String&gt; map, CountDownLatch countDownLatch) {
+        this.map = map;
+        this.countDownLatch = countDownLatch;
+    }
+
+    @Override
+    public void run() {
+
+        // 这里写代码做某些事
+        System.out.println(Thread.currentThread().getName() + &quot;\t开始了...&quot;);
+        final int sleep = RandomUtils.nextInt(5, 20);
+        try {
+            Thread.sleep(sleep * 1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        // 添加结果到map中
+        map.putIfAbsent(Thread.currentThread().getName(), String.valueOf(sleep));
+
+        // 告诉 countDownLatch ，当前线程完成了
+        System.out.println(Thread.currentThread().getName() + &quot;\t结束了...&quot;);
+        countDownLatch.countDown();
+    }
+}
+
+</code></pre>
+<pre><code class="language-plain_text">package countdownlatchtest;
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+public class Main {
+
+    public static void main(String[] args) {
+        final ExecutorService executorService = Executors.newFixedThreadPool(6);
+        for (int i = 0; i &lt; 3; i++) {
+            // 模拟多次执行任务
+            doTask(executorService);
+        }
+    }
+
+    private static void doTask(ExecutorService executorService) {
+        CountDownLatchService countDownLatchService = new CountDownLatchService();
+        for (int i = 0; i &lt; 4; i++) {
+            Worker worker = new Worker(countDownLatchService.getResultMap(), countDownLatchService.getCountDownLatch());
+            executorService.submit(worker);
+        }
+        try {
+            // 阻塞在这里，等待其他线程执行完成
+            countDownLatchService.getCountDownLatch().await();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        System.out.println(&quot;所有线程执行成功&quot;);
+        System.out.println(&quot;打印结果如下：\n&quot; + countDownLatchService.getResultMap());
+    }
+
+}
+</code></pre>
+<h3><a id="cyclicbarrier" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>CyclicBarrier</h3>
+<pre><code class="language-plain_text">package cyclicbarriertest;
+
+import com.google.common.collect.Maps;
+
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.CyclicBarrier;
+
+public class CyclicBarrierService implements Runnable {
+
+    /**
+     * 表示当有4个线程执行完的时候，会调用第二个参数 barrierAction 的start()方法
+     *
+     * 所以本类实现 Runnable 接口，传入this
+     */
+    private CyclicBarrier cyclicBarrier = new CyclicBarrier(4, this);
+
+    /**
+     * 用来存储所有线程的运行结果
+     */
+    private ConcurrentMap&lt;String, String&gt; resultMap = Maps.newConcurrentMap();
+
+    @Override
+    public void run() {
+        System.out.println(&quot;所有线程执行成功&quot;);
+        System.out.println(&quot;打印结果如下：\n&quot; + resultMap);
+    }
+
+    public ConcurrentMap&lt;String, String&gt; getResultMap() {
+        return resultMap;
+    }
+
+    public CyclicBarrier getCyclicBarrier() {
+        return cyclicBarrier;
+    }
+}
+</code></pre>
+<pre><code class="language-plain_text">package cyclicbarriertest;
+
+import org.apache.commons.lang3.RandomUtils;
+
+import java.util.concurrent.BrokenBarrierException;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.CyclicBarrier;
+
+public class Worker implements Runnable {
+
+    private ConcurrentMap&lt;String, String&gt; map;
+    private CyclicBarrier cyclicBarrier;
+
+    public Worker(ConcurrentMap&lt;String, String&gt; map, CyclicBarrier cyclicBarrier) {
+        this.map = map;
+        this.cyclicBarrier = cyclicBarrier;
+    }
+
+    @Override
+    public void run() {
+
+        // 这里写代码做某些事
+        System.out.println(Thread.currentThread().getName() + &quot;\t开始了...&quot;);
+        final int sleep = RandomUtils.nextInt(5, 20);
+        try {
+            Thread.sleep(sleep * 1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        // 添加结果到map中
+        map.putIfAbsent(Thread.currentThread().getName(), String.valueOf(sleep));
+
+        try {
+            // 告诉 cyclicBarrier ，当前线程完成了
+            System.out.println(Thread.currentThread().getName() + &quot;\t结束了...&quot;);
+            cyclicBarrier.await();
+        } catch (InterruptedException | BrokenBarrierException e) {
+            e.printStackTrace();
+        }
+    }
+}
+</code></pre>
+<pre><code class="language-plain_text">package cyclicbarriertest;
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+public class Main {
+
+    public static void main(String[] args) {
+        final ExecutorService executorService = Executors.newFixedThreadPool(6);
+        for (int j = 0; j &lt; 3; j++) {
+            // 模拟多次任务执行
+            doTask(executorService);
+        }
+    }
+
+    private static void doTask(ExecutorService executorService) {
+        CyclicBarrierService cyclicBarrierService = new CyclicBarrierService();
+        for (int i = 0; i &lt; 4; i++) {
+            Worker worker = new Worker(cyclicBarrierService.getResultMap(), cyclicBarrierService.getCyclicBarrier());
+            executorService.submit(worker);
+        }
+    }
+}
+
+</code></pre>
+<h2><a id="%E6%80%BB%E7%BB%93" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>总结</h2>
+<p>写了上面两个例子，后面发现场景一适合用<code>CountDownLatch</code>，场景二适合用<code>CyclicBarrier</code>。场景一我们基本上不存在有任务不能执行完的情况，基本上做到计数器不归0，即使服务启动了也没办法正常使用，场景二很多情况都是任务不能正常的执行完成。</p>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[设计模式 简单工厂 工厂方法 抽象工厂]]></title>
+    <link href="https://tuzhihao.com/16661412449263.html"/>
+    <updated>2022-10-19T09:00:44+08:00</updated>
+    <id>https://tuzhihao.com/16661412449263.html</id>
+    <content type="html"><![CDATA[
+<p>针对实体user，希望写一系列的功能，能够实现数据库的增删改查等功能。</p>
+<pre><code class="language-java">    public static void main(String[] args) {
+        User u = new User();
+        u.setName(&quot;methol&quot;);
+
+        add(u);
+        edit(u);
+    }
+    
+    public static void add(User user){
+        System.out.println(&quot;save user【&quot; + user.getName() + &quot;】 to db&quot;);
+    }
+    
+    public static void edit(User user){
+        System.out.println(&quot;edit user【&quot; + user.getName() + &quot;】, and save to db&quot;);
+    }
+</code></pre>
+<p>上面的方法虽然基本上实现了功能，但是不利于程序以后的扩展和复用，代码也不容易维护。<br />
+通过封装、继承、多态把程序的耦合度降低，使用设计模式可以使得程序更加灵活，后期容易修改，也更加易于复用。<br />
+有了如下的代码：</p>
+<pre><code class="language-plain_text">package mode.factory.simple;
+
+import mode.factory.bean.User;
+
+public interface Operation {
+
+    void operate(User user);
+
+}
+</code></pre>
+<pre><code class="language-plain_text">
+package mode.factory.simple;
+
+import mode.factory.bean.User;
+
+public class AddOperate implements Operation {
+
+    @Override
+    public void operate(User user) {
+        System.out.println(&quot;save user【&quot; + user.getName() + &quot;】 to db&quot;);
+    }
+}
+</code></pre>
+<pre><code class="language-plain_text">package mode.factory.simple;
+
+import mode.factory.bean.User;
+
+public class EditOperate implements Operation {
+
+    @Override
+    public void operate(User user) {
+        System.out.println(&quot;edit user【&quot; + user.getName() + &quot;】, and save to db&quot;);
+    }
+}
+</code></pre>
+<pre><code class="language-plain_text">    public static void main(String[] args) {
+        User u = new User();
+        u.setName(&quot;methol&quot;);
+
+        // 不同的操作需要new不同的类操作
+        Operation addOperate = new AddOperate();
+        addOperate.operate(u);
+        Operation editOperate = new EditOperate();
+        editOperate.operate(u);
+    }
+</code></pre>
+<p>上述代码已经经过封装，并且也适合之后的代码扩展，但是还是有一个问题，如果后期想通过不同的参数（事先不知道是要执行edit还是add），那么就要通过条件判断要做的操作，这时简单工厂模式可能就是一个比较好的选择。</p>
+<h2><a id="%E7%AE%80%E5%8D%95%E5%B7%A5%E5%8E%82%E6%A8%A1%E5%BC%8F%E4%B8%8E%E5%B7%A5%E5%8E%82%E6%A8%A1%E5%BC%8F" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>简单工厂模式与工厂模式</h2>
+<pre><code class="language-plain_text">package mode.factory.simple;
+
+public class OperateFactory {
+    public static Operation findOperation(String operation) {
+        switch (operation) {
+            case &quot;add&quot;:
+                return new AddOperate();
+            case &quot;edit&quot;:
+                return new EditOperate();
+            default:
+                return null;
+        }
+    }
+}
+</code></pre>
+<p>通过工厂类来帮我们new一个对象，而不是直接在代码中需要的地方new一个对象，在同一个地方管理，后期的代码维护和扩展性都强了很多。<br />
+或者这时想增加一个delete方法，只需要继承<code>Operation</code>类，写一个方法，然后在<code>OperateFactory</code>增加一个case即可。<br />
+<strong>简单工厂模式</strong>，就是一个简单的创建产品(<code>Operation</code>)的工具，可以是<code>AddOperate</code>类，也可以是<code>EditOperate</code>类，甚至他们之间没有任何关系也是没问题的。<br />
+<strong>工厂模式</strong>，他也是一个简单的创建产品(<code>Operation</code>)的工具，但是他有一个区别是所有的产品(<code>AddOperate</code>，<code>EditOperate</code>)都是继承(实现)<code>Operation</code>这个父类的，父类中有抽象的方法，之后都是调用同一个方法来做操作。<br />
+使用中，很少使用简单工厂模式，大多都是工厂模式，谈到工厂模式，基本上都是指的工厂模式。</p>
+<pre><code class="language-java">    public static void main(String[] args) {
+        User u = new User();
+        u.setName(&quot;methol&quot;);
+
+        // 不同的操作需要new不同的类操作
+        Operation addOperate = new AddOperate();
+        addOperate.operate(u);
+        Operation editOperate = new EditOperate();
+        editOperate.operate(u);
+
+        // 使用一个简单的工厂，让工厂来帮我们选择
+        OperateFactory.findOperation(&quot;add&quot;).operate(u);
+        OperateFactory.findOperation(&quot;edit&quot;).operate(u);
+    }
+</code></pre>
+<h2><a id="%E5%B7%A5%E5%8E%82%E6%96%B9%E6%B3%95" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>工厂方法</h2>
+<p>对<code>Operation</code>做了一些小的修改，增加了一个方法</p>
+<pre><code class="language-plain_text">public interface Operation {
+
+    void operate(User user);
+
+    Operation createDefault(String operationType);
+}
+</code></pre>
+<pre><code class="language-plain_text">public class AddOperate implements Operation {
+
+    @Override
+    public void operate(User user) {
+        System.out.println(&quot;save user【&quot; + user.getName() + &quot;】 to db&quot;);
+    }
+
+    @Override
+    public Operation createDefault(String operationType) {
+        return OperateFactory.findOperation(operationType);
+    }
+}
+</code></pre>
+<pre><code class="language-plain_text">public class EditOperate implements Operation {
+
+    @Override
+    public void operate(User user) {
+        System.out.println(&quot;edit user【&quot; + user.getName() + &quot;】, and save to db&quot;);
+    }
+
+    @Override
+    public Operation createDefault(String operationType) {
+        return OperateFactory.findOperation(operationType);
+    }
+}
+</code></pre>
+<p>工厂方法主要系是两个元素，产品(<code>Operation</code>)和创建者(<code>OperateFactory</code>)。<br />
+而工厂方法就是一个创建者这个类的一个方法而已，这个方法就是用来封装产品的创建。<br />
+和工厂模式的区别是，工厂模式的最大优点在于工厂类中包含了逻辑判断，根据(客户端)传入的参数动态实例化相关的类，那么对于客户端来说，他是不需要关心产品(<code>Operation</code>)的，他只需要关心传入的参数。而工厂模式这时把这一动作延后，接口定义了一个用来创建对象的接口，让子类决定实例化哪个类，工厂方法使一个类的实例化过程延迟到其子类。</p>
+<h2><a id="%E6%8A%BD%E8%B1%A1%E5%B7%A5%E5%8E%82" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>抽象工厂</h2>
+<p>抽象工厂，顾名思义，就是对工厂进行抽象。<br />
+工厂方法和工厂模式都是对产品抽象封装，通过一个工厂，生产多种产品。<br />
+抽象工厂就是通过不同的工厂生产不同的产品。<br />
+还是上面的例子，<code>OperateFactory</code>创建了新增和修改两种操作(产品)，此时有一个新的需求来了，之前用的数据库使mysql，现在想改成oracle，此时就对OperateFactory进行抽象。</p>
+<pre><code class="language-plain_text">package mode.factory.abstracs;
+
+import mode.factory.bean.User;
+import mode.factory.simple.Operation;
+
+public interface Factory {
+
+    void add(User user);
+
+    void edit(User user);
+
+    Operation createDefault(String operationType);
+}
+</code></pre>
+<p>接口申明了，不管是申明工厂，都需要有add和edit这两种产品的生产。不同的接口只需要实现这个接口，做自己的操作即可。同时不同的工厂还可以实现自己独有的产品的生产。</p>
+<pre><code class="language-plain_text">package mode.factory.abstracs;
+
+import mode.factory.bean.User;
+import mode.factory.simple.Operation;
+
+public class MysqlOperateFactory implements Factory {
+    @Override
+    public void add(User user) {
+        createDefault(&quot;add&quot;).operate(user);
+    }
+
+    @Override
+    public void edit(User user) {
+        createDefault(&quot;edit&quot;).operate(user);
+    }
+
+    @Override
+    public Operation createDefault(String operationType) {
+        return new MysqlOperate().findOperation(operationType);
+    }
+}
+</code></pre>
+<pre><code class="language-plain_text">package mode.factory.abstracs;
+
+import mode.factory.bean.User;
+import mode.factory.simple.Operation;
+
+public class OracleOperateFactory implements Factory {
+    @Override
+    public void add(User user) {
+        createDefault(&quot;add&quot;).operate(user);
+    }
+
+    @Override
+    public void edit(User user) {
+        createDefault(&quot;edit&quot;).operate(user);
+    }
+
+    @Override
+    public Operation createDefault(String operationType) {
+        return new OracleOperate().findOperation(operationType);
+    }
+}
+</code></pre>
+<p>这里也用了工厂方法的思想，抽象工厂的模式实现了工厂线的扩展。</p>
+<h2><a id="%E5%B0%8F%E7%BB%93" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>小结</h2>
+<ol>
+<li>工厂模式就是一个类，它用来根据客户端(参数)具体的实例化某个对象。</li>
+<li>工厂方法也是实例化对象，但是他把这个过程延迟到了子类，由子类决定具体实例化哪个对象。</li>
+<li>抽象工厂是对工厂的扩展。他是在工厂方法的上面做的进一步的抽象。</li>
+<li>工厂模式是用来生产产品的，不能增加产品；工厂方法是用来生产产品，同时也可以增加产品（实现接口，增加产品）；抽象工厂用来增加工厂的，他不能增加产品。</li>
+</ol>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[布隆过滤器和Guava的实现]]></title>
+    <link href="https://tuzhihao.com/16661412449464.html"/>
+    <updated>2022-10-19T09:00:44+08:00</updated>
+    <id>https://tuzhihao.com/16661412449464.html</id>
+    <content type="html"><![CDATA[
+<h2><a id="%E4%BB%8B%E7%BB%8D" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>介绍</h2>
+<p>布隆过滤器实际上是一个很长的二进制向量和一系列的随机映射函数。可用于检索一个元素是否在一个集合中。</p>
+<h2><a id="%E4%BD%BF%E7%94%A8%E5%9C%BA%E6%99%AF" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>使用场景</h2>
+<ul>
+<li>一个大型的爬虫网络中，判断某一个网址是否被访问过。</li>
+<li>大数据量的词语(句子)去重。</li>
+</ul>
+<h2><a id="%E5%8E%9F%E7%90%86" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>原理</h2>
+<p>布隆过滤器的核心实现是一个超大的位数组和几个哈希函数。假设数组的长度为m，哈希函数的个数为k。<br />
+<img src="https://pic.tuzhihao.com/upic/20210418/214747-djSEpK.png" alt="布隆过滤器原理图" /><br />
+如上图：假设集合里面有x,y,z，通过hash函数计算后的结果为a,b,c，那么w[a],w[b],w[c]都会表标记为1。假设现在有3个hash函数，如图3个不同颜色的线，分别计算出不同的结果，并标记为1。当判断某一个元素是否在一个集合的时候，就通过判断这三个hash的结果，如果都是1，说明该元素在这个集合中。如果有一个为0，说明该元素不在此集合中。因此，这也是存在误判的原因。<br />
+总的来说，bloom filter是以极低的的错误去换取空间和时间。</p>
+<h2><a id="%E4%BC%98%E7%82%B9" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>优点</h2>
+<ul>
+<li>有很好的空间和时间效率。</li>
+<li>不存在漏报的问题，就是说如果元素存在的话，那必定的到的是正确的结果，这个元素确实是存在的。</li>
+<li>不是用原始数据进行的判断，对于某些敏感的数据也是可以适用的。</li>
+</ul>
+<h2><a id="%E7%BC%BA%E7%82%B9" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>缺点</h2>
+<ul>
+<li>误报率随着元素的增加，误报（将不存在的元素判定为存在）也会越严重。</li>
+<li>不能删除已添加的元素，因为是多个hash函数的结果值对应一个元素。</li>
+</ul>
+<h2><a id="%E8%87%AA%E5%B7%B1%E5%AE%9E%E7%8E%B0%E4%B8%80%E4%B8%AA%E7%AE%80%E5%8D%95%E7%9A%84bloomfilter" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>自己实现一个简单的BloomFilter</h2>
+<pre><code class="language-java">public interface BloomFilter&lt;T&gt; {
+
+    /**
+     * 添加一个数据到bloomfilter内
+     *
+     * @param element 要添加的元素
+     */
+    void add(T element);
+
+    /**
+     * 判断该过滤器内是否存在元素
+     *
+     * @param element 被判断的元素
+     * @return 是否存在
+     */
+    boolean contains(T element);
+}
+
+
+import java.util.BitSet;
+
+public class SimpleBloomFilter implements BloomFilter&lt;String&gt; {
+
+
+    /**
+     * 存储的bit容量
+     */
+    private static final int DEFAULT_SIZE = Integer.MAX_VALUE;
+
+    /**
+     * 存储标志位的bits
+     */
+    private BitSet bits = new BitSet(DEFAULT_SIZE);
+
+    /**
+     * 不同hash函数的种子
+     */
+    private static final int[] seeds = new int[]{113, 213, 3111, 397, 611, 532};
+    /**
+     * hash函数的数组
+     */
+    private SimpleHash[] hashFunction = new SimpleHash[seeds.length];
+
+    public SimpleBloomFilter() {
+        // 默认初始化 hashFunction
+        for (int i = 0; i &lt; seeds.length; i++) {
+            hashFunction[i] = new SimpleHash(DEFAULT_SIZE, seeds[i]);
+        }
+    }
+
+    @Override
+    public void add(String element) {
+        for (SimpleHash function : hashFunction) {
+            final int hash = function.hash(element);
+            bits.set(hash, true);
+        }
+    }
+
+    @Override
+    public boolean contains(String element) {
+        for (SimpleHash function : hashFunction) {
+            if (!bits.get(function.hash(element))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static class SimpleHash {
+
+        private int cap;
+        private int seed;
+
+        private SimpleHash(int cap, int seed) {
+            this.cap = cap;
+            this.seed = seed;
+        }
+
+        /**
+         * 简单的写一个hash算法
+         */
+        public int hash(String value) {
+            int result = 0;
+            int len = value.length();
+            for (int i = 0; i &lt; len; i++) {
+                result = seed * result + value.charAt(i) + value.hashCode();
+            }
+            // 把值的范围控制在cap内
+            return (cap - 1) &amp; result;
+        }
+    }
+}
+
+</code></pre>
+<h2><a id="guava%E4%B8%AD%E7%9A%84bloomfilter" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>Guava中的BloomFilter</h2>
+<p>主要是两个类，<code>com.google.common.hash.BloomFilter</code>和<code>com.google.common.hash.BloomFilterStrategies</code>。</p>
+<pre><code class="language-java">  /** The bit set of the BloomFilter (not necessarily power of 2!) */
+  private final BitArray bits;
+
+  /** Number of hashes per element */
+  private final int numHashFunctions;
+
+  /** The funnel to translate Ts to bytes */
+  private final Funnel&lt;? super T&gt; funnel;
+
+  /**
+   * The strategy we employ to map an element T to {@code numHashFunctions} bit indexes.
+   */
+  private final Strategy strategy;
+</code></pre>
+<p>四个成员变量，<code>BitArray</code>是<code>BloomFilterStrategies</code>中的静态内部类。作用和上面的<code>BitSet</code>类似。有基本的get和set方法，同时提供了一些其他常用的方法。</p>
+<pre><code class="language-java">  static final class BitArray {
+    final long[] data;
+    long bitCount;
+
+    BitArray(long bits) {
+      this(new long[Ints.checkedCast(LongMath.divide(bits, 64, RoundingMode.CEILING))]);
+    }
+
+    // Used by serialization
+    BitArray(long[] data) {
+      checkArgument(data.length &gt; 0, &quot;data length is zero!&quot;);
+      this.data = data;
+      long bitCount = 0;
+      for (long value : data) {
+        bitCount += Long.bitCount(value);
+      }
+      this.bitCount = bitCount;
+    }
+
+    /** Returns true if the bit changed value. */
+    boolean set(long index) {
+      if (!get(index)) {
+        data[(int) (index &gt;&gt;&gt; 6)] |= (1L &lt;&lt; index);
+        bitCount++;
+        return true;
+      }
+      return false;
+    }
+
+    boolean get(long index) {
+      return (data[(int) (index &gt;&gt;&gt; 6)] &amp; (1L &lt;&lt; index)) != 0;
+    }
+
+    /** Number of bits */
+    long bitSize() {
+      return (long) data.length * Long.SIZE;
+    }
+
+    /** Number of set bits (1s) */
+    long bitCount() {
+      return bitCount;
+    }
+
+    BitArray copy() {
+      return new BitArray(data.clone());
+    }
+
+    /** Combines the two BitArrays using bitwise OR. */
+    void putAll(BitArray array) {
+      checkArgument(
+          data.length == array.data.length,
+          &quot;BitArrays must be of equal length (%s != %s)&quot;,
+          data.length,
+          array.data.length);
+      bitCount = 0;
+      for (int i = 0; i &lt; data.length; i++) {
+        data[i] |= array.data[i];
+        bitCount += Long.bitCount(data[i]);
+      }
+    }
+
+    @Override
+    public boolean equals(@Nullable Object o) {
+      if (o instanceof BitArray) {
+        BitArray bitArray = (BitArray) o;
+        return Arrays.equals(data, bitArray.data);
+      }
+      return false;
+    }
+
+    @Override
+    public int hashCode() {
+      return Arrays.hashCode(data);
+    }
+  }
+</code></pre>
+<p><code>numHashFunctions</code>是表示一个元素对应了几个hash函数，和上面<code>hashFunction.length</code>是一个意思。<br />
+<code>strategy</code>是把元素映射为hash值的策略，类似上面的<code>hashFunction</code>。<code>BloomFilter</code>定了了<code>Strategy</code>接口。<code>put</code>方法把<code>numHashFunctions</code>个通过计算后的值放入bitArray中。<code>mightContain</code>返回该过滤器是否可能含有元素T。<code>ordinal</code>就是枚举类的<code>ordinal()</code>。</p>
+<pre><code class="language-java">  interface Strategy extends java.io.Serializable {
+
+    /**
+     * Sets {@code numHashFunctions} bits of the given bit array, by hashing a user element.
+     *
+     * &lt;p&gt;Returns whether any bits changed as a result of this operation.
+     */
+    &lt;T&gt; boolean put(T object, Funnel&lt;? super T&gt; funnel, int numHashFunctions, BitArray bits);
+
+    /**
+     * Queries {@code numHashFunctions} bits of the given bit array, by hashing a user element;
+     * returns {@code true} if and only if all selected bits are set.
+     */
+    &lt;T&gt; boolean mightContain(
+        T object, Funnel&lt;? super T&gt; funnel, int numHashFunctions, BitArray bits);
+
+    /**
+     * Identifier used to encode this strategy, when marshalled as part of a BloomFilter. Only
+     * values in the [-128, 127] range are valid for the compact serial form. Non-negative values
+     * are reserved for enums defined in BloomFilterStrategies; negative values are reserved for any
+     * custom, stateful strategy we may define (e.g. any kind of strategy that would depend on user
+     * input).
+     */
+    int ordinal();
+  }
+</code></pre>
+<p>并在<code>BloomFilterStrategies</code>中给出了两个实现的枚举。</p>
+<pre><code class="language-java">  MURMUR128_MITZ_32() {
+    @Override
+    public &lt;T&gt; boolean put(
+        T object, Funnel&lt;? super T&gt; funnel, int numHashFunctions, BitArray bits) {
+      long bitSize = bits.bitSize();
+      long hash64 = Hashing.murmur3_128().hashObject(object, funnel).asLong();
+      int hash1 = (int) hash64;
+      int hash2 = (int) (hash64 &gt;&gt;&gt; 32);
+
+      boolean bitsChanged = false;
+      for (int i = 1; i &lt;= numHashFunctions; i++) {
+        int combinedHash = hash1 + (i * hash2);
+        // Flip all the bits if it's negative (guaranteed positive number)
+        if (combinedHash &lt; 0) {
+          combinedHash = ~combinedHash;
+        }
+        bitsChanged |= bits.set(combinedHash % bitSize);
+      }
+      return bitsChanged;
+    }
+
+    @Override
+    public &lt;T&gt; boolean mightContain(
+        T object, Funnel&lt;? super T&gt; funnel, int numHashFunctions, BitArray bits) {
+      long bitSize = bits.bitSize();
+      long hash64 = Hashing.murmur3_128().hashObject(object, funnel).asLong();
+      int hash1 = (int) hash64;
+      int hash2 = (int) (hash64 &gt;&gt;&gt; 32);
+
+      for (int i = 1; i &lt;= numHashFunctions; i++) {
+        int combinedHash = hash1 + (i * hash2);
+        // Flip all the bits if it's negative (guaranteed positive number)
+        if (combinedHash &lt; 0) {
+          combinedHash = ~combinedHash;
+        }
+        if (!bits.get(combinedHash % bitSize)) {
+          return false;
+        }
+      }
+      return true;
+    }
+  },
+  /**
+   * This strategy uses all 128 bits of {@link Hashing#murmur3_128} when hashing. It looks different
+   * than the implementation in MURMUR128_MITZ_32 because we're avoiding the multiplication in the
+   * loop and doing a (much simpler) += hash2. We're also changing the index to a positive number by
+   * AND'ing with Long.MAX_VALUE instead of flipping the bits.
+   */
+  MURMUR128_MITZ_64() {
+    @Override
+    public &lt;T&gt; boolean put(
+        T object, Funnel&lt;? super T&gt; funnel, int numHashFunctions, BitArray bits) {
+      long bitSize = bits.bitSize();
+      byte[] bytes = Hashing.murmur3_128().hashObject(object, funnel).getBytesInternal();
+      long hash1 = lowerEight(bytes);
+      long hash2 = upperEight(bytes);
+
+      boolean bitsChanged = false;
+      long combinedHash = hash1;
+      for (int i = 0; i &lt; numHashFunctions; i++) {
+        // Make the combined hash positive and indexable
+        bitsChanged |= bits.set((combinedHash &amp; Long.MAX_VALUE) % bitSize);
+        combinedHash += hash2;
+      }
+      return bitsChanged;
+    }
+
+    @Override
+    public &lt;T&gt; boolean mightContain(
+        T object, Funnel&lt;? super T&gt; funnel, int numHashFunctions, BitArray bits) {
+      long bitSize = bits.bitSize();
+      byte[] bytes = Hashing.murmur3_128().hashObject(object, funnel).getBytesInternal();
+      long hash1 = lowerEight(bytes);
+      long hash2 = upperEight(bytes);
+
+      long combinedHash = hash1;
+      for (int i = 0; i &lt; numHashFunctions; i++) {
+        // Make the combined hash positive and indexable
+        if (!bits.get((combinedHash &amp; Long.MAX_VALUE) % bitSize)) {
+          return false;
+        }
+        combinedHash += hash2;
+      }
+      return true;
+    }
+
+    private /* static */ long lowerEight(byte[] bytes) {
+      return Longs.fromBytes(
+          bytes[7], bytes[6], bytes[5], bytes[4], bytes[3], bytes[2], bytes[1], bytes[0]);
+    }
+
+    private /* static */ long upperEight(byte[] bytes) {
+      return Longs.fromBytes(
+          bytes[15], bytes[14], bytes[13], bytes[12], bytes[11], bytes[10], bytes[9], bytes[8]);
+    }
+  };
+</code></pre>
+<p>Guava就是选取了这两个hash算法中的一个，创建一个BloomFilter可以指定其中的一个算法，具体的算法逻辑可以参看<a href="http://www.cyhone.com/2017/02/07/Introduce-to-BloomFilter/">解读BloomFilter算法</a><br />
+使用实例：</p>
+<pre><code class="language-java">    private static void bloomFilter() throws Exception {
+        final BloomFilter&lt;String&gt; dealIdBloomFilter = BloomFilter.create(new Funnel&lt;String&gt;() {
+            @Override
+            public void funnel(String from, PrimitiveSink into) {
+                into.putString(from, Charsets.UTF_8);
+            }
+        }, 3000000, 0.0000001d);
+        BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(new File(&quot;C:\\Users\\Methol\\Desktop\\jiaokao-word.txt&quot;)), &quot;utf-8&quot;));
+        String line;
+        int i = 0;
+        StringBuilder sb = new StringBuilder();
+        while ((line = br.readLine()) != null) {
+            if (!dealIdBloomFilter.mightContain(line)) {
+                dealIdBloomFilter.put(line);
+                sb.append(line).append(&quot;\n&quot;);
+                i++;
+            }
+            if (i % 1000 == 0) {
+                FileUtils.write(new File(&quot;C:\\Users\\Methol\\Desktop\\bloomFilterDistinct.txt&quot;),
+                        sb.toString(), Charsets.UTF_8, true);
+                sb = new StringBuilder();
+            }
+        }
+        FileUtils.write(new File(&quot;C:\\Users\\Methol\\Desktop\\bloomFilterDistinct.txt&quot;),
+                sb.toString(), Charsets.UTF_8, true);
+    }
+</code></pre>
+<h2><a id="%E6%89%A9%E5%B1%95" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>扩展</h2>
+<p>同样对大数据量的内容进行滤重，当时还想到了用spark，不过这个真的有点大炮打小鸟的感觉，用起来代码是非常简单，但是单单就滤重这件事来说，还是BloomFilter好用。<br />
+800w行的句子，滤重后有200w，spark的用时比BloomFilter略多。<br />
+贴一段spark的代码：</p>
+<pre><code class="language-java">    private static void spark() {
+        System.setProperty(&quot;hadoop.home.dir&quot;, &quot;D:\\server\\hadoop-common-2.2.0\\&quot;);
+        SparkConf conf = new SparkConf().setAppName(&quot;Text String Distinct&quot;).setMaster(&quot;local&quot;).set(&quot;spark.executor.memory&quot;, &quot;1g&quot;);
+        JavaSparkContext sc = new JavaSparkContext(conf);
+        JavaRDD&lt;String&gt; textFile = sc.textFile(&quot;C:\\Users\\Methol\\Desktop\\jiaokao-word.txt&quot;);
+        final JavaRDD&lt;String&gt; distinct = textFile.distinct();
+        final long count = distinct.count();
+        System.out.println(count);
+        distinct.coalesce(1).saveAsTextFile(&quot;C:\\Users\\Methol\\Desktop\\distinct&quot;);
+    }
+</code></pre>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[MySql 空间索引]]></title>
+    <link href="https://tuzhihao.com/16661412450896.html"/>
+    <updated>2022-10-19T09:00:45+08:00</updated>
+    <id>https://tuzhihao.com/16661412450896.html</id>
+    <content type="html"><![CDATA[
+<p>Mysql5.7版本之后支持空间索引，试用下实现离我最近的功能。<br />
+感觉查询速度还是没有es快，但是小数据量也是一个可用的办法。</p>
+<pre><code class="language-sql">create database geo_test default charset = utf8mb4;
+use geo_test;
+
+create table t_dealer
+(
+    id bigint not null auto_increment primary key,
+    dealer_name varchar(255) not null,
+    city_code varchar(45) null,
+    phone varchar(32) null,
+    lat decimal(10,7) null,
+    lon decimal(10,7) null,
+    create_time datetime null
+)default charset = utf8mb4;
+create index idx_name on t_dealer (dealer_name);
+comment on table t_dealer is '基本信息表';
+comment on column dealer_name is '@cname:名称';
+comment on column address is '@cname:地址';
+comment on column city_code is '@cname:城市编码';
+comment on column phone is '@cname:电话';
+comment on column lat is '@cname:纬度';
+comment on column lon is '@cname:经度';
+comment on column create_time is '@cname:创建时间';
+
+# 添加geo点
+alter table t_dealer
+add pnt POINT NULL comment '经纬度的geo点';
+# 从经纬度中补全数据
+update t_dealer set pnt = point(lat,lon);
+# 改为not null之后才能添加索引
+alter table t_dealer MODIFY pnt POINT not null;
+# 添加索引，这种索引要求字段not null
+ALTER TABLE t_dealer ADD SPATIAL INDEX spatIdx(pnt);
+
+ 
+# 几种空间对象比较方法 
+SET @g1 = GEOMFROMTEXT('Polygon((30.7108682140 114.0961681600,30.6890070000 114.5951950000,
+30.2507470000 114.5767980000,30.2507470000 114.1030670000,30.7108682140 114.0961681600))');
+SET @g2 = pointfromtext('Point(30.476421 114.403866)');
+ 
+# 注意：比较的都是外包络几何类型对象 
+# 包含
+select * from t_dealer where MBRCONTAINS(@g1,pnt);
+SELECT MBRCONTAINS(@g1,@g2), MBRCONTAINS(@g2,@g1), MBRCONTAINS(@g1,@g1);
+# 被包含
+select * from t_dealer where MBRWITHIN(pnt,@g1);
+SELECT MBRWITHIN(@g2,@g1),MBRWITHIN(@g1,@g2);
+# 不相交 
+SELECT MBRDISJOINT(@g1,@g2);
+# 相等 
+SELECT MBREQUAL(@g1,@g2);
+# 相交 
+SELECT MBRINTERSECTS(@g1,@g2);
+# 重叠 
+SELECT MBROVERLAPS(@g1,@g2);
+# 相切 
+SELECT MBRTOUCHES(@g1,@g2);
+# 距离 单位 m
+select id,dealer_name,city_code,phone,lat,lon,
+  GLength(LineStringFromWKB(linestring(pnt,pointfromtext('Point(30.476421 114.403866)'))))*100*1000 as distance
+from t_dealer
+order by distance asc;
+
+
+</code></pre>
+<p><img src="https://pic.tuzhihao.com/upic/20210418/214849-WBvCWV.png" alt="离我最近查询实例" /></p>
+<p>数据下载:<br />
+<a href="media/16661412450896/dealer_insert.zip">dealer_insert.zip</a></p>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[ubuntu部分软件不能使用中文输入法]]></title>
+    <link href="https://tuzhihao.com/16661412450247.html"/>
+    <updated>2022-10-19T09:00:45+08:00</updated>
+    <id>https://tuzhihao.com/16661412450247.html</id>
+    <content type="html"><![CDATA[
+<p>ubuntu安装了fcitx之后，安装了搜狗输入法，但是还是不能在wine下的QQ下输入中文，包括Intellij IDEA有时候也不行。<br />
+看网上的教程，好像是因为有ibus的存在，而且默认为ibus，所以才不行的，有一个简单的解决办法，就是在这些软件的启动脚本前加一行命令，就可以解决了。<br />
+例如：<br />
+Intellij IDEA，启动脚本是 <code>/home/methol/software/idea-IU-162.1121.32/bin/idea.sh</code>，使用vim编辑，在下面这段文字前加上这段话。</p>
+<pre><code class="language-plain_text"># ---------------------------------------------------------------------
+# Run the IDE.
+# ---------------------------------------------------------------------
+</code></pre>
+<p>加上：</p>
+<pre><code class="language-plain_text">XMODIFIERS=&quot;@im=fcitx&quot;
+export XMODIFIERS
+</code></pre>
+<p>如图：<br />
+<img src="https://pic.tuzhihao.com/upic/20210418/214922-q6TJTM.png" alt="IDEA脚本示例" /></p>
+<p>Wine QQ的启动脚本是<code>/opt/longene/qq/qq.sh</code><br />
+如图：<br />
+<img src="https://pic.tuzhihao.com/upic/20210418/214922-q6TJTM.png" alt="Wine QQ 脚本示例" /></p>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[web上传文件夹]]></title>
+    <link href="https://tuzhihao.com/16661412450064.html"/>
+    <updated>2022-10-19T09:00:45+08:00</updated>
+    <id>https://tuzhihao.com/16661412450064.html</id>
+    <content type="html"><![CDATA[
+<p>使用html5的api来上传文件夹，只有chrome支持。</p>
+<pre><code class="language-html">&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;head&gt;
+  &lt;meta charset=&quot;UTF-8&quot;&gt;
+  &lt;title&gt;Title&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;input id=&quot;upload&quot; type='file' name=&quot;file&quot; webkitdirectory&gt;
+&lt;button id=&quot;button&quot;&gt;按钮&lt;/button&gt;
+&lt;/body&gt;
+&lt;script src=&quot;//libs.useso.com/js/jquery/1.11.1/jquery.min.js&quot; type=&quot;text/javascript&quot;&gt;&lt;/script&gt;
+&lt;script type=&quot;text/javascript&quot;&gt;
+  function Map() {
+    /**
+     * 结构
+     * @param key
+     * @param value
+     */
+    function Struct(key, value) {
+      this.key = key;
+      this.value = value;
+    }
+
+    /**
+     * 数据存放数组
+     */
+    this.arr = [];
+    /**
+     * 增加数据
+     * @param key {String}
+     * @param value {Object}
+     */
+    this.put = function (key, value) {
+      for (var i = 0; i &lt; this.arr.length; i++) {
+        if (this.arr[i].key === key) {
+          this.arr[i].value = value;
+          return;
+        }
+      }
+      this.arr[this.arr.length] = new Struct(key, value);
+    };
+    /**
+     * 通过key获取数据
+     * @param key {String}
+     * @returns {Object}
+     */
+    this.get = function (key) {
+      for (var i = 0; i &lt; this.arr.length; i++) {
+        if (this.arr[i].key === key) {
+          return this.arr[i].value;
+        }
+      }
+      return null;
+    };
+    /**
+     * 删除数据
+     * @param key{String}
+     */
+    this.remove = function (key) {
+      var v;
+      for (var i = 0; i &lt; this.arr.length; i++) {
+        v = this.arr[i];
+        if (v.key === key) {
+          this.arr.splice(i, 1);
+          return;
+        }
+      }
+    };
+    /**
+     * 是否存在key
+     * @param key {String}
+     * @returns {boolean}
+     */
+    this.containsKey = function (key) {
+      var v;
+      for (var i = 0; i &lt; this.arr.length; i++) {
+        v = this.arr[i];
+        if (v.key === key) {
+          return true;
+        }
+      }
+      return false;
+    };
+    /**
+     * 获取map数据量
+     * @returns {Number}
+     */
+    this.size = function () {
+      return this.arr.length;
+    };
+    /**
+     * 判断Map是否为空
+     * @returns {boolean}
+     */
+    this.isEmpty = function () {
+      return this.arr.length &lt;= 0;
+    };
+    /**
+     * 全部清空
+     */
+    this.removeAll = function () {
+      this.arr = [];
+    };
+  }
+&lt;/script&gt;
+&lt;script type=&quot;text/javascript&quot;&gt;
+  var host = &quot;http://example.com&quot;;  // 远程服务器地址
+  var map = new Map();  // 用来存放文件夹路径和id的键值对
+  var files = [];
+
+  $(&quot;#upload&quot;).change(function () {
+    files = this.files;
+    console.log(files);
+  });
+
+  $(&quot;#button&quot;).on(&quot;click&quot;, function () {
+    for (var i = 0; i &lt; files.length; i++) {
+      var file = files[i];
+      console.log(file);
+      var path = getFolder(file.webkitRelativePath);
+      var folderId = getFolderIdFromMap(path);
+      // 创建文件
+      uploadResource(file, folderId, 10001);
+    }
+  });
+
+  function uploadResource(file, folderId, projectId) {
+    var filepath = null;
+    var formData = new FormData();
+    formData.append(&quot;text&quot;, file);
+    $.ajax({
+      url: host + &quot;/sys/upload/uploadProjectResource&quot;,
+      type: &quot;POST&quot;,
+      data: formData,
+      xhrFields: {
+        withCredentials: true // 确保请求会携带上Cookie
+      },
+      enctype: 'multipart/form-data',
+      processData: false,  // tell jQuery not to process the data
+      contentType: false,
+      complete: function (respResult) {
+        if (respResult.status == 200) {
+          filepath = respResult.responseText;
+          $.ajax({
+            url: host + &quot;/project/resource/create&quot;,
+            type: &quot;post&quot;,
+            dataType: &quot;json&quot;,
+            xhrFields: {
+              withCredentials: true
+            },
+            beforeSend: function (xhr) {
+              xhr.setRequestHeader(&quot;Content-Type&quot;, &quot;application/json&quot;);
+            },
+            data: JSON.stringify({
+              &quot;projectId&quot;: projectId,
+              &quot;resourceContent&quot;: filepath,
+              &quot;resourceName&quot;: file.name,
+              &quot;folderId&quot;: folderId,
+              &quot;type&quot;: 20  // 当前是文件资源
+            }),
+            success: function (data) {
+              console.log(data);
+            },
+            error: function (respResult) {
+            }
+          });
+        } else {
+        }
+      }
+    });
+  }
+
+  function getFolderIdFromMap(path) {
+    var folderId = map.get(path);
+    var folderName = path.substring(path.lastIndexOf(&quot;/&quot;) + 1, path.length);
+    var localFolder = 0;
+    if (path.indexOf(&quot;/&quot;) &gt; 0) {
+      // 说明当前不是最高级目录，是子目录
+      localFolder = getFolderIdFromMap(path.substring(0, path.lastIndexOf(&quot;/&quot;)));
+    }
+    if (folderId == null) {
+      $.ajax({
+        async: false,
+        url: host + &quot;/project/resource/create/folder&quot;,
+        type: &quot;post&quot;,
+        dataType: &quot;json&quot;,
+        xhrFields: {
+          withCredentials: true
+        },
+        beforeSend: function (xhr) {
+          xhr.setRequestHeader(&quot;Content-Type&quot;, &quot;application/json&quot;);
+        },
+        data: JSON.stringify({
+          &quot;projectId&quot;: 10001,
+          &quot;folderName&quot;: folderName,
+          &quot;folderId&quot;: localFolder
+        }),
+        success: function (data) {
+          console.log(data);
+          folderId = data.id;
+          map.put(path, folderId);
+        },
+        error: function (respResult) {
+        }
+      });
+    }
+    return folderId;
+  }
+
+  function getFolder(path) {
+    console.log(path);
+    var index = path.lastIndexOf(&quot;/&quot;);
+    return path.substring(0, index);
+  }
+&lt;/script&gt;
+
+&lt;/html&gt;
+</code></pre>
+<p>服务器采用java，用了接受文件和创建文件夹。<br />
+文件夹也是虚拟的，采用在当前记录增加parentId来存储父节点，实现树的结构。<br />
+表结构：</p>
+<pre><code class="language-sql">CREATE TABLE t_project_resource_folder
+(
+    id BIGINT(20) PRIMARY KEY NOT NULL COMMENT '主键',
+    folder_name VARCHAR(255) DEFAULT '' COMMENT '文件夹名',
+    parent_id BIGINT(20) DEFAULT '0' NOT NULL COMMENT '父文件夹id,0表示顶级目录'
+)
+CREATE TABLE t_project_resource
+(
+    id BIGINT(20) PRIMARY KEY NOT NULL COMMENT '主键',
+    resource_name VARCHAR(255) NOT NULL COMMENT '资源名',
+    resource_content VARCHAR(255) COMMENT '资源内容,通常是放在oss文件的url',
+    resource_folder_id BIGINT(20) DEFAULT '0' COMMENT '资源文件夹ID,0表示文件处于顶级目录'
+)
+</code></pre>
+<p>服务器端接口的代码：</p>
+<pre><code class="language-java">@RequestMapping(value = &quot;&quot;, method = RequestMethod.POST)
+public ResponseEntity&lt;String&gt; upload(MultipartFile text) throws Exception {
+  String fileName = text.getOriginalFilename();
+  int lastDot = fileName.lastIndexOf(&quot;.&quot;);
+  String type = fileName.substring(lastDot + 1);
+  String sb = &quot;uploads&quot; + &quot;/&quot; + UUID.randomUUID().toString() + &quot;.&quot; + type;
+  String uploadPath = storageProvider.upload(sb, text);  // 调用service接口把文件存到oss中，返回文件在oss的地址
+  return ResponseEntity.ok(uploadPath);
+}
+</code></pre>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[shadowsocks用户连接数查看脚本]]></title>
+    <link href="https://tuzhihao.com/16661412450464.html"/>
+    <updated>2022-10-19T09:00:45+08:00</updated>
+    <id>https://tuzhihao.com/16661412450464.html</id>
+    <content type="html"><![CDATA[
+<pre><code class="language-shell">#!/bin/bash
+cd ~
+echo  &gt;shadowsocks_clients.txt
+for ((i=9101; i&lt;9105; i++)); do
+echo ${i}: &gt;&gt;shadowsocks_clients.txt
+lsof -i -n -P | egrep -c &quot;:${i}.+ESTABLISHED&quot;  &gt;&gt;shadowsocks_clients.txt
+lsof -i -n -P | egrep &quot;:${i}.+ESTABLISHED&quot;  &gt;&gt;shadowsocks_clients.txt
+echo  &gt;&gt;shadowsocks_clients.txt
+echo  &gt;&gt;shadowsocks_clients.txt
+done
+
+cat shadowsocks_clients.txt
+</code></pre>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[单例模式]]></title>
+    <link href="https://tuzhihao.com/16661412449730.html"/>
+    <updated>2022-10-19T09:00:44+08:00</updated>
+    <id>https://tuzhihao.com/16661412449730.html</id>
+    <content type="html"><![CDATA[
+<h3><a id="%E6%87%92%E6%B1%89%E5%BC%8F%EF%BC%8C%E7%BA%BF%E7%A8%8B%E4%B8%8D%E5%AE%89%E5%85%A8" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a><del>懒汉式，线程不安全</del></h3>
+<p>当被问到要实现一个单例模式时，很多人的第一反应是写出如下的代码，包括教科书上也是这样教我们的。</p>
+<pre><code class="language-java">public class Singleton {
+    private static Singleton instance;
+    private Singleton (){}
+
+    public static Singleton getInstance() {
+     if (instance == null) {
+         instance = new Singleton();
+     }
+     return instance;
+    }
+}
+</code></pre>
+<p>这段代码简单明了，而且使用了懒加载模式，但是却存在致命的问题。当有多个线程并行调用 getInstance() 的时候，就会创建多个实例。也就是说在多线程下不能正常工作。</p>
+<h3><a id="%E6%87%92%E6%B1%89%E5%BC%8F%EF%BC%8C%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>懒汉式，线程安全</h3>
+<p>为了解决上面的问题，最简单的方法是将整个 getInstance() 方法设为同步（==synchronized==）。</p>
+<pre><code class="language-java">public static synchronized Singleton getInstance() {
+    if (instance == null) {
+        instance = new Singleton();
+    }
+    return instance;
+}
+</code></pre>
+<p>虽然做到了线程安全，并且解决了多实例的问题，但是它并不高效。因为在任何时候只能有一个线程调用 getInstance() 方法。但是同步操作只需要在第一次调用时才被需要，即第一次创建单例实例对象时。这就引出了双重检验锁。</p>
+<h3><a id="%E5%8F%8C%E9%87%8D%E6%A3%80%E9%AA%8C%E9%94%81" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>双重检验锁</h3>
+<p>双重检验锁模式（double checked locking pattern），是一种使用同步块加锁的方法。程序员称其为双重检查锁，因为会有两次检查<code>instance == null</code>，一次是在同步块外，一次是在同步块内。为什么在同步块内还要再检验一次？因为可能会有多个线程一起进入同步块外的 if，如果在同步块内不进行二次检验的话就会生成多个实例了。</p>
+<pre><code class="language-java">public static Singleton getSingleton() {
+    if (instance == null) {   //Single Checked
+        synchronized (Singleton.class) {
+            if (instance == null) {   //Double Checked
+                instance = new Singleton();
+            }
+        }
+    }
+    return instance ;
+}
+</code></pre>
+<p>这段代码看起来很完美，很可惜，它是有问题。主要在于<code>instance = new Singleton()</code>这句，这并非是一个原子操作，事实上在 JVM 中这句话大概做了下面 3 件事情。</p>
+<ul>
+<li>1.给 instance 分配内存</li>
+<li>2.调用 Singleton 的构造函数来初始化成员变量</li>
+<li>3.将instance对象指向分配的内存空间（执行完这步 instance 就为非 null 了）</li>
+</ul>
+<p>但是在 JVM 的即时编译器中存在指令重排序的优化。也就是说上面的第二步和第三步的顺序是不能保证的，最终的执行顺序可能是 1-2-3 也可能是 1-3-2。如果是后者，则在 3 执行完毕、2 未执行之前，被线程二抢占了，这时 instance 已经是非 null 了（但却没有初始化），所以线程二会直接返回 instance，然后使用，然后顺理成章地报错。</p>
+<p>我们只需要将 instance 变量声明成 volatile 就可以了。</p>
+<pre><code class="language-java">public class Singleton {
+    private volatile static Singleton instance; //声明成 volatile
+    private Singleton (){}
+
+    public static Singleton getSingleton() {
+        if (instance == null) {                         
+            synchronized (Singleton.class) {
+                if (instance == null) {       
+                    instance = new Singleton();
+                }
+            }
+        }
+        return instance;
+    }
+
+}
+</code></pre>
+<p>有些人认为使用 volatile 的原因是可见性，也就是可以保证线程在本地不会存有 instance 的副本，每次都是去主内存中读取。但其实是不对的。使用 volatile 的主要原因是其另一个特性：禁止指令重排序优化。也就是说，在 volatile 变量的赋值操作后面会有一个内存屏障（生成的汇编代码上），读操作不会被重排序到内存屏障之前。比如上面的例子，取操作必须在执行完 1-2-3 之后或者 1-3-2 之后，不存在执行到 1-3 然后取到值的情况。从「先行发生原则」的角度理解的话，就是对于一个 volatile 变量的写操作都先行发生于后面对这个变量的读操作（这里的“后面”是时间上的先后顺序）。</p>
+<p>但是特别注意在 Java 5 以前的版本使用了 volatile 的双检锁还是有问题的。其原因是 Java 5 以前的 JMM （Java 内存模型）是存在缺陷的，即时将变量声明成 volatile 也不能完全避免重排序，主要是 volatile 变量前后的代码仍然存在重排序问题。这个 volatile 屏蔽重排序的问题在 Java 5 中才得以修复，所以在这之后才可以放心使用 volatile。</p>
+<p>相信你不会喜欢这种复杂又隐含问题的方式，当然我们有更好的实现线程安全的单例模式的办法。</p>
+<h3><a id="%E9%A5%BF%E6%B1%89%E5%BC%8Fstatic-final-field" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>饿汉式 static final field</h3>
+<p>这种方法非常简单，因为单例的实例被声明成 static 和 final 变量了，在第一次加载类到内存中时就会初始化，所以创建实例本身是线程安全的。</p>
+<pre><code class="language-java">public class Singleton {  
+    private static class SingletonHolder {  
+        private static final Singleton INSTANCE = new Singleton();  
+    }  
+    private Singleton (){}  
+    public static final Singleton getInstance() {  
+        return SingletonHolder.INSTANCE;
+    }  
+}
+</code></pre>
+<p>这种写法仍然使用JVM本身机制保证了线程安全问题；由于 SingletonHolder 是私有的，除了 getInstance() 之外没有办法访问它，因此它是懒汉式的；同时读取实例的时候不会进行同步，没有性能缺陷；也不依赖 JDK 版本。</p>
+<h3><a id="%E6%9E%9A%E4%B8%BEenum" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>枚举 Enum</h3>
+<p>用枚举写单例实在太简单了！这也是它最大的优点。下面这段代码就是声明枚举实例的通常做法。</p>
+<pre><code class="language-java">public enum EasySingleton{
+    INSTANCE;
+}
+</code></pre>
+<p>我们可以通过EasySingleton.INSTANCE来访问实例，这比调用getInstance()方法简单多了。创建枚举默认就是线程安全的，所以不需要担心double checked locking，而且还能防止反序列化导致重新创建新的对象。但是还是很少看到有人这样写，可能是因为不太熟悉吧。</p>
+<h3><a id="%E6%80%BB%E7%BB%93" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>总结</h3>
+<p>一般来说，单例模式有五种写法：懒汉、饿汉、双重检验锁、静态内部类、枚举。上述所说都是线程安全的实现，文章开头给出的第一种方法不算正确的写法。<br />
+就我个人而言，一般情况下直接使用==<strong>饿汉式</strong>==就好了，如果明确要求要懒加载（lazy initialization）会倾向于使用==<strong>静态内部类</strong>==，如果涉及到反序列化创建对象时会试着使用==<strong>枚举</strong>==的方式来实现单例。</p>
+<h3><a id="read-more" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>Read More</h3>
+<blockquote>
+<ul>
+<li><a href="http://javarevisited.blogspot.sg/2014/05/double-checked-locking-on-singleton-in-java.html">Double Checked Locking on Singleton Class in Java</a></li>
+</ul>
+</blockquote>
+<blockquote>
+<ul>
+<li><a href="http://javarevisited.blogspot.sg/2012/07/why-enum-singleton-are-better-in-java.html">Why Enum Singleton are better in Java</a></li>
+</ul>
+</blockquote>
+<blockquote>
+<ul>
+<li><a href="http://javarevisited.blogspot.com/2012/12/how-to-create-thread-safe-singleton-in-java-example.html">How to create thread safe Singleton in Java</a></li>
+</ul>
+</blockquote>
+<blockquote>
+<ul>
+<li><a href="http://javarevisited.blogspot.com/2011/03/10-interview-questions-on-singleton.html">10 Singleton Pattern Interview questions in Java</a></li>
+</ul>
+</blockquote>
+<p>转载：</p>
+<blockquote>
+<p><a href="http://wuchong.me/blog/2014/08/28/how-to-correctly-write-singleton-pattern/">如何正确地写出单例模式 | Jark's Blog</a></p>
+</blockquote>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[k-means聚类算法]]></title>
+    <link href="https://tuzhihao.com/16661412450535.html"/>
+    <updated>2022-10-19T09:00:45+08:00</updated>
+    <id>https://tuzhihao.com/16661412450535.html</id>
+    <content type="html"><![CDATA[
+<p>聚类分析算法的一个java代码，我的项目中应用了这个代码。</p>
+<pre><code class="language-java">package com.methol.util;
+
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.ArrayList;
+
+//K-means算法实现
+
+public class KMeans {
+    // 聚类的数目
+    public final static int ClassCount = 4;
+    // 样本数目（测试集）
+    public static int InstanceNumber = 100;
+    // 样本属性数目（测试）
+    public final static int FieldCount = 1;
+
+    // 设置异常点阈值参数（每一类初始的最小数目为InstanceNumber/ClassCount^t）
+    public final static double t = 2.0;
+    // 存放数据的矩阵
+    public static double[][] data;
+
+    // 每个类的均值中心
+    public static double[][] classData;
+
+    // 噪声集合索引
+    public static ArrayList&lt;Integer&gt; noises;
+
+    // 存放每次变换结果的矩阵
+    public static ArrayList&lt;ArrayList&lt;Integer&gt;&gt; result;
+
+    //存放每个属性的最大值
+    public static double[] classmax = new double[FieldCount];
+
+    // 构造函数，初始化
+    public KMeans() {
+        // 最后一位用来储存结果
+        data = new double[InstanceNumber][FieldCount + 1];
+        classData = new double[ClassCount][FieldCount];
+        result = new ArrayList&lt;ArrayList&lt;Integer&gt;&gt;(ClassCount);
+        noises = new ArrayList&lt;Integer&gt;();
+    }
+
+    /**
+     * 主函数入口 测试集的文件名称为“测试集.data”,其中有1000*57大小的数据 每一行为一个样本，有57个属性 主要分为两个步骤 1.读取数据
+     * 2.进行聚类 最后统计运行时间和消耗的内存
+     */
+    public static void main(String[] args) {
+        // TODO Auto-generated method stub
+        long startTime = System.currentTimeMillis();
+        KMeans cluster = new KMeans();
+        cluster.InstanceNumber = 100;
+        // 读取数据
+        //cluster.readData(&quot;D:/test.txt&quot;);
+
+        //随机产生数据
+        for (int i = 0; i &lt; InstanceNumber; i++) {
+            data[i][0] = (double) Math.random();
+            data[i][0] = data[i][0] * 100;
+            System.out.println(data[i][0]);
+        }
+
+        // 聚类过程
+        cluster.cluster();
+        // 输出结果
+        cluster.printResult(&quot;clusterResult.data&quot;);
+        long endTime = System.currentTimeMillis();
+        System.out.println(&quot;Total Time:&quot; + (endTime - startTime) + &quot;ms&quot;);
+        System.out.println(&quot;Memory Consuming:&quot;
+                + (double) (Runtime.getRuntime().totalMemory() - Runtime
+                .getRuntime().freeMemory()) / 1000000 + &quot;MB&quot;);
+
+        System.out.println(&quot;聚类中心：&quot;);
+        for (int i = 0; i &lt; ClassCount; i++) {
+            System.out.println(classData[i][0] * classmax[0]);
+
+            //data[i][0] = (double) (Math.random()*100);
+        }
+
+        for (ArrayList&lt;Integer&gt; i : result) {
+            for (Integer integer : i) {
+                System.out.print(integer + &quot;\t&quot;);
+            }
+            System.out.println(&quot;数目:&quot; + i.size());
+        }
+
+        for (ArrayList&lt;Integer&gt; i : result) {
+            for (Integer integer : i) {
+                System.out.print(data[integer][0] + &quot;\t&quot;);
+            }
+            System.out.println(&quot;数目:&quot; + i.size());
+        }
+
+        System.out.println(&quot;noises:&quot;);
+        for (Integer noise : noises) {
+            System.out.println(noise);
+        }
+    }
+
+    /**
+     * 读取测试集的数据
+     *
+     * @param trainingFileName 测试集文件名
+     */
+    public void readData(String trainingFileName) {
+        try {
+            FileReader fr = new FileReader(trainingFileName);
+            BufferedReader br = new BufferedReader(fr);
+            // 存放数据的临时变量
+            String lineData = null;
+            String[] splitData = null;
+            int line = 0;
+            // 按行读取
+            while (br.ready()) {
+                // 得到原始的字符串
+                lineData = br.readLine();
+                splitData = lineData.split(&quot;,&quot;);
+                // 转化为数据
+                // System.out.println(&quot;length:&quot;+splitData.length);
+                if (splitData.length &gt; 1) {
+                    for (int i = 0; i &lt; splitData.length; i++) {
+                        // System.out.println(splitData[i]);
+                        // System.out.println(splitData[i].getClass());
+                        if (splitData[i].startsWith(&quot;Iris-setosa&quot;)) {
+                            data[line][i] = (double) 1.0;
+                        } else if (splitData[i].startsWith(&quot;Iris-versicolor&quot;)) {
+                            data[line][i] = (double) 2.0;
+                        } else if (splitData[i].startsWith(&quot;Iris-virginica&quot;)) {
+                            data[line][i] = (double) 3.0;
+                        } else { // 将数据截取之后放进数组
+                            data[line][i] = Double.parseDouble(splitData[i]);
+                        }
+                    }
+                    line++;
+                }
+            }
+            System.out.println(line);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * 聚类过程，主要分为两步 1.循环找初始点 2.不断调整直到分类不再发生变化
+     */
+    public void cluster() {
+        // 数据标准化处理
+        normalize();
+        // 标记是否需要重新找初始点
+        boolean needUpdataInitials = true;
+
+        // 找初始点的迭代次数
+        int times = 1;
+        // 找初始点
+        while (needUpdataInitials) {
+            needUpdataInitials = false;
+            result.clear();
+            //System.out.println(&quot;Find Initials Iteration&quot; + (times++) + &quot;time(s)&quot;);
+
+            // 一次找初始点的尝试和根据初始点的分类
+            findInitials();
+            firstClassify();
+
+            // 如果某个分类的数目小于特定的阈值，则认为这个分类中的所有样本都是噪声点
+            // 需要重新找初始点
+            for (int i = 0; i &lt; result.size(); i++) {
+                if (result.get(i).size() &lt; InstanceNumber
+                        / Math.pow(ClassCount, t)) {
+                    needUpdataInitials = true;
+                    noises.addAll(result.get(i));
+                }
+            }
+        }
+
+        // 找到合适的初始点后
+        // 不断的调整均值中心和分类，直到不再发生任何变化
+        Adjust();
+
+//        //把结果存入数组answer中
+//        for (int i = 0; i &lt; ClassCount; i++) {
+//            KMeans.answer[i] = classData[i][0];
+//        }
+
+    }
+
+    /**
+     * 对数据进行归一化 1.找每一个属性的最大值 2.对某个样本的每个属性除以其最大值
+     */
+    public void normalize() {
+        // 找最大值
+
+        for (int i = 0; i &lt; InstanceNumber; i++) {
+            for (int j = 0; j &lt; FieldCount; j++) {
+                if (data[i][j] &gt; classmax[j])
+                    classmax[j] = data[i][j];
+            }
+        }
+
+        // 归一化
+        for (int i = 0; i &lt; InstanceNumber; i++) {
+            for (int j = 0; j &lt; FieldCount; j++) {
+                data[i][j] = data[i][j] / classmax[j];
+            }
+        }
+    }
+
+    // 关于初始向量的一次找寻尝试
+    public void findInitials() {
+        // a,b为标志距离最远的两个向量的索引
+        int i, j, a, b;
+        i = j = a = b = 0;
+
+        // 最远距离
+        double maxDis = 0;
+
+        // 已经找到的初始点个数
+        int alreadyCls = 2;
+
+        // 存放已经标记为初始点的向量索引
+        ArrayList&lt;Integer&gt; initials = new ArrayList&lt;Integer&gt;();
+
+        // 从两个开始
+        for (; i &lt; InstanceNumber; i++) {
+            // 噪声点
+            if (noises.contains(i))
+                continue;
+            // long startTime = System.currentTimeMillis();
+            j = i + 1;
+            for (; j &lt; InstanceNumber; j++) {
+                // 噪声点
+                if (noises.contains(j))
+                    continue;
+                // 找出最大的距离并记录下来
+                double newDis = calDis(data[i], data[j]);
+                if (maxDis &lt; newDis) {
+                    a = i;
+                    b = j;
+                    maxDis = newDis;
+                }
+            }
+            // long endTime = System.currentTimeMillis();
+            // System.out.println(i +
+            // &quot;Vector Caculation Time:&quot;+(endTime-startTime)+&quot;ms&quot;);
+        }
+
+        // 将前两个初始点记录下来
+        initials.add(a);
+        initials.add(b);
+        classData[0] = data[a];
+        classData[1] = data[b];
+
+        // 在结果中新建存放某样本索引的对象，并把初始点添加进去
+        ArrayList&lt;Integer&gt; resultOne = new ArrayList&lt;Integer&gt;();
+        ArrayList&lt;Integer&gt; resultTwo = new ArrayList&lt;Integer&gt;();
+        resultOne.add(a);
+        resultTwo.add(b);
+        result.add(resultOne);
+        result.add(resultTwo);
+
+        // 找到剩余的几个初始点
+        while (alreadyCls &lt; ClassCount) {
+            i = j = 0;
+            double maxMin = 0;
+            int newClass = -1;
+
+            // 找最小值中的最大值
+            for (; i &lt; InstanceNumber; i++) {
+                double min = 0;
+                double newMin = 0;
+                // 找和已有类的最小值
+                if (initials.contains(i))
+                    continue;
+                // 噪声点去除
+                if (noises.contains(i))
+                    continue;
+                for (j = 0; j &lt; alreadyCls; j++) {
+                    newMin = calDis(data[i], classData[j]);
+                    if (min == 0 || newMin &lt; min)
+                        min = newMin;
+                }
+
+                // 新最小距离较大
+                if (min &gt; maxMin) {
+                    maxMin = min;
+                    newClass = i;
+                }
+            }
+            // 添加到均值集合和结果集合中
+            // System.out.println(&quot;NewClass&quot;+newClass);
+            initials.add(newClass);
+            //System.err.println(&quot;newClass:&quot;+newClass);
+            //System.err.println(&quot;alreadyCls:&quot;+alreadyCls);
+            classData[alreadyCls++] = data[newClass];
+            ArrayList&lt;Integer&gt; rslt = new ArrayList&lt;Integer&gt;();
+            rslt.add(newClass);
+            result.add(rslt);
+        }
+    }
+
+    // 第一次分类
+    public void firstClassify() {
+        // 根据初始向量分类
+        for (int i = 0; i &lt; InstanceNumber; i++) {
+            double min = 0f;
+            int clsId = -1;
+            for (int j = 0; j &lt; classData.length; j++) {
+                // 欧式距离
+                double newMin = calDis(classData[j], data[i]);
+                if (clsId == -1 || newMin &lt; min) {
+                    clsId = j;
+                    min = newMin;
+                }
+
+            }
+            // 本身不再添加
+            if (!result.get(clsId).contains(i))
+                result.get(clsId).add(i);
+        }
+    }
+
+    // 迭代分类，直到各个类的数据不再变化
+    public void Adjust() {
+        // 记录是否发生变化
+        boolean change = true;
+
+        // 循环的次数
+        int times = 1;
+        while (change) {
+            // 复位
+            change = false;
+            //System.out.println(&quot;Adjust Iteration&quot; + (times++) + &quot;time(s)&quot;);
+
+            // 重新计算每个类的均值
+            for (int i = 0; i &lt; ClassCount; i++) {
+                // 原有的数据
+                ArrayList&lt;Integer&gt; cls = result.get(i);
+
+                // 新的均值
+                double[] newMean = new double[FieldCount];
+
+                // 计算均值
+                for (Integer index : cls) {
+                    for (int j = 0; j &lt; FieldCount; j++)
+                        newMean[j] += data[index][j];
+                }
+                for (int j = 0; j &lt; FieldCount; j++)
+                    newMean[j] /= cls.size();
+                if (!compareMean(newMean, classData[i])) {
+                    classData[i] = newMean;
+                    change = true;
+                }
+            }
+            // 清空之前的数据
+            for (ArrayList&lt;Integer&gt; cls : result)
+                cls.clear();
+
+            // 重新分配
+            for (int i = 0; i &lt; InstanceNumber; i++) {
+                double min = 0f;
+                int clsId = -1;
+                for (int j = 0; j &lt; classData.length; j++) {
+                    double newMin = calDis(classData[j], data[i]);
+                    if (clsId == -1 || newMin &lt; min) {
+                        clsId = j;
+                        min = newMin;
+                    }
+                }
+                data[i][FieldCount] = clsId;
+                result.get(clsId).add(i);
+            }
+
+            // 测试聚类效果(训练集)
+            // for(int i = 0;i &lt; ClassCount;i++){
+            // int positives = 0;
+            // int negatives = 0;
+            // ArrayList&lt;Integer&gt; cls = result.get(i);
+            // for(Integer instance:cls)
+            // if (data[instance][FieldCount - 1] == 1f)
+            // positives ++;
+            // else
+            // negatives ++;
+            // System.out.println(&quot; &quot; + i + &quot; Positive: &quot; + positives +
+            // &quot; Negatives: &quot; + negatives);
+            // }
+            // System.out.println();
+        }
+
+    }
+
+    /**
+     * 计算a样本和b样本的欧式距离作为不相似度
+     *
+     * @param aVector 样本a
+     * @param bVector 样本b
+     * @return 欧式距离长度
+     */
+    private double calDis(double[] aVector, double[] bVector) {
+        double dis = 0;
+        int i = 0;
+        /* 最后一个数据在训练集中为结果，所以不考虑 */
+        for (; i &lt; aVector.length; i++)
+            dis += Math.pow(bVector[i] - aVector[i], 2);
+        dis = Math.pow(dis, 0.5);
+        return (double) dis;
+    }
+
+    /**
+     * 判断两个均值向量是否相等
+     *
+     * @param a 向量a
+     * @param b 向量b
+     * @return 相等返回true
+     */
+    private boolean compareMean(double[] a, double[] b) {
+        if (a.length != b.length)
+            return false;
+        for (int i = 0; i &lt; a.length; i++) {
+            if (a[i] &gt; 0 &amp;&amp; b[i] &gt; 0 &amp;&amp; a[i] != b[i]) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * 将结果输出到一个文件中
+     *
+     * @param fileName 文件名
+     */
+    public void printResult(String fileName) {
+        FileWriter fw = null;
+        BufferedWriter bw = null;
+        try {
+            fw = new FileWriter(fileName);
+            bw = new BufferedWriter(fw);
+            // 写入文件
+            for (int i = 0; i &lt; InstanceNumber; i++) {
+                bw.write(String.valueOf(data[i][FieldCount]).substring(0, 1));
+                bw.newLine();
+            }
+
+            // 统计每类的数目，打印到控制台
+            for (int i = 0; i &lt; ClassCount; i++) {
+                System.out.println(&quot;第&quot; + (i + 1) + &quot;类数目: &quot;
+                        + result.get(i).size());
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+
+            // 关闭资源
+            if (bw != null)
+                try {
+                    bw.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            if (fw != null)
+                try {
+                    fw.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+        }
+
+    }
+}
+
+</code></pre>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[安装pure-ftp服务以及设置虚拟用户]]></title>
+    <link href="https://tuzhihao.com/16661412449667.html"/>
+    <updated>2022-10-19T09:00:44+08:00</updated>
+    <id>https://tuzhihao.com/16661412449667.html</id>
+    <content type="html"><![CDATA[
+<p>今天才算是终于把ghost的bolg弄好了，但是还是很麻烦，都是自己搭建的，没有好的管理平台，传文件也很麻烦，就装了一个pure-ftp，来上传和下载文件什么的。</p>
+<p>命令不多，就下面几条。</p>
+<pre><code class="language-plain_text">#安装pure-ftpd
+apt-get install pure-ftpd
+# 在系统中添加相应的用户和组，如用户ftpuser 和组ftpgroup 
+groupadd ftpgroup
+useradd ftpuser -g ftpgroup -d /home/ftp -s /sbin/nologin 
+# 添加虚拟用户，如添加ftpmethol，并指定查看目录为/srv/ghost
+pure-pw useradd ftpmethol -u ftpuser -g ftpgroup -d /srv/ghost
+# 根据提示输入两次密码
+
+# 让 pure-ftpd 建立虚拟用户数据
+pure-pw mkdb
+
+# 重启服务
+/etc/init.d/pure-ftpd restart
+
+</code></pre>
+<p>但是往往这样弄完之后，还是不能登陆成功，会提示用户密码验证失败，解决办法：</p>
+<pre><code class="language-plain_text"># 在/etc/pure-ftpd/auth下，创建一个软链接
+cd /etc/pure-ftpd/auth
+ln -s /etc/pure-ftpd/conf/PureDB 60puredb
+</code></pre>
+<p>其他重要配置：</p>
+<pre><code class="language-plain_text"># 匿名用户登录改为否
+/etc/pure-ftpd/conf/NoAnonymous  内容改为no
+</code></pre>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Hibernate中Session.load与Session.get的区别]]></title>
+    <link href="https://tuzhihao.com/16661412451072.html"/>
+    <updated>2022-10-19T09:00:45+08:00</updated>
+    <id>https://tuzhihao.com/16661412451072.html</id>
+    <content type="html"><![CDATA[
+<p><code>Session.load()/get()</code>方法均可以根据指定的实体类和id从数据库读取记录，并返回与之对应的实体对象。</p>
+<p>其区别在于：<br /><br />
+如果未能发现符合条件的记录，get方法返回null，而load方法会抛出一个ObjectNotFoundException。<br />
+Load方法可返回实体的代理类实例，而get方法永远直接返回实体类。<br />
+load方法可以充分利用内部缓存和二级缓存中的现有数据，而get方法则仅仅在内部缓存中进行数据查找，如没有发现对应数据，将越过二级缓存，直接调用SQL完成数据读取。</p>
+<p>上面是看别人写的，我自己觉得<br /><br />
+<strong>get()主要用于数据库有可能存在，也有可能不存在的时候，需要从数据库取出数据的时候。<br />
+load()主要用于可以肯定数据库中有这一条记录的时候，从数据库中去除这条数据。</strong></p>
+<p>下面两个例子，第一个是通过订单号得到订单这个实体类对象，第二个是通过订单号，从数据库中删除这条数据。</p>
+<pre><code class="language-java">//通过订单号得到订单这个实体类对象，不能肯定这个订单是不是在数据库中存在
+public Order getOrder(int orderid) {
+  Session session = sessionFactory.getCurrentSession();
+  Order order = null;
+  try {
+    order = (Order) session.get(Order.class, orderid);
+  } catch (RuntimeException e) {
+    throw e;
+  }
+  return order;
+}
+</code></pre>
+<hr />
+<pre><code class="language-java">	//通过订单号，从数据库中删除这条数据，可以肯定数据库中有这一条数据
+	public int deleteOrder(int orderId) {
+		Session session = sessionFactory.getCurrentSession();
+		try {
+			Order order = (Order) session.load(Order.class, orderId);
+			session.delete(order);
+		} catch (Exception e) {
+			return -1;
+		}
+		return 0;
+	}	
+</code></pre>
+<p>参见<a href="http://blog.csdn.net/zhaoshl_368/article/details/6577103">http://blog.csdn.net/zhaoshl_368/article/details/6577103</a></p>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[全排列]]></title>
+    <link href="https://tuzhihao.com/16661412449917.html"/>
+    <updated>2022-10-19T09:00:44+08:00</updated>
+    <id>https://tuzhihao.com/16661412449917.html</id>
+    <content type="html"><![CDATA[
+<pre><code class="language-java">/**
+ * Created by Methol on 2015/4/10.
+ * 根据A数组的大小，输出 1 ~ A.length 的全排列
+ */
+public class Main {
+
+    static int A[] = new int[5];
+
+    /*
+     根据A数组的大小，输出 1 ~ A.length 的全排列
+     @param cur 当前元素的位置
+     */
+    public static void next_permutation(int cur) {
+        if (cur == A.length) {         //递归边界
+            //在这里打印输出，也就是说在这里写具体要操作的函数，A中有排列好的序列
+            for (int i = 0; i &lt; A.length; i++) {
+                System.out.print(A[i] + &quot; &quot;);
+            }
+            System.out.println();
+        } else {
+            for (int i = 0; i &lt;= A.length; i++) {
+                boolean ok = true;
+                for (int j = 0; j &lt; cur; j++) {
+                    if (A[j] == i) ok = false;         //如果i已经在A[0]~A[cur-1]出现过，则不能再选
+                }
+                if (ok) {
+                    A[cur] = i;
+                    next_permutation(cur + 1);    //递归调用
+                }
+            }
+        }
+    }
+
+    public static void main(String[] args) {
+        next_permutation(0);
+    }
+
+}
+</code></pre>
+<hr />
+<pre><code class="language-java">/**
+ * Created by Methol on 2015/4/10.
+ * 输出数组P中元素的全排列。
+ */
+public class Main {
+ 
+  static int A[] = new int[5];
+  static int P[] = {1,2,3};
+ 
+  /*
+   输出数组P中元素的全排列。
+   @param cur 当前元素的位置
+   */
+  public static void next_permutation(int cur) {
+    if (cur == P.length) {         //递归边界
+      //在这里打印输出，也就是说在这里写具体要操作的函数，A中有排列好的序列
+      for (int i = 0; i &lt; P.length; i++) {
+        System.out.print(A[i] + &quot; &quot;);
+      }
+      System.out.println();
+    } else {
+      for (int i = 0; i &lt; P.length; i++) {
+        if(i==0 || P[i]!=P[i-1]) {
+          int c1 = 0 ,c2 = 0;
+          //统计A[0]~A[cur-1]中P[i]出现的次数
+          for (int j = 0; j &lt; cur ; j++)
+            if(A[j] == P[i])  c1++;
+          //统计P中P[i]出现的次数
+          for (int j = 0; j &lt; P.length; j++)
+            if( P[i] == P[j] )  c2++;
+          if(c1 &lt; c2){   //当c1&lt;c2的时候说明还有可以选的，递归调用
+            A[cur] = P[i];
+            next_permutation(cur+1);
+          }
+        }
+      }
+    }
+  }
+   
+  public static void main(String[] args) {
+    next_permutation(0);
+  }
+ 
+}
+</code></pre>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[遍历所有01序列]]></title>
+    <link href="https://tuzhihao.com/16661412449189.html"/>
+    <updated>2022-10-19T09:00:44+08:00</updated>
+    <id>https://tuzhihao.com/16661412449189.html</id>
+    <content type="html"><![CDATA[
+<p>逻辑判断题，有很多个条件，1,0表示真,假，遍历所有的可能情况，递归操作。</p>
+<pre><code class="language-java">/**
+ * Created by Methol on 2015/4/8.
+ */
+public class Main {
+
+  static int a[] ={0,0,0};
+
+  public static void show(){
+    for (int i = 0; i &lt; a.length; i++) {
+      System.out.print(a[i]+&quot; &quot;);
+    }
+    System.out.println();
+  }
+
+  public  static void f(int i){
+
+    if(i&gt;=a.length){
+      //这里写操作
+      show();
+      return;
+    }
+
+    a[i] = 0;
+    f(i+1);
+
+    a[i] = 1;
+    f(i+1);
+
+  }
+
+  public static void main(String []args){
+    f(0);
+  }
+}
+</code></pre>
+<hr />
+<p>输出结果：</p>
+<p>0 0 0<br />
+0 0 1<br />
+0 1 0<br />
+0 1 1<br />
+1 0 0<br />
+1 0 1<br />
+1 1 0<br />
+1 1 1</p>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[数字三角形–动态规划]]></title>
+    <link href="https://tuzhihao.com/16661412449393.html"/>
+    <updated>2022-10-19T09:00:44+08:00</updated>
+    <id>https://tuzhihao.com/16661412449393.html</id>
+    <content type="html"><![CDATA[
+<blockquote>
+<p>题目</p>
+</blockquote>
+<p>有一个由非负整数组成的三角形，第一行只有一个数，除了最下行之外每个数的左下方和右下方各有一个数，如下图：<br />
+<img src="https://pic.tuzhihao.com/upic/20210418/214820-gw8zqJ.jpg" alt="题目" /><br />
+从第一行开始，每次可以往做下或右下走一格，直到走到最下行，把沿途经过的数全部加起来，如何走才能使得这个和最大。</p>
+<blockquote>
+<p>分析</p>
+</blockquote>
+<p>可以从下往上来分析<br />
+如下:<br />
+1<br />
+3 2<br />
+4 10 1<br />
+4 3 2 20<br />
+从下开始往上更新。</p>
+<p>第1次更新为：<br />
+1<br />
+3 2<br />
+<strong>8 13 21</strong><br />
+4 3 2 20</p>
+<p>第2次更新：<br />
+1<br />
+<strong>16 23</strong><br />
+8 13 21<br />
+4 3 2 20</p>
+<p>第3次更新：<br />
+<strong>24</strong><br />
+16 23<br />
+8 13 21<br />
+4 3 2 20</p>
+<h2><a id="%E4%B8%89%E7%A7%8D%E5%AE%9E%E7%8E%B0%E6%96%B9%E6%B3%95%EF%BC%9A%E9%80%92%E5%BD%92%E3%80%81%E9%80%92%E6%8E%A8%E3%80%81%E8%AE%B0%E5%BF%86%E5%8C%96%E6%90%9C%E7%B4%A2%E2%80%8B" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>三种实现方法：递归、递推、记忆化搜索<br />
+​</h2>
+<pre><code class="language-java">/*
+递归
+4
+1
+3 2
+4 10 1
+4 3 2 20
+ */
+import java.util.Scanner;
+
+public class Main {
+
+  static int [][]a = new int [100][100];   //用来存储数字三角形的数据
+  static int [][]c = new int [100][100];   //用来存路径
+  static int n ;
+  static int count;
+
+  public static void main(String[] args) {
+    Scanner scanner = new Scanner(System.in);
+    n = scanner.nextInt();
+    int i,j;
+    for(i=0;i&lt;n;i++){
+      for(j=0;j&lt;=i;j++){
+        a[i][j] = scanner.nextInt();
+      }
+    }
+
+    System.out.println(fun(0, 0));
+    System.out.println(&quot;计算了&quot;+count+&quot;次&quot;);
+
+    //输出走的路径
+    System.out.print(&quot;路径如下：(0,0)&quot;);
+    int t = 0;
+    for(i=1;i&lt;n;i++){
+      System.out.print(&quot;-&gt;(&quot;+i+&quot;,&quot;+c[i-1][t]+&quot;)&quot;);
+      t = c[i-1][t];
+    }
+
+  }
+
+  public static int fun(int i,int j){
+    if(i == n-1)
+      return a[i][j];   //如果到了最下面一层，就返回当前这个数
+    count++;
+
+    int t1 = fun(i+1, j);
+    int t2 = fun(i+1, j+1);
+    if(t1&gt;t2){
+      c[i][j] = j;  //表示当前这个位置是从下一行哪个数据来的
+      return a[i][j]+t1;
+    }else {
+      c[i][j] = j+1;  //表示当前这个位置是从下一行哪个数据来的
+      return a[i][j]+t2;
+    }
+
+    //return a[i][j] + Math.max(fun(i+1, j), fun(i+1, j+1));
+  }
+
+}
+</code></pre>
+<hr />
+<pre><code class="language-java">/*
+ * 递推
+ */
+
+import java.util.Scanner;
+
+public class Main {
+
+  static int [][]a = new int [4][4];
+  static int [][]d = new int [4][4];
+  static int n ;
+  static int count;
+
+  public static void main(String[] args) {
+    Scanner scanner = new Scanner(System.in);
+    n = scanner.nextInt();
+    int i,j;
+    for(i=0;i&lt;n;i++){
+      for(j=0;j&lt;=i;j++){
+        a[i][j] = scanner.nextInt();
+        d[i][j] = a[i][j];
+      }
+    }
+    for(i=n-1;i&gt;=1;i--){
+      for(j=0;j&lt;i;j++){
+        count++;
+        d[i-1][j]+=Math.max(d[i][j], d[i][j+1]);
+      }
+    }
+    System.out.println(d[0][0]);
+    System.out.println(&quot;计算了&quot;+count+&quot;次&quot;);
+
+  }
+
+}
+</code></pre>
+<hr />
+<pre><code class="language-java">/*
+ * 记忆化搜索
+ */
+
+
+import java.util.Scanner;
+
+public class Main {
+  static int [][]a = new int [100][100];
+  static int [][]d = new int [100][100];
+  static int n ;
+  static int count;
+
+  public static void main(String[] args) {
+    Scanner scanner = new Scanner(System.in);
+    n = scanner.nextInt();
+    for(int i=0;i&lt;n;i++){
+      for(int j=0;j&lt;=i;j++){
+        a[i][j] = scanner.nextInt();
+      }
+    }
+    System.out.println(fun(0, 0));
+    System.out.println(&quot;计算了&quot;+count+&quot;次&quot;);
+  }
+
+  public static int fun(int i,int j){
+    if(i == n-1)
+      return a[i][j];   //如果到了最下面一层，就返回当前这个数
+
+    if(d[i][j]!=0) return d[i][j];
+
+    count++;   //统计 计算了多少次
+    d[i+1][j] = fun(i+1, j);
+    d[i+1][j+1] = fun(i+1, j+1);
+    return a[i][j] + Math.max(d[i+1][j], d[i+1][j+1]);
+  }
+
+}
+</code></pre>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[八皇后问题]]></title>
+    <link href="https://tuzhihao.com/16661412449855.html"/>
+    <updated>2022-10-19T09:00:44+08:00</updated>
+    <id>https://tuzhihao.com/16661412449855.html</id>
+    <content type="html"><![CDATA[
+<pre><code class="language-c">#include &lt;iostream&gt;
+#include &lt;algorithm&gt;
+using namespace std;
+const int size=8;
+int eq[]={0,1,2,3,4,5,6,7};
+long cc=0;
+int eightqueen(){
+  while(next_permutation(eq,eq+8)){
+    bool ok=true;
+    int i,j;
+    //不可能存在同行同列，判断是不是相同对角线就可以了
+    for(i=0;i&lt;size &amp;&amp; ok;i++){
+      for(j=0;j&lt;size &amp;&amp; ok;j++){
+        if(i==j) continue;
+        if( (i-eq[i]==j-eq[j])||(i+eq[i]==j+eq[j]) ) //判断是不是在同一对角线
+          ok=false;
+      }
+    }
+    if(ok){
+      cc++;
+      for(i=0;i&lt;size;i++){
+        cout&lt;&lt;eq[i];
+      }
+      cout&lt;&lt;endl;
+    }
+  }
+  return cc;
+}
+int main(){
+  cout&lt;&lt;endl&lt;&lt;eightqueen()&lt;&lt;endl;
+  return 0;
+}
+</code></pre>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Class.forName的作用以及为什么要用它]]></title>
+    <link href="https://tuzhihao.com/16661412451218.html"/>
+    <updated>2022-10-19T09:00:45+08:00</updated>
+    <id>https://tuzhihao.com/16661412451218.html</id>
+    <content type="html"><![CDATA[
+<p><code>Class.forName(xxx.xx.xx)</code> 返回的是一个类</p>
+<p>首先你要明白在java里面任何class都要装载在虚拟机上才能运行。这句话就是装载类用的(和new 不一样，要分清楚)。</p>
+<p>至于什么时候用，你可以考虑一下这个问题，给你一个字符串变量，它代表一个类的包名和类名，你怎么实例化它？只有你提到的这个方法了，不过要再加一点。<br />
+<code>A a = (A)Class.forName(“pacage.A”).newInstance();</code><br />
+这和你<br />
+<code>A a = new A()；</code><br />
+是一样的效果。</p>
+<p>关于补充的问题<br />
+答案是肯定的，jvm会执行静态代码段，你要记住一个概念，静态代码是和class绑定的，class装载成功就表示执行了你的静态代码了。而且以后不会再走这段静态代码了。</p>
+<p><code>Class.forName(xxx.xx.xx);</code> 返回的是一个类<br />
+<code>Class.forName(xxx.xx.xx);</code>的作用是要求JVM查找并加载指定的类，也就是说JVM会执行该类的静态代码段</p>
+<p>动态加载和创建Class 对象，比如想根据用户输入的字符串来创建对象<br />
+String str = 用户输入的字符串<br />
+<code>Class t = Class.forName(str);</code><br />
+<code>t.newInstance();</code></p>
+<p>在初始化一个类，生成一个实例的时候，newInstance()方法和new关键字除了一个是方法，一个是关键字外，最主要有什么区别？它们的区别在于创建对象的方式不一样，前者是使用类加载机制，后者是创建一个新类。那么为什么会有两种创建对象方式？这主要考虑到软件的可伸缩、可扩展和可重用等软件设计思想。</p>
+<p>Java中工厂模式经常使用newInstance()方法来创建对象，因此从为什么要使用工厂模式上可以找到具体答案。 例如：<br />
+class c = Class.forName(“Example”);<br />
+factory = (ExampleInterface)c.newInstance();</p>
+<p>其中ExampleInterface是Example的接口，可以写成如下形式：<br />
+String className = “Example”;<br />
+class c = Class.forName(className);<br />
+factory = (ExampleInterface)c.newInstance();</p>
+<p>进一步可以写成如下形式：<br />
+String className = readfromXMlConfig;//从xml 配置文件中获得字符串<br />
+class c = Class.forName(className);<br />
+factory = (ExampleInterface)c.newInstance();</p>
+<p>上面代码已经不存在Example的类名称，它的优点是，无论Example类怎么变化，上述代码不变，甚至可以更换Example的兄弟类Example2 , Example3 , Example4……，只要他们继承ExampleInterface就可以。</p>
+<p>从JVM的角度看，我们使用关键字new创建一个类的时候，这个类可以没有被加载。但是使用newInstance()方法的时候，就必须保证：1、这个类已经加载；2、这个类已经连接了。而完成上面两个步骤的正是Class的静态方法forName()所完成的，这个静态方法调用了启动类加载器，即加载java API的那个加载器。</p>
+<p>现在可以看出，newInstance()实际上是把new这个方式分解为两步，即首先调用Class加载方法加载某个类，然后实例化。 这样分步的好处是显而易见的。我们可以在调用class的静态加载方法forName时获得更好的灵活性，提供给了一种降耦的手段。</p>
+<p>最后用最简单的描述来区分new关键字和newInstance()方法的区别：<br />
+<strong>newInstance: 弱类型。低效率。只能调用无参构造。<br />
+new: 强类型。相对高效。能调用任何public构造。</strong></p>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[ubuntu命令行下安装jdk]]></title>
+    <link href="https://tuzhihao.com/16661412450127.html"/>
+    <updated>2022-10-19T09:00:45+08:00</updated>
+    <id>https://tuzhihao.com/16661412450127.html</id>
+    <content type="html"><![CDATA[
+<p>通过终端在/usr/local目录下新建java文件夹，并切换到目录</p>
+<p><code>mkdir /usr/local/java</code><br />
+<code>cd /usr/local/java</code></p>
+<p>首先下载jdk</p>
+<p><code>wget http://download.oracle.com/otn-pub/java/jdk/8u40-b25/jdk-8u40-linux-x64.tar.gz?AuthParam=1426050099_a7374ae62bb8c10ea270621a31e5a344</code></p>
+<p>安装tar,解压压缩包</p>
+<p><code>apt-get install tar</code><br />
+<code>tar xvf jdk-8u40-linux-x64.tar.gz</code></p>
+<p>设置jdk环境变量<br />
+这里采用全局设置方法，它是是所有用户的共用的环境变量</p>
+<p><code>vim ~/.bashrc</code><br />
+打开之后在末尾添加：</p>
+<pre><code class="language-plain_text">export JAVA_HOME=/usr/local/java/jdk1.8.0_40
+export JRE_HOME=${JAVA_HOME}/jre
+export CLASSPATH=.:${JAVA_HOME}/lib:${JRE_HOME}/lib
+export PATH=${JAVA_HOME}/bin:$PATH
+</code></pre>
+<p>保存之后，输入以下命令使之立即生效。</p>
+<p><code>source ~/.bashrc</code><br />
+这样就配置好了，输入下面命令查看是否生效。</p>
+<p>`java -version``<br />
+显示如下</p>
+<pre><code class="language-plain_text">java version “1.8.0_40″
+Java(TM) SE Runtime Environment (build 1.8.0_40-b25)
+Java HotSpot(TM) 64-Bit Server VM (build 25.40-b25, mixed mode)
+</code></pre>
+
+]]></content>
+  </entry>
+  
+</feed>

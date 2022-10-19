@@ -1,0 +1,701 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>  
+	  
+  	Methol
+  	
+	</title>
+
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<link href="atom.xml" rel="alternate" title="Methol" type="application/atom+xml">
+
+	<link href="asset/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+	<link href="asset/stylesheets/font-awesome.min.css" media="screen, projection" rel="stylesheet" type="text/css">
+	<script src="asset/javascripts/jquery.min.js"></script>
+	
+
+	<!--[if lt IE 9]><script src="asset/javascripts/html5.js"></script><![endif]-->
+	<!-- <link href='http://fonts.googleapis.com/css?family=Nunito:400,300,700' rel='stylesheet' type='text/css'> -->
+	<style type="text/css">
+/* latin */
+@font-face {
+  font-family: 'Nunito';
+  font-style: normal;
+  font-weight: 300;
+  src: local('Nunito-Light'), url(asset/font/1TiHc9yag0wq3lDO9cw0voX0hVgzZQUfRDuZrPvH3D8.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2212, U+2215, U+E0FF, U+EFFD, U+F000;
+}
+/* latin */
+@font-face {
+  font-family: 'Nunito';
+  font-style: normal;
+  font-weight: 400;
+  src: local('Nunito-Regular'), url(asset/font/6TbRXKWJjpj6V2v_WyRbMX-_kf6ByYO6CLYdB4HQE-Y.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2212, U+2215, U+E0FF, U+EFFD, U+F000;
+}
+/* latin */
+@font-face {
+  font-family: 'Nunito';
+  font-style: normal;
+  font-weight: 700;
+  src: local('Nunito-Bold'), url(asset/font/TttUCfJ272GBgSKaOaD7KoX0hVgzZQUfRDuZrPvH3D8.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2212, U+2215, U+E0FF, U+EFFD, U+F000;
+}
+	</style>
+	
+	<style type="text/css">
+	.container .left-col{ opacity: 1;}
+	#pagenavi a{ font-size: 1.3em;}
+	#pagenavi .next:before{ top: 3px;}
+	#pagenavi .prev:before{ top: 3px;}
+	.container .mid-col .mid-col-container #content .archives .title{ font-size: 1.5em;}
+	.container .mid-col .mid-col-container #content article{ padding: 15px 0px;}
+	#header .subtitle {
+		line-height: 1.2em;
+		padding-top: 8px;
+	}
+	article pre{ background: none; border: none; padding: 0;}
+	article .entry-content{text-align: left;}
+	.share-comment{ padding: 25px 0px; clear: both;}
+	hr{ margin: 20px 0px;border: 0; border-top:solid 1px #ddd;}
+	</style>
+  
+
+</head>
+
+
+<body>
+	<div class="container">
+		<div class="left-col">
+			<div class="intrude-less">
+				<header id="header" class="inner">
+				 
+					
+					<h1><a href="index.html">Methol</a></h1>
+					<p class="subtitle"></p>
+					<nav id="main-nav">
+						<ul class="main">
+						
+						  <li id=""><a target="_self" href="index.html">Home</a></li>
+						
+						  <li id=""><a target="_self" href="archives.html">Archives</a></li>
+						
+						</ul>
+					</nav>
+
+					<nav id="sub-nav">
+						<div class="social">
+
+
+
+
+
+
+
+
+
+
+
+
+
+								
+
+								<a class="rss" href="atom.xml" title="RSS">RSS</a>
+							
+						</div>
+					</nav>
+				</header>				
+			</div>
+		</div>	
+		<div class="mid-col">
+			<div class="mid-col-container"> <div id="content" class="inner">
+<div itemscope itemtype="http://schema.org/Blog">
+
+
+	<article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
+		<div class="meta">
+			<div class="date">
+				<time datetime="2022-10-19T09:24:04+08:00" itemprop="datePublished">2022/10/19</time>
+			</div>
+			
+			 
+			
+		</div>
+		<h1 class="title" itemprop="name"><a href="16661426449923.html" itemprop="url">
+		使用backblaze B2 和 Cloudflare Wrokers做图床</a></h1>
+		<div class="entry-content" itemprop="articleBody">
+			
+			<p><img src="https://file1.tuzhihao.com/20221019/Ybv0U0.jpg" alt="" /></p>
+<h2><a id="%E4%B8%BA%E4%BB%80%E4%B9%88%E4%BD%BF%E7%94%A8bcakblaze-b2" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>为什么使用bcakblaze B2</h2>
+<ul>
+<li>免费，有10G的免费空间</li>
+<li>API友好，支持s3 API</li>
+<li>带宽联盟。使用Cloudflare中转获取图片不计流量费用</li>
+</ul>
+<p>怎么传图片就不赘述了，我用的是uPic，你可以用你喜欢的工具</p>
+<h2><a id="%E4%BD%BF%E7%94%A8bcakblaze-b2" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>使用bcakblaze B2</h2>
+<p>先注册，创建一个bucket<br />
+<img src="https://file1.tuzhihao.com/20221019/wIbtCx.png" alt="" /><br />
+然后上传一张图(也可以配置使用你的工具上传，或者网页上传)，然后记录如下信息</p>
+<ol>
+<li>Bucket Name</li>
+<li>Friendly URL里面的host</li>
+</ol>
+<p><img src="https://file1.tuzhihao.com/20221019/q1ZnJ9.png" alt="" /></p>
+<h2><a id="%E4%BD%BF%E7%94%A8cloudflare-workers" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>使用Cloudflare Workers</h2>
+<p>为什么使用wokers而不用cname的方式接入</p>
+<ul>
+<li>去除URL中的 /file/<bucket-name> 部分</li>
+<li>去除一些从 Backblaze B2 响应的无用请求头</li>
+<li>加上基本的 CORS 请求头，以便允许图片嵌入到网站中</li>
+<li>为图片优化缓存 (浏览器的缓存, 以及 CDN 边界服务器上的缓存)</li>
+</ul>
+<p>先创建一个workers，然后写入如下脚本，只需要修改2个变量</p>
+<ol>
+<li>b2Bucket -&gt; 上述1</li>
+<li>b2Domain -&gt; 上述2</li>
+</ol>
+<pre><code class="language-js">'use strict';
+const b2Domain = 'f004.backblazeb2.com'; // configure this as per instructions above
+const b2Bucket = 'bucketName'; // configure this as per instructions above
+const b2UrlPath = `/file/${b2Bucket}/`;
+addEventListener('fetch', event =&gt; {
+	return event.respondWith(fileReq(event));
+});
+
+// define the file extensions we wish to add basic access control headers to
+const corsFileTypes = ['png', 'jpg', 'gif', 'jpeg', 'webp'];
+
+// backblaze returns some additional headers that are useful for debugging, but unnecessary in production. We can remove these to save some size
+const removeHeaders = [
+	'x-bz-content-sha1',
+	'x-bz-file-id',
+	'x-bz-file-name',
+	'x-bz-info-src_last_modified_millis',
+	'X-Bz-Upload-Timestamp',
+	'x-bz-server-side-encryption',
+	'x-bz-client-unauthorized-to-read',
+	'Expires'
+];
+const expiration = 31536000; // override browser cache for images - 1 year
+
+// define a function we can re-use to fix headers
+const fixHeaders = function(url, status, headers){
+	let newHdrs = new Headers(headers);
+	// add basic cors headers for images
+	if(corsFileTypes.includes(url.pathname.split('.').pop())){
+		newHdrs.set('Access-Control-Allow-Origin', '*');
+	}
+	// override browser cache for files when 200
+	if(status === 200){
+		newHdrs.set('Cache-Control', &quot;public, max-age=&quot; + expiration);
+	}else{
+		// only cache other things for 5 minutes
+		newHdrs.set('Cache-Control', 'public, max-age=300');
+	}
+	// set ETag for efficient caching where possible
+	const ETag = newHdrs.get('x-bz-content-sha1') || newHdrs.get('x-bz-info-src_last_modified_millis') || newHdrs.get('x-bz-file-id');
+	if(ETag){
+		newHdrs.set('ETag', ETag);
+	}
+	// remove unnecessary headers
+	removeHeaders.forEach(header =&gt; {
+		newHdrs.delete(header);
+	});
+	return newHdrs;
+};
+
+async function fileReq(event){
+	const cache = caches.default; // Cloudflare edge caching
+	const url = new URL(event.request.url);
+	if(!url.pathname.startsWith(b2UrlPath)){ 
+		url.pathname = b2UrlPath + url.pathname;
+        // console.log(url.pathname);
+	}
+    url.host = b2Domain;
+    // console.log(url);
+	let response = await cache.match(url); // try to find match for this request in the edge cache
+	if(response){
+		// use cache found on Cloudflare edge. Set X-Worker-Cache header for helpful debug
+		let newHdrs = fixHeaders(url, response.status, response.headers);
+		newHdrs.set('X-Worker-Cache', &quot;true&quot;);
+		return new Response(response.body, {
+			status: response.status,
+			statusText: response.statusText,
+			headers: newHdrs
+		});
+	}
+	// no cache, fetch image, apply Cloudflare lossless compression
+	response = await fetch(url, {cf: {polish: &quot;lossless&quot;}});
+	let newHdrs = fixHeaders(url, response.status, response.headers);
+
+  if(response.status === 200){
+
+    response = new Response(response.body, {
+      status: response.status,
+      statusText: response.statusText,
+      headers: newHdrs
+    });
+  }else{
+    response = new Response('File not found!', { status: 404 })
+  }
+
+	event.waitUntil(cache.put(url, response.clone()));
+	return response;
+}
+</code></pre>
+<p>脚本参考<br />
+<a href="https://blog.meow.page/archives/free-personal-image-hosting-with-backblaze-b2-and-cloudflare-workers/">https://blog.meow.page/archives/free-personal-image-hosting-with-backblaze-b2-and-cloudflare-workers/</a><br />
+<a href="https://jross.me/free-personal-image-hosting-with-backblaze-b2-and-cloudflare-workers/">https://jross.me/free-personal-image-hosting-with-backblaze-b2-and-cloudflare-workers/</a></p>
+<p>我在脚本上的修改是把<code>b2Domain</code>改为b2的host，这样脚本更容易理解一些。</p>
+<p>最后你可以使用自己的域名做一个route就可以使用自己的域名，cf workers的域名在国内墙的比较厉害...</p>
+<h2><a id="%E6%8E%A8%E8%8D%90%E4%B8%80%E4%B8%AA%E5%9B%BE%E7%89%87%E7%BD%91%E7%AB%99" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>推荐一个图片网站</h2>
+<p><a href="https://unsplash.com">https://unsplash.com</a></p>
+
+
+			
+			
+		</div>
+
+	</article>
+ 
+	<article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
+		<div class="meta">
+			<div class="date">
+				<time datetime="2021-04-18T09:00:44+08:00" itemprop="datePublished">2021/04/18</time>
+			</div>
+			
+			 
+			
+		</div>
+		<h1 class="title" itemprop="name"><a href="16661412449981.html" itemprop="url">
+		三星电视换区</a></h1>
+		<div class="entry-content" itemprop="articleBody">
+			
+			<h2><a id="apple-tv-4k%E6%8C%82%E4%BA%86" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>Apple TV 4k 挂了</h2>
+<p>家里的Apple TV 4k突然自己就挂掉了，应该不是硬件的问题，感觉是软件的问题，但是背后一个接口都没有，也没办法自己升级系统。</p>
+<p>周末拿到Apple店里，给的理由大陆不卖，所以也不修，只能到香港修。</p>
+<p>这就GG了...</p>
+<p>因为我主要是看Youtube、Nas视频、emby视频、netflix，安卓盒子的性能都太弱了，只能看看流媒体。</p>
+<p>而且Apple TV的infuse神器，Youtube今年也支持4k了，真是唯一选择。</p>
+<p>好在快开发布会了，等下一代吧，所以只能先不买了。</p>
+<h2><a id="%E4%B8%89%E6%98%9F%E7%94%B5%E8%A7%86%E6%8D%A2%E5%8C%BA" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>三星电视换区</h2>
+<p>然后就研究起了我的电视，因为之前是有爱奇艺、腾讯那些视频的。所以看看能不能先装一个youtube看看。</p>
+<p>系统是三星自己的tizen系统，应用只能去自带的应用商店下载。那这没办法了，只能换区。</p>
+<p>果然，就搜到了2篇文章，已经说的很详细了，我这里只是对我自己的电视操作做一个备份。</p>
+<p><a href="https://sspai.com/post/59549">https://sspai.com/post/59549</a></p>
+<p><a href="https://joveng.myds.me:8888/tv-unlock/">https://joveng.myds.me:8888/tv-unlock/</a></p>
+<h3><a id="%E6%AD%A5%E9%AA%A4" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>步骤</h3>
+<ol>
+<li>带有红外的智能手机请下载「IR Service Remote」的APP。</li>
+</ol>
+<p><a href="media/16661412449981/IR_Service_Remote-com.wolf.servicercsam-v1.2-Android_4.4+.apk">IR_Service_Remote-com.wolf.servicercsam-v1.2-Android_4.4+.apk</a></p>
+<p>在电视处于亮屏的状态下，打开「IR Service remote」依次按下「S1」-「S2」即可进入工程模式菜单</p>
+<p><img src="https://pic.tuzhihao.com/upic/20210418/214505-x5fw8P.png" alt="image-20210418212716653" /></p>
+<ol start="2">
+<li>
+<p>使用电视遥控器「方向键」将光标移动到「Option」选项，按一下「确定键」进入，然后使用手机拍照当前画面。进入之后可以看到「Local Set」选项是「CHI_DTV」，意味当前系统是国区。</p>
+<p>将光标移动到「Local Set」选项并按下「确定键」进入，在弹出的「Local Set List」列表里移到你想要切换的地区代码，美区选择「AD_AU2」，港区选择「HKG_DTV」，之后按下遥控器「确定键」后会自动返回。</p>
+<p><img src="https://pic.tuzhihao.com/upic/20210418/214529-8B2zzw.png" alt="image-20210418212855744" /></p>
+</li>
+<li>
+<p>再次进入到「MRT Option」选项，进入「Language Set」选项并确保此处参数显示为「China」，返回并进入「Region」确保此处参数显示为「asia_dtv」，其余的参数按照之前拍的照片依次复原即可。「Production Option」和「Engineer Option」同理。</p>
+</li>
+<li>
+<p>重启电视。</p>
+</li>
+<li>
+<p>使用遥控器依次选择「设置」-「支持」-「自诊断」-「重置 Smart Hub」，输入 PIN 码「0000」后系统桌面会重启。</p>
+<p><img src="https://pic.tuzhihao.com/upic/20210418/214531-b2YyAM.png" alt="image-20210418213026402" /></p>
+</li>
+<li>
+<p>重启之后光标移动到「apps」会弹出「同意条款」页面，注意即便当前电视的系统语言为简体中文，但此页面应为英文界面。使用电视原厂遥控器在「同意条款」页面以此按下「静音」-「音量 +」-「频道 +」-「静音」按键，电视会弹出「Internet 服务位置设置」选项。选择香港。</p>
+<p><img src="https://pic.tuzhihao.com/upic/20210418/214533-6bqY6X.png" alt="image-20210418213101873" /></p>
+</li>
+<li>
+<p>最后同意协议，安装app就行了！</p>
+<p><img src="https://pic.tuzhihao.com/upic/20210418/214535-hHG7r1.png" alt="image-20210418213749906" /></p>
+</li>
+</ol>
+<h2><a id="%E5%A4%87%E4%BB%BD%E5%8F%82%E6%95%B0%E6%88%AA%E5%9B%BE" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>备份参数截图</h2>
+<h3><a id="%E4%BF%AE%E6%94%B9%E5%89%8D%E5%9B%BD%E5%8C%BA" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>修改前(国区)</h3>
+<p><img src="https://pic.tuzhihao.com/upic/20210418/214540-9KWi3f.png" alt="image-20210418213525967" /></p>
+<p><img src="https://pic.tuzhihao.com/upic/20210418/214545-wC0kFH.png" alt="image-20210418213536752" /></p>
+<p><img src="https://pic.tuzhihao.com/upic/20210418/214549-zvrLvw.png" alt="image-20210418213549420" /></p>
+<h3><a id="%E4%BF%AE%E6%94%B9%E5%90%8E%E6%B8%AF%E5%8C%BA" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>修改后(港区)</h3>
+<p><img src="https://pic.tuzhihao.com/upic/20210418/214551-2jMHOy.png" alt="image-20210418213446438" /></p>
+<p><img src="https://pic.tuzhihao.com/upic/20210418/214554-aMRDcj.png" alt="image-20210418213500655" /></p>
+<p><img src="https://pic.tuzhihao.com/upic/20210418/214558-B0a473.png" alt="image-20210418213510547" /></p>
+
+
+			
+			
+		</div>
+
+	</article>
+ 
+	<article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
+		<div class="meta">
+			<div class="date">
+				<time datetime="2018-03-10T09:00:45+08:00" itemprop="datePublished">2018/03/10</time>
+			</div>
+			
+			 
+			
+		</div>
+		<h1 class="title" itemprop="name"><a href="16661412450320.html" itemprop="url">
+		防止iPhone自动下载iOS11升级</a></h1>
+		<div class="entry-content" itemprop="articleBody">
+			
+			<h3><a id="%E5%AE%89%E8%A3%85tvos-beta%E6%8F%8F%E8%BF%B0%E6%96%87%E4%BB%B6" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>安装tvOS Beta描述文件</h3>
+<p>使用 iOS 端的 Safari 浏览器点击  <strong><a href="https://tuzhihao.com/upload/tvos/tvos11.mobileconfig">https://tuzhihao.com/upload/tvos/tvos11.mobileconfig</a></strong> 安装，或是使用 PC 下载后邮件发送到 iOS 设备，用自带的 Mail 打开也可安装。安装完成后重启手机，便不会再收到任何的系统更新了。</p>
+<h2><a id="%E5%B1%8F%E8%94%BD%E6%9B%B4%E6%96%B0%E7%9A%84%E5%8E%9F%E7%90%86" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>屏蔽更新的原理</h2>
+<p>安装了<code>tvOS 11 Beta Software Profile</code>，设备便会去检测 tvOS 10 Beta 版的更新，显而易见的是，tvOS 系统仅能适用于 Apple TV，iOS 设备安装该描述文件后，检测到的更新无法适用，便会显示 : 您的软件是最新版本。</p>
+<h2><a id="%E6%B3%A8%E6%84%8F%E4%BA%8B%E9%A1%B9" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>注意事项</h2>
+<ol>
+<li>
+<p>该描述文件能用到2019年，估计到时候应该有tvOS 12的Beta文件了。</p>
+</li>
+<li>
+<p>如果之前装了可以升级测试版系统的描述文件，删除原来安装的描述文件，再安装本文件。</p>
+</li>
+<li>
+<p>安装之后连接 iTunes 时依然会提示有系统更新，忽略即可。</p>
+</li>
+<li>
+<p>已经自动下载好安装包的用户，可以进入设置——通用里面，找到【储存空间与iCloud用量】——【管理储存空间与iCloud用量】里面删除掉已安装的升级包，然后再安装描述文件。</p>
+<p>​</p>
+</li>
+</ol>
+
+
+			
+			
+		</div>
+
+	</article>
+  
+
+</div>
+<nav id="pagenavi">
+	 
+	 <a class="next" href="all_1.html">Next</a> 
+	<div class="center"><a href="archives.html">Blog Archives</a></div>
+
+</nav>
+
+</div>
+
+
+
+        </div>
+			<footer id="footer" class="inner">Copyright &copy; 2014
+Powered by <a target="_blank" href="http://www.mweb.im">MWeb</a> &nbsp;&nbsp; 
+Theme by <a href="http://shashankmehta.in/archive/2012/greyshade.html">Shashank Mehta</a>
+      </footer>
+		</div>
+	</div>
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<style type="text/css">
+figure{margin: 1em 0;padding: 0;}
+  figcaption{text-align:center;}
+
+/* PrismJS 1.14.0
+https://prismjs.com/download.html#themes=prism-coy&languages=markup+css+clike+javascript */
+/**
+ * prism.js Coy theme for JavaScript, CoffeeScript, CSS and HTML
+ * Based on https://github.com/tshedor/workshop-wp-theme (Example: http://workshop.kansan.com/category/sessions/basics or http://workshop.timshedor.com/category/sessions/basics);
+ * @author Tim  Shedor
+ */
+
+code[class*="language-"],
+pre[class*="language-"] {
+  color: black;
+  background: none;
+  font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+  text-align: left;
+  white-space: pre;
+  word-spacing: normal;
+  word-break: normal;
+  word-wrap: normal;
+  line-height: 1.5;
+
+  -moz-tab-size: 4;
+  -o-tab-size: 4;
+  tab-size: 4;
+
+  -webkit-hyphens: none;
+  -moz-hyphens: none;
+  -ms-hyphens: none;
+  hyphens: none;
+}
+
+/* Code blocks */
+pre[class*="language-"] {
+  position: relative;
+  margin: .5em 0;
+  overflow: visible;
+  padding: 0;
+}
+pre[class*="language-"]>code {
+  position: relative;
+  border-left: 10px solid #358ccb;
+  box-shadow: -1px 0px 0px 0px #358ccb, 0px 0px 0px 1px #dfdfdf;
+  background-color: #fdfdfd;
+  background-image: linear-gradient(transparent 50%, rgba(69, 142, 209, 0.04) 50%);
+  background-size: 3em 3em;
+  background-origin: content-box;
+  background-attachment: local;
+}
+
+code[class*="language"] {
+  max-height: inherit;
+  height: inherit;
+  padding: 0 1em;
+  display: block;
+  overflow: auto;
+}
+
+/* Margin bottom to accomodate shadow */
+:not(pre) > code[class*="language-"],
+pre[class*="language-"] {
+  background-color: #fdfdfd;
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+  margin-bottom: 1em;
+}
+
+/* Inline code */
+:not(pre) > code[class*="language-"] {
+  position: relative;
+  padding: .2em;
+  border-radius: 0.3em;
+  color: #c92c2c;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  display: inline;
+  white-space: normal;
+}
+
+pre[class*="language-"]:before,
+pre[class*="language-"]:after {
+  content: '';
+  z-index: -2;
+  display: block;
+  position: absolute;
+  bottom: 0.75em;
+  left: 0.18em;
+  width: 40%;
+  height: 20%;
+  max-height: 13em;
+  box-shadow: 0px 13px 8px #979797;
+  -webkit-transform: rotate(-2deg);
+  -moz-transform: rotate(-2deg);
+  -ms-transform: rotate(-2deg);
+  -o-transform: rotate(-2deg);
+  transform: rotate(-2deg);
+}
+
+:not(pre) > code[class*="language-"]:after,
+pre[class*="language-"]:after {
+  right: 0.75em;
+  left: auto;
+  -webkit-transform: rotate(2deg);
+  -moz-transform: rotate(2deg);
+  -ms-transform: rotate(2deg);
+  -o-transform: rotate(2deg);
+  transform: rotate(2deg);
+}
+
+.token.comment,
+.token.block-comment,
+.token.prolog,
+.token.doctype,
+.token.cdata {
+  color: #7D8B99;
+}
+
+.token.punctuation {
+  color: #5F6364;
+}
+
+.token.property,
+.token.tag,
+.token.boolean,
+.token.number,
+.token.function-name,
+.token.constant,
+.token.symbol,
+.token.deleted {
+  color: #c92c2c;
+}
+
+.token.selector,
+.token.attr-name,
+.token.string,
+.token.char,
+.token.function,
+.token.builtin,
+.token.inserted {
+  color: #2f9c0a;
+}
+
+.token.operator,
+.token.entity,
+.token.url,
+.token.variable {
+  color: #a67f59;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.token.atrule,
+.token.attr-value,
+.token.keyword,
+.token.class-name {
+  color: #1990b8;
+}
+
+.token.regex,
+.token.important {
+  color: #e90;
+}
+
+.language-css .token.string,
+.style .token.string {
+  color: #a67f59;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.token.important {
+  font-weight: normal;
+}
+
+.token.bold {
+  font-weight: bold;
+}
+.token.italic {
+  font-style: italic;
+}
+
+.token.entity {
+  cursor: help;
+}
+
+.namespace {
+  opacity: .7;
+}
+
+@media screen and (max-width: 767px) {
+  pre[class*="language-"]:before,
+  pre[class*="language-"]:after {
+    bottom: 14px;
+    box-shadow: none;
+  }
+
+}
+
+/* Plugin styles */
+.token.tab:not(:empty):before,
+.token.cr:before,
+.token.lf:before {
+  color: #e0d7d1;
+}
+
+/* Plugin styles: Line Numbers */
+pre[class*="language-"].line-numbers.line-numbers {
+  padding-left: 0;
+}
+
+pre[class*="language-"].line-numbers.line-numbers code {
+  padding-left: 3.8em;
+}
+
+pre[class*="language-"].line-numbers.line-numbers .line-numbers-rows {
+  left: 0;
+}
+
+/* Plugin styles: Line Highlight */
+pre[class*="language-"][data-line] {
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 0;
+}
+pre[data-line] code {
+  position: relative;
+  padding-left: 4em;
+}
+pre .line-highlight {
+  margin-top: 0;
+}
+
+pre[class*="language-"].line-numbers {
+    position: relative;
+    padding-left: 3.8em;
+    counter-reset: linenumber;
+}
+
+pre[class*="language-"].line-numbers > code {
+    position: relative;
+    white-space: inherit;
+}
+
+.line-numbers .line-numbers-rows {
+    position: absolute;
+    pointer-events: none;
+    top: 0;
+    font-size: 100%;
+    left: -3.8em;
+    width: 3em; /* works for line-numbers below 1000 lines */
+    letter-spacing: -1px;
+    border-right: 1px solid #999;
+
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+
+}
+
+    .line-numbers-rows > span {
+        pointer-events: none;
+        display: block;
+        counter-increment: linenumber;
+    }
+
+        .line-numbers-rows > span:before {
+            content: counter(linenumber);
+            color: #999;
+            display: block;
+            padding-right: 0.8em;
+            text-align: right;
+        }
+
+</style>
+  
+    
+
+
+</body>
+</html>
