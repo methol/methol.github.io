@@ -4,7 +4,7 @@
 	<meta charset="utf-8">
 	<title>  
 	  
-  	Class.forName的作用以及为什么要用它 - Methol
+  	Methol
   	
 	</title>
 
@@ -118,57 +118,179 @@
 		</div>	
 		<div class="mid-col">
 			<div class="mid-col-container"> <div id="content" class="inner">
+<div itemscope itemtype="http://schema.org/Blog">
 
-	<article class="post" itemscope itemtype="http://schema.org/BlogPosting">
-		<h1 class="title" itemprop="name">Class.forName的作用以及为什么要用它</h1>
-		<div class="entry-content" itemprop="articleBody">
-			<p><code>Class.forName(xxx.xx.xx)</code> 返回的是一个类</p>
-<p>首先你要明白在java里面任何class都要装载在虚拟机上才能运行。这句话就是装载类用的(和new 不一样，要分清楚)。</p>
-<p>至于什么时候用，你可以考虑一下这个问题，给你一个字符串变量，它代表一个类的包名和类名，你怎么实例化它？只有你提到的这个方法了，不过要再加一点。<br />
-<code>A a = (A)Class.forName(“pacage.A”).newInstance();</code><br />
-这和你<br />
-<code>A a = new A()；</code><br />
-是一样的效果。</p>
-<p>关于补充的问题<br />
-答案是肯定的，jvm会执行静态代码段，你要记住一个概念，静态代码是和class绑定的，class装载成功就表示执行了你的静态代码了。而且以后不会再走这段静态代码了。</p>
-<p><code>Class.forName(xxx.xx.xx);</code> 返回的是一个类<br />
-<code>Class.forName(xxx.xx.xx);</code>的作用是要求JVM查找并加载指定的类，也就是说JVM会执行该类的静态代码段</p>
-<p>动态加载和创建Class 对象，比如想根据用户输入的字符串来创建对象<br />
-String str = 用户输入的字符串<br />
-<code>Class t = Class.forName(str);</code><br />
-<code>t.newInstance();</code></p>
-<p>在初始化一个类，生成一个实例的时候，newInstance()方法和new关键字除了一个是方法，一个是关键字外，最主要有什么区别？它们的区别在于创建对象的方式不一样，前者是使用类加载机制，后者是创建一个新类。那么为什么会有两种创建对象方式？这主要考虑到软件的可伸缩、可扩展和可重用等软件设计思想。</p>
-<p>Java中工厂模式经常使用newInstance()方法来创建对象，因此从为什么要使用工厂模式上可以找到具体答案。 例如：<br />
-class c = Class.forName(“Example”);<br />
-factory = (ExampleInterface)c.newInstance();</p>
-<p>其中ExampleInterface是Example的接口，可以写成如下形式：<br />
-String className = “Example”;<br />
-class c = Class.forName(className);<br />
-factory = (ExampleInterface)c.newInstance();</p>
-<p>进一步可以写成如下形式：<br />
-String className = readfromXMlConfig;//从xml 配置文件中获得字符串<br />
-class c = Class.forName(className);<br />
-factory = (ExampleInterface)c.newInstance();</p>
-<p>上面代码已经不存在Example的类名称，它的优点是，无论Example类怎么变化，上述代码不变，甚至可以更换Example的兄弟类Example2 , Example3 , Example4……，只要他们继承ExampleInterface就可以。</p>
-<p>从JVM的角度看，我们使用关键字new创建一个类的时候，这个类可以没有被加载。但是使用newInstance()方法的时候，就必须保证：1、这个类已经加载；2、这个类已经连接了。而完成上面两个步骤的正是Class的静态方法forName()所完成的，这个静态方法调用了启动类加载器，即加载java API的那个加载器。</p>
-<p>现在可以看出，newInstance()实际上是把new这个方式分解为两步，即首先调用Class加载方法加载某个类，然后实例化。 这样分步的好处是显而易见的。我们可以在调用class的静态加载方法forName时获得更好的灵活性，提供给了一种降耦的手段。</p>
-<p>最后用最简单的描述来区分new关键字和newInstance()方法的区别：<br />
-<strong>newInstance: 弱类型。低效率。只能调用无参构造。<br />
-new: 强类型。相对高效。能调用任何public构造。</strong></p>
 
+	<article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
+		<div class="meta">
+			<div class="date">
+				<time datetime="2015-01-06T09:00:45+08:00" itemprop="datePublished">2015/01/06</time>
+			</div>
+			
+			 
+			
 		</div>
+		<h1 class="title" itemprop="name"><a href="16661412450602.html" itemprop="url">
+		java关键词过滤算法</a></h1>
+		<div class="entry-content" itemprop="articleBody">
+			
+			<pre><code class="language-java">/**
+ * java关键字过滤
+ * HashMap实现DFA算法
+ * 关键词替换为*
+ * @author Methol
+ */
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+@SuppressWarnings({ &quot;rawtypes&quot;, &quot;unchecked&quot; })
+public class KeywordFilter {
+  /** 直接禁止的 */
+  private HashMap keysMap = new HashMap();
+  static final String tihuantxt = &quot;**********************************************************&quot;;
+  private int matchType = 1; // 1:最小长度匹配 2：最大长度匹配
+
+  public void addKeywords(List&lt;String&gt; keywords) {
+    for (int i = 0; i &lt; keywords.size(); i++) {
+      String key = keywords.get(i).trim();
+      HashMap nowhash = null;
+      nowhash = keysMap;
+      for (int j = 0; j &lt; key.length(); j++) {
+        char word = key.charAt(j);
+        Object wordMap = nowhash.get(word);
+        if (wordMap != null) {
+          nowhash = (HashMap) wordMap;
+        } else {
+          HashMap&lt;String, String&gt; newWordHash = new HashMap&lt;String, String&gt;();
+          newWordHash.put(&quot;isEnd&quot;, &quot;0&quot;);
+          nowhash.put(word, newWordHash);
+          nowhash = newWordHash;
+        }
+        if (j == key.length() - 1) {
+          nowhash.put(&quot;isEnd&quot;, &quot;1&quot;);
+        }
+      }
+    }
+  }
+
+  /**
+   * 重置关键词
+   */
+  public void clearKeywords() {
+    keysMap.clear();
+  }
+
+  /**
+   * 检查一个字符串从begin位置起开始是否有keyword符合， 如果有符合的keyword值，返回值为匹配keyword的长度，否则返回零
+   * flag 1:最小长度匹配 2：最大长度匹配
+   */
+  private int checkKeyWords(String txt, int begin, int flag) {
+    HashMap nowhash = null;
+    nowhash = keysMap;
+    int maxMatchRes = 0;
+    int res = 0;
+    int l = txt.length();
+    char word = 0;
+    for (int i = begin; i &lt; l; i++) {
+      word = txt.charAt(i);
+      Object wordMap = nowhash.get(word);
+      if (wordMap != null) {
+        res++;
+        nowhash = (HashMap) wordMap;
+        if (((String) nowhash.get(&quot;isEnd&quot;)).equals(&quot;1&quot;)) {
+          if (flag == 1) {
+            wordMap = null;
+            nowhash = null;
+            txt = null;
+            return res;
+          } else {
+            maxMatchRes = res;
+          }
+        }
+      } else {
+        txt = null;
+        nowhash = null;
+        return maxMatchRes;
+      }
+    }
+    txt = null;
+    nowhash = null;
+    return maxMatchRes;
+  }
+
+  /**
+   * 返回txt中关键字的列表
+   */
+  public String getTxtKeyWords(String txt) {
+    Set set = new HashSet();
+    int l = txt.length();
+    String newtxt = new String();
+    for (int i = 0; i &lt; l;) {
+      int len = checkKeyWords(txt, i, matchType);
+      if (len &gt; 0) {
+        newtxt += txt.substring(0, i);
+        newtxt += tihuantxt.substring(0, len);
+        newtxt += txt.substring(i + len, txt.length());
+        txt = newtxt;
+        newtxt = &quot;&quot;;
+        i += len;
+      } else {
+        i++;
+      }
+    }
+    return txt;
+  }
+
+  /**
+   * 仅判断txt中是否有关键字
+   */
+  public boolean isContentKeyWords(String txt) {
+    for (int i = 0; i &lt; txt.length(); i++) {
+      int len = checkKeyWords(txt, i, 1);
+      if (len &gt; 0) {
+        return true;
+      }
+    }
+    txt = null;
+    return false;
+  }
+
+  public int getMatchType() {
+    return matchType;
+  }
+
+  public void setMatchType(int matchType) {
+    this.matchType = matchType;
+  }
+}
+</code></pre>
+<p>​</p>
+
+
+			
+			
+		</div>
+
 	</article>
-	<div class="share-comment">
-	 
+  
 
-	  
-	    <div id="disqus_thread"></div>
-	  
+</div>
+<nav id="pagenavi">
+	 <a class="prev" href="all_21.html">Prev</a>  
+	
+	<div class="center"><a href="archives.html">Blog Archives</a></div>
 
-	  
+</nav>
 
-	</div>
-</div>        </div>
+</div>
+
+
+
+        </div>
 			<footer id="footer" class="inner">Copyright &copy; 2014
 Powered by <a target="_blank" href="http://www.mweb.im">MWeb</a> &nbsp;&nbsp; 
 Theme by <a href="http://shashankmehta.in/archive/2012/greyshade.html">Shashank Mehta</a>

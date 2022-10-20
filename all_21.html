@@ -4,7 +4,7 @@
 	<meta charset="utf-8">
 	<title>  
 	  
-  	Class.forName的作用以及为什么要用它 - Methol
+  	Methol
   	
 	</title>
 
@@ -118,57 +118,63 @@
 		</div>	
 		<div class="mid-col">
 			<div class="mid-col-container"> <div id="content" class="inner">
+<div itemscope itemtype="http://schema.org/Blog">
 
-	<article class="post" itemscope itemtype="http://schema.org/BlogPosting">
-		<h1 class="title" itemprop="name">Class.forName的作用以及为什么要用它</h1>
-		<div class="entry-content" itemprop="articleBody">
-			<p><code>Class.forName(xxx.xx.xx)</code> 返回的是一个类</p>
-<p>首先你要明白在java里面任何class都要装载在虚拟机上才能运行。这句话就是装载类用的(和new 不一样，要分清楚)。</p>
-<p>至于什么时候用，你可以考虑一下这个问题，给你一个字符串变量，它代表一个类的包名和类名，你怎么实例化它？只有你提到的这个方法了，不过要再加一点。<br />
-<code>A a = (A)Class.forName(“pacage.A”).newInstance();</code><br />
-这和你<br />
-<code>A a = new A()；</code><br />
-是一样的效果。</p>
-<p>关于补充的问题<br />
-答案是肯定的，jvm会执行静态代码段，你要记住一个概念，静态代码是和class绑定的，class装载成功就表示执行了你的静态代码了。而且以后不会再走这段静态代码了。</p>
-<p><code>Class.forName(xxx.xx.xx);</code> 返回的是一个类<br />
-<code>Class.forName(xxx.xx.xx);</code>的作用是要求JVM查找并加载指定的类，也就是说JVM会执行该类的静态代码段</p>
-<p>动态加载和创建Class 对象，比如想根据用户输入的字符串来创建对象<br />
-String str = 用户输入的字符串<br />
-<code>Class t = Class.forName(str);</code><br />
-<code>t.newInstance();</code></p>
-<p>在初始化一个类，生成一个实例的时候，newInstance()方法和new关键字除了一个是方法，一个是关键字外，最主要有什么区别？它们的区别在于创建对象的方式不一样，前者是使用类加载机制，后者是创建一个新类。那么为什么会有两种创建对象方式？这主要考虑到软件的可伸缩、可扩展和可重用等软件设计思想。</p>
-<p>Java中工厂模式经常使用newInstance()方法来创建对象，因此从为什么要使用工厂模式上可以找到具体答案。 例如：<br />
-class c = Class.forName(“Example”);<br />
-factory = (ExampleInterface)c.newInstance();</p>
-<p>其中ExampleInterface是Example的接口，可以写成如下形式：<br />
-String className = “Example”;<br />
-class c = Class.forName(className);<br />
-factory = (ExampleInterface)c.newInstance();</p>
-<p>进一步可以写成如下形式：<br />
-String className = readfromXMlConfig;//从xml 配置文件中获得字符串<br />
-class c = Class.forName(className);<br />
-factory = (ExampleInterface)c.newInstance();</p>
-<p>上面代码已经不存在Example的类名称，它的优点是，无论Example类怎么变化，上述代码不变，甚至可以更换Example的兄弟类Example2 , Example3 , Example4……，只要他们继承ExampleInterface就可以。</p>
-<p>从JVM的角度看，我们使用关键字new创建一个类的时候，这个类可以没有被加载。但是使用newInstance()方法的时候，就必须保证：1、这个类已经加载；2、这个类已经连接了。而完成上面两个步骤的正是Class的静态方法forName()所完成的，这个静态方法调用了启动类加载器，即加载java API的那个加载器。</p>
-<p>现在可以看出，newInstance()实际上是把new这个方式分解为两步，即首先调用Class加载方法加载某个类，然后实例化。 这样分步的好处是显而易见的。我们可以在调用class的静态加载方法forName时获得更好的灵活性，提供给了一种降耦的手段。</p>
-<p>最后用最简单的描述来区分new关键字和newInstance()方法的区别：<br />
-<strong>newInstance: 弱类型。低效率。只能调用无参构造。<br />
-new: 强类型。相对高效。能调用任何public构造。</strong></p>
 
+	<article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
+		<div class="meta">
+			<div class="date">
+				<time datetime="2015-03-11T09:00:45+08:00" itemprop="datePublished">2015/03/11</time>
+			</div>
+			
+			 
+			
 		</div>
+		<h1 class="title" itemprop="name"><a href="16661412450391.html" itemprop="url">
+		ubuntu下安装mysql并开启远程登陆</a></h1>
+		<div class="entry-content" itemprop="articleBody">
+			
+			<p>安装很简单，一行命令。<br />
+<code>apt-get install mysql-server</code><br />
+开启远程登陆。<br /><br />
+<code>netstat -an | grep 3306</code><br />
+显示结果：<em><em>tcp 0 0 127.0.0.1:3306 0.0.0.0:</em> LISTEN</em>*<br />
+从上面可以看出，mysql的3306端口只是监听本地的连接，这样就阻碍了外部IP对该数据库的访问，修改的办法其实很简单，进入到mysql的配置文件所在目录（<code>/etc/mysql/my.cnf</code>）下，找到文件中的如下内容：<br />
+<strong>bind-address = 127.0.0.1</strong><br />
+将bind-address注释掉就可以让别的ip访问。<br />
+然后登陆到mysql。</p>
+<p><code>mysql -uroot -pxxxxxxxx</code><br />
+输入以下命令。</p>
+<pre><code class="language-plain_text">mysql&gt; grant all on *.* to user_name@'%' identified by 'user_password';
+mysql &gt;use mysql;
+mysql&gt;update user set host = '%' where user = 'root';
+mysql&gt; flush privileges;
+</code></pre>
+<p>如果第三命令报错，看是不是root已经有了，primary key的错误，如果是的，可以忽略，执行下面一条命令。</p>
+<p>之后重启mysql就可以了。</p>
+<p><code>/etc/init.d/mysql restart</code></p>
+
+
+			
+			
+		</div>
+
 	</article>
-	<div class="share-comment">
-	 
+  
 
-	  
-	    <div id="disqus_thread"></div>
-	  
+</div>
+<nav id="pagenavi">
+	 <a class="prev" href="all_20.html">Prev</a>  
+	 <a class="next" href="all_22.html">Next</a> 
+	<div class="center"><a href="archives.html">Blog Archives</a></div>
 
-	  
+</nav>
 
-	</div>
-</div>        </div>
+</div>
+
+
+
+        </div>
 			<footer id="footer" class="inner">Copyright &copy; 2014
 Powered by <a target="_blank" href="http://www.mweb.im">MWeb</a> &nbsp;&nbsp; 
 Theme by <a href="http://shashankmehta.in/archive/2012/greyshade.html">Shashank Mehta</a>
