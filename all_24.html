@@ -124,29 +124,151 @@
 	<article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
 		<div class="meta">
 			<div class="date">
-				<time datetime="2015-09-06T09:00:45+08:00" itemprop="datePublished">2015/09/06</time>
+				<time datetime="2015-01-06T09:00:45+08:00" itemprop="datePublished">2015/01/06</time>
 			</div>
 			
 			 
 			
 		</div>
-		<h1 class="title" itemprop="name"><a href="16661412450464.html" itemprop="url">
-		shadowsocks用户连接数查看脚本</a></h1>
+		<h1 class="title" itemprop="name"><a href="16661412450602.html" itemprop="url">
+		java关键词过滤算法</a></h1>
 		<div class="entry-content" itemprop="articleBody">
 			
-			<pre><code class="language-shell">#!/bin/bash
-cd ~
-echo  &gt;shadowsocks_clients.txt
-for ((i=9101; i&lt;9105; i++)); do
-echo ${i}: &gt;&gt;shadowsocks_clients.txt
-lsof -i -n -P | egrep -c &quot;:${i}.+ESTABLISHED&quot;  &gt;&gt;shadowsocks_clients.txt
-lsof -i -n -P | egrep &quot;:${i}.+ESTABLISHED&quot;  &gt;&gt;shadowsocks_clients.txt
-echo  &gt;&gt;shadowsocks_clients.txt
-echo  &gt;&gt;shadowsocks_clients.txt
-done
+			<pre><code class="language-java">/**
+ * java关键字过滤
+ * HashMap实现DFA算法
+ * 关键词替换为*
+ * @author Methol
+ */
 
-cat shadowsocks_clients.txt
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+@SuppressWarnings({ &quot;rawtypes&quot;, &quot;unchecked&quot; })
+public class KeywordFilter {
+  /** 直接禁止的 */
+  private HashMap keysMap = new HashMap();
+  static final String tihuantxt = &quot;**********************************************************&quot;;
+  private int matchType = 1; // 1:最小长度匹配 2：最大长度匹配
+
+  public void addKeywords(List&lt;String&gt; keywords) {
+    for (int i = 0; i &lt; keywords.size(); i++) {
+      String key = keywords.get(i).trim();
+      HashMap nowhash = null;
+      nowhash = keysMap;
+      for (int j = 0; j &lt; key.length(); j++) {
+        char word = key.charAt(j);
+        Object wordMap = nowhash.get(word);
+        if (wordMap != null) {
+          nowhash = (HashMap) wordMap;
+        } else {
+          HashMap&lt;String, String&gt; newWordHash = new HashMap&lt;String, String&gt;();
+          newWordHash.put(&quot;isEnd&quot;, &quot;0&quot;);
+          nowhash.put(word, newWordHash);
+          nowhash = newWordHash;
+        }
+        if (j == key.length() - 1) {
+          nowhash.put(&quot;isEnd&quot;, &quot;1&quot;);
+        }
+      }
+    }
+  }
+
+  /**
+   * 重置关键词
+   */
+  public void clearKeywords() {
+    keysMap.clear();
+  }
+
+  /**
+   * 检查一个字符串从begin位置起开始是否有keyword符合， 如果有符合的keyword值，返回值为匹配keyword的长度，否则返回零
+   * flag 1:最小长度匹配 2：最大长度匹配
+   */
+  private int checkKeyWords(String txt, int begin, int flag) {
+    HashMap nowhash = null;
+    nowhash = keysMap;
+    int maxMatchRes = 0;
+    int res = 0;
+    int l = txt.length();
+    char word = 0;
+    for (int i = begin; i &lt; l; i++) {
+      word = txt.charAt(i);
+      Object wordMap = nowhash.get(word);
+      if (wordMap != null) {
+        res++;
+        nowhash = (HashMap) wordMap;
+        if (((String) nowhash.get(&quot;isEnd&quot;)).equals(&quot;1&quot;)) {
+          if (flag == 1) {
+            wordMap = null;
+            nowhash = null;
+            txt = null;
+            return res;
+          } else {
+            maxMatchRes = res;
+          }
+        }
+      } else {
+        txt = null;
+        nowhash = null;
+        return maxMatchRes;
+      }
+    }
+    txt = null;
+    nowhash = null;
+    return maxMatchRes;
+  }
+
+  /**
+   * 返回txt中关键字的列表
+   */
+  public String getTxtKeyWords(String txt) {
+    Set set = new HashSet();
+    int l = txt.length();
+    String newtxt = new String();
+    for (int i = 0; i &lt; l;) {
+      int len = checkKeyWords(txt, i, matchType);
+      if (len &gt; 0) {
+        newtxt += txt.substring(0, i);
+        newtxt += tihuantxt.substring(0, len);
+        newtxt += txt.substring(i + len, txt.length());
+        txt = newtxt;
+        newtxt = &quot;&quot;;
+        i += len;
+      } else {
+        i++;
+      }
+    }
+    return txt;
+  }
+
+  /**
+   * 仅判断txt中是否有关键字
+   */
+  public boolean isContentKeyWords(String txt) {
+    for (int i = 0; i &lt; txt.length(); i++) {
+      int len = checkKeyWords(txt, i, 1);
+      if (len &gt; 0) {
+        return true;
+      }
+    }
+    txt = null;
+    return false;
+  }
+
+  public int getMatchType() {
+    return matchType;
+  }
+
+  public void setMatchType(int matchType) {
+    this.matchType = matchType;
+  }
+}
 </code></pre>
+<p>​</p>
 
 
 			
@@ -158,8 +280,8 @@ cat shadowsocks_clients.txt
 
 </div>
 <nav id="pagenavi">
-	 <a class="prev" href="all_10.html">Prev</a>  
-	 <a class="next" href="all_12.html">Next</a> 
+	 <a class="prev" href="all_23.html">Prev</a>  
+	
 	<div class="center"><a href="archives.html">Blog Archives</a></div>
 
 </nav>

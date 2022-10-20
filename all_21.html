@@ -124,35 +124,42 @@
 	<article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
 		<div class="meta">
 			<div class="date">
-				<time datetime="2015-03-11T09:00:45+08:00" itemprop="datePublished">2015/03/11</time>
+				<time datetime="2015-03-19T09:00:45+08:00" itemprop="datePublished">2015/03/19</time>
 			</div>
 			
 			 
 			
 		</div>
-		<h1 class="title" itemprop="name"><a href="16661412450391.html" itemprop="url">
-		ubuntu下安装mysql并开启远程登陆</a></h1>
+		<h1 class="title" itemprop="name"><a href="16661412450127.html" itemprop="url">
+		ubuntu命令行下安装jdk</a></h1>
 		<div class="entry-content" itemprop="articleBody">
 			
-			<p>安装很简单，一行命令。<br />
-<code>apt-get install mysql-server</code><br />
-开启远程登陆。<br /><br />
-<code>netstat -an | grep 3306</code><br />
-显示结果：<em><em>tcp 0 0 127.0.0.1:3306 0.0.0.0:</em> LISTEN</em>*<br />
-从上面可以看出，mysql的3306端口只是监听本地的连接，这样就阻碍了外部IP对该数据库的访问，修改的办法其实很简单，进入到mysql的配置文件所在目录（<code>/etc/mysql/my.cnf</code>）下，找到文件中的如下内容：<br />
-<strong>bind-address = 127.0.0.1</strong><br />
-将bind-address注释掉就可以让别的ip访问。<br />
-然后登陆到mysql。</p>
-<p><code>mysql -uroot -pxxxxxxxx</code><br />
-输入以下命令。</p>
-<pre><code class="language-plain_text">mysql&gt; grant all on *.* to user_name@'%' identified by 'user_password';
-mysql &gt;use mysql;
-mysql&gt;update user set host = '%' where user = 'root';
-mysql&gt; flush privileges;
+			<p>通过终端在/usr/local目录下新建java文件夹，并切换到目录</p>
+<p><code>mkdir /usr/local/java</code><br />
+<code>cd /usr/local/java</code></p>
+<p>首先下载jdk</p>
+<p><code>wget http://download.oracle.com/otn-pub/java/jdk/8u40-b25/jdk-8u40-linux-x64.tar.gz?AuthParam=1426050099_a7374ae62bb8c10ea270621a31e5a344</code></p>
+<p>安装tar,解压压缩包</p>
+<p><code>apt-get install tar</code><br />
+<code>tar xvf jdk-8u40-linux-x64.tar.gz</code></p>
+<p>设置jdk环境变量<br />
+这里采用全局设置方法，它是是所有用户的共用的环境变量</p>
+<p><code>vim ~/.bashrc</code><br />
+打开之后在末尾添加：</p>
+<pre><code class="language-plain_text">export JAVA_HOME=/usr/local/java/jdk1.8.0_40
+export JRE_HOME=${JAVA_HOME}/jre
+export CLASSPATH=.:${JAVA_HOME}/lib:${JRE_HOME}/lib
+export PATH=${JAVA_HOME}/bin:$PATH
 </code></pre>
-<p>如果第三命令报错，看是不是root已经有了，primary key的错误，如果是的，可以忽略，执行下面一条命令。</p>
-<p>之后重启mysql就可以了。</p>
-<p><code>/etc/init.d/mysql restart</code></p>
+<p>保存之后，输入以下命令使之立即生效。</p>
+<p><code>source ~/.bashrc</code><br />
+这样就配置好了，输入下面命令查看是否生效。</p>
+<p>`java -version``<br />
+显示如下</p>
+<pre><code class="language-plain_text">java version “1.8.0_40″
+Java(TM) SE Runtime Environment (build 1.8.0_40-b25)
+Java HotSpot(TM) 64-Bit Server VM (build 25.40-b25, mixed mode)
+</code></pre>
 
 
 			

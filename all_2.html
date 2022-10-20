@@ -124,36 +124,142 @@
 	<article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
 		<div class="meta">
 			<div class="date">
-				<time datetime="2018-03-10T09:00:45+08:00" itemprop="datePublished">2018/03/10</time>
+				<time datetime="2022-10-19T09:24:04+08:00" itemprop="datePublished">2022/10/19</time>
 			</div>
 			
 			 
 			
 		</div>
-		<h1 class="title" itemprop="name"><a href="16661412450320.html" itemprop="url">
-		防止iPhone自动下载iOS11升级</a></h1>
+		<h1 class="title" itemprop="name"><a href="16661426449923.html" itemprop="url">
+		使用backblaze B2 和 Cloudflare Wrokers做图床</a></h1>
 		<div class="entry-content" itemprop="articleBody">
 			
-			<h3><a id="%E5%AE%89%E8%A3%85tvos-beta%E6%8F%8F%E8%BF%B0%E6%96%87%E4%BB%B6" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>安装tvOS Beta描述文件</h3>
-<p>使用 iOS 端的 Safari 浏览器点击  <strong><a href="https://tuzhihao.com/upload/tvos/tvos11.mobileconfig">https://tuzhihao.com/upload/tvos/tvos11.mobileconfig</a></strong> 安装，或是使用 PC 下载后邮件发送到 iOS 设备，用自带的 Mail 打开也可安装。安装完成后重启手机，便不会再收到任何的系统更新了。</p>
-<h2><a id="%E5%B1%8F%E8%94%BD%E6%9B%B4%E6%96%B0%E7%9A%84%E5%8E%9F%E7%90%86" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>屏蔽更新的原理</h2>
-<p>安装了<code>tvOS 11 Beta Software Profile</code>，设备便会去检测 tvOS 10 Beta 版的更新，显而易见的是，tvOS 系统仅能适用于 Apple TV，iOS 设备安装该描述文件后，检测到的更新无法适用，便会显示 : 您的软件是最新版本。</p>
-<h2><a id="%E6%B3%A8%E6%84%8F%E4%BA%8B%E9%A1%B9" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>注意事项</h2>
+			<p><img src="https://file1.tuzhihao.com/20221019/Ybv0U0.jpg" alt="" /></p>
+<h2><a id="%E4%B8%BA%E4%BB%80%E4%B9%88%E4%BD%BF%E7%94%A8bcakblaze-b2" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>为什么使用bcakblaze B2</h2>
+<ul>
+<li>免费，有10G的免费空间</li>
+<li>API友好，支持s3 API</li>
+<li>带宽联盟。使用Cloudflare中转获取图片不计流量费用</li>
+</ul>
+<p>怎么传图片就不赘述了，我用的是uPic，你可以用你喜欢的工具</p>
+<h2><a id="%E4%BD%BF%E7%94%A8bcakblaze-b2" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>使用bcakblaze B2</h2>
+<p>先注册，创建一个bucket<br />
+<img src="https://file1.tuzhihao.com/20221019/wIbtCx.png" alt="" /><br />
+然后上传一张图(也可以配置使用你的工具上传，或者网页上传)，然后记录如下信息</p>
 <ol>
-<li>
-<p>该描述文件能用到2019年，估计到时候应该有tvOS 12的Beta文件了。</p>
-</li>
-<li>
-<p>如果之前装了可以升级测试版系统的描述文件，删除原来安装的描述文件，再安装本文件。</p>
-</li>
-<li>
-<p>安装之后连接 iTunes 时依然会提示有系统更新，忽略即可。</p>
-</li>
-<li>
-<p>已经自动下载好安装包的用户，可以进入设置——通用里面，找到【储存空间与iCloud用量】——【管理储存空间与iCloud用量】里面删除掉已安装的升级包，然后再安装描述文件。</p>
-<p>​</p>
-</li>
+<li>Bucket Name</li>
+<li>Friendly URL里面的host</li>
 </ol>
+<p><img src="https://file1.tuzhihao.com/20221019/q1ZnJ9.png" alt="" /></p>
+<h2><a id="%E4%BD%BF%E7%94%A8cloudflare-workers" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>使用Cloudflare Workers</h2>
+<p>为什么使用wokers而不用cname的方式接入</p>
+<ul>
+<li>去除URL中的 /file/<bucket-name> 部分</li>
+<li>去除一些从 Backblaze B2 响应的无用请求头</li>
+<li>加上基本的 CORS 请求头，以便允许图片嵌入到网站中</li>
+<li>为图片优化缓存 (浏览器的缓存, 以及 CDN 边界服务器上的缓存)</li>
+</ul>
+<p>先创建一个workers，然后写入如下脚本，只需要修改2个变量</p>
+<ol>
+<li>b2Bucket -&gt; 上述1</li>
+<li>b2Domain -&gt; 上述2</li>
+</ol>
+<pre><code class="language-js">'use strict';
+const b2Domain = 'f004.backblazeb2.com'; // configure this as per instructions above
+const b2Bucket = 'bucketName'; // configure this as per instructions above
+const b2UrlPath = `/file/${b2Bucket}/`;
+addEventListener('fetch', event =&gt; {
+	return event.respondWith(fileReq(event));
+});
+
+// define the file extensions we wish to add basic access control headers to
+const corsFileTypes = ['png', 'jpg', 'gif', 'jpeg', 'webp'];
+
+// backblaze returns some additional headers that are useful for debugging, but unnecessary in production. We can remove these to save some size
+const removeHeaders = [
+	'x-bz-content-sha1',
+	'x-bz-file-id',
+	'x-bz-file-name',
+	'x-bz-info-src_last_modified_millis',
+	'X-Bz-Upload-Timestamp',
+	'x-bz-server-side-encryption',
+	'x-bz-client-unauthorized-to-read',
+	'Expires'
+];
+const expiration = 31536000; // override browser cache for images - 1 year
+
+// define a function we can re-use to fix headers
+const fixHeaders = function(url, status, headers){
+	let newHdrs = new Headers(headers);
+	// add basic cors headers for images
+	if(corsFileTypes.includes(url.pathname.split('.').pop())){
+		newHdrs.set('Access-Control-Allow-Origin', '*');
+	}
+	// override browser cache for files when 200
+	if(status === 200){
+		newHdrs.set('Cache-Control', &quot;public, max-age=&quot; + expiration);
+	}else{
+		// only cache other things for 5 minutes
+		newHdrs.set('Cache-Control', 'public, max-age=300');
+	}
+	// set ETag for efficient caching where possible
+	const ETag = newHdrs.get('x-bz-content-sha1') || newHdrs.get('x-bz-info-src_last_modified_millis') || newHdrs.get('x-bz-file-id');
+	if(ETag){
+		newHdrs.set('ETag', ETag);
+	}
+	// remove unnecessary headers
+	removeHeaders.forEach(header =&gt; {
+		newHdrs.delete(header);
+	});
+	return newHdrs;
+};
+
+async function fileReq(event){
+	const cache = caches.default; // Cloudflare edge caching
+	const url = new URL(event.request.url);
+	if(!url.pathname.startsWith(b2UrlPath)){ 
+		url.pathname = b2UrlPath + url.pathname;
+        // console.log(url.pathname);
+	}
+    url.host = b2Domain;
+    // console.log(url);
+	let response = await cache.match(url); // try to find match for this request in the edge cache
+	if(response){
+		// use cache found on Cloudflare edge. Set X-Worker-Cache header for helpful debug
+		let newHdrs = fixHeaders(url, response.status, response.headers);
+		newHdrs.set('X-Worker-Cache', &quot;true&quot;);
+		return new Response(response.body, {
+			status: response.status,
+			statusText: response.statusText,
+			headers: newHdrs
+		});
+	}
+	// no cache, fetch image, apply Cloudflare lossless compression
+	response = await fetch(url, {cf: {polish: &quot;lossless&quot;}});
+	let newHdrs = fixHeaders(url, response.status, response.headers);
+
+  if(response.status === 200){
+
+    response = new Response(response.body, {
+      status: response.status,
+      statusText: response.statusText,
+      headers: newHdrs
+    });
+  }else{
+    response = new Response('File not found!', { status: 404 })
+  }
+
+	event.waitUntil(cache.put(url, response.clone()));
+	return response;
+}
+</code></pre>
+<p>脚本参考<br />
+<a href="https://blog.meow.page/archives/free-personal-image-hosting-with-backblaze-b2-and-cloudflare-workers/">https://blog.meow.page/archives/free-personal-image-hosting-with-backblaze-b2-and-cloudflare-workers/</a><br />
+<a href="https://jross.me/free-personal-image-hosting-with-backblaze-b2-and-cloudflare-workers/">https://jross.me/free-personal-image-hosting-with-backblaze-b2-and-cloudflare-workers/</a></p>
+<p>我在脚本上的修改是把<code>b2Domain</code>改为b2的host，这样脚本更容易理解一些。</p>
+<p>最后你可以使用自己的域名做一个route就可以使用自己的域名，cf workers的域名在国内墙的比较厉害...</p>
+<h2><a id="%E6%8E%A8%E8%8D%90%E4%B8%80%E4%B8%AA%E5%9B%BE%E7%89%87%E7%BD%91%E7%AB%99" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>推荐一个图片网站</h2>
+<p><a href="https://unsplash.com">https://unsplash.com</a></p>
 
 
 			

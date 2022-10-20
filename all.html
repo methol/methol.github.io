@@ -124,142 +124,54 @@
 	<article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
 		<div class="meta">
 			<div class="date">
-				<time datetime="2022-10-19T09:24:04+08:00" itemprop="datePublished">2022/10/19</time>
+				<time datetime="2022-10-20T16:28:16+08:00" itemprop="datePublished">2022/10/20</time>
 			</div>
 			
 			 
 			
 		</div>
-		<h1 class="title" itemprop="name"><a href="16661426449923.html" itemprop="url">
-		使用backblaze B2 和 Cloudflare Wrokers做图床</a></h1>
+		<h1 class="title" itemprop="name"><a href="16662544966970.html" itemprop="url">
+		telegram bot api proxy</a></h1>
 		<div class="entry-content" itemprop="articleBody">
 			
-			<p><img src="https://file1.tuzhihao.com/20221019/Ybv0U0.jpg" alt="" /></p>
-<h2><a id="%E4%B8%BA%E4%BB%80%E4%B9%88%E4%BD%BF%E7%94%A8bcakblaze-b2" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>为什么使用bcakblaze B2</h2>
-<ul>
-<li>免费，有10G的免费空间</li>
-<li>API友好，支持s3 API</li>
-<li>带宽联盟。使用Cloudflare中转获取图片不计流量费用</li>
-</ul>
-<p>怎么传图片就不赘述了，我用的是uPic，你可以用你喜欢的工具</p>
-<h2><a id="%E4%BD%BF%E7%94%A8bcakblaze-b2" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>使用bcakblaze B2</h2>
-<p>先注册，创建一个bucket<br />
-<img src="https://file1.tuzhihao.com/20221019/wIbtCx.png" alt="" /><br />
-然后上传一张图(也可以配置使用你的工具上传，或者网页上传)，然后记录如下信息</p>
-<ol>
-<li>Bucket Name</li>
-<li>Friendly URL里面的host</li>
-</ol>
-<p><img src="https://file1.tuzhihao.com/20221019/q1ZnJ9.png" alt="" /></p>
-<h2><a id="%E4%BD%BF%E7%94%A8cloudflare-workers" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>使用Cloudflare Workers</h2>
-<p>为什么使用wokers而不用cname的方式接入</p>
-<ul>
-<li>去除URL中的 /file/<bucket-name> 部分</li>
-<li>去除一些从 Backblaze B2 响应的无用请求头</li>
-<li>加上基本的 CORS 请求头，以便允许图片嵌入到网站中</li>
-<li>为图片优化缓存 (浏览器的缓存, 以及 CDN 边界服务器上的缓存)</li>
-</ul>
-<p>先创建一个workers，然后写入如下脚本，只需要修改2个变量</p>
-<ol>
-<li>b2Bucket -&gt; 上述1</li>
-<li>b2Domain -&gt; 上述2</li>
-</ol>
-<pre><code class="language-js">'use strict';
-const b2Domain = 'f004.backblazeb2.com'; // configure this as per instructions above
-const b2Bucket = 'bucketName'; // configure this as per instructions above
-const b2UrlPath = `/file/${b2Bucket}/`;
-addEventListener('fetch', event =&gt; {
-	return event.respondWith(fileReq(event));
-});
-
-// define the file extensions we wish to add basic access control headers to
-const corsFileTypes = ['png', 'jpg', 'gif', 'jpeg', 'webp'];
-
-// backblaze returns some additional headers that are useful for debugging, but unnecessary in production. We can remove these to save some size
-const removeHeaders = [
-	'x-bz-content-sha1',
-	'x-bz-file-id',
-	'x-bz-file-name',
-	'x-bz-info-src_last_modified_millis',
-	'X-Bz-Upload-Timestamp',
-	'x-bz-server-side-encryption',
-	'x-bz-client-unauthorized-to-read',
-	'Expires'
+			<p>众所周知的原因，大陆无法直接访问telegram api，使用各种代理工具都不够稳定，可能中断。<br />
+可以使用cloudflare workers来代理telegram bot api，在国内可以正常给机器人发消息，脚本如下：</p>
+<pre><code class="language-js">// 这里可以设置bot白名单，写入你的bot id即可，防止滥用
+const whitelist = [
+  &quot;/bot5245255:&quot;,
+  &quot;/bot5065435:&quot;
 ];
-const expiration = 31536000; // override browser cache for images - 1 year
+const tg_host = &quot;api.telegram.org&quot;;
 
-// define a function we can re-use to fix headers
-const fixHeaders = function(url, status, headers){
-	let newHdrs = new Headers(headers);
-	// add basic cors headers for images
-	if(corsFileTypes.includes(url.pathname.split('.').pop())){
-		newHdrs.set('Access-Control-Allow-Origin', '*');
-	}
-	// override browser cache for files when 200
-	if(status === 200){
-		newHdrs.set('Cache-Control', &quot;public, max-age=&quot; + expiration);
-	}else{
-		// only cache other things for 5 minutes
-		newHdrs.set('Cache-Control', 'public, max-age=300');
-	}
-	// set ETag for efficient caching where possible
-	const ETag = newHdrs.get('x-bz-content-sha1') || newHdrs.get('x-bz-info-src_last_modified_millis') || newHdrs.get('x-bz-file-id');
-	if(ETag){
-		newHdrs.set('ETag', ETag);
-	}
-	// remove unnecessary headers
-	removeHeaders.forEach(header =&gt; {
-		newHdrs.delete(header);
-	});
-	return newHdrs;
-};
+addEventListener('fetch', event =&gt; {
+    event.respondWith(handleRequest(event.request))
+})
 
-async function fileReq(event){
-	const cache = caches.default; // Cloudflare edge caching
-	const url = new URL(event.request.url);
-	if(!url.pathname.startsWith(b2UrlPath)){ 
-		url.pathname = b2UrlPath + url.pathname;
-        // console.log(url.pathname);
-	}
-    url.host = b2Domain;
-    // console.log(url);
-	let response = await cache.match(url); // try to find match for this request in the edge cache
-	if(response){
-		// use cache found on Cloudflare edge. Set X-Worker-Cache header for helpful debug
-		let newHdrs = fixHeaders(url, response.status, response.headers);
-		newHdrs.set('X-Worker-Cache', &quot;true&quot;);
-		return new Response(response.body, {
-			status: response.status,
-			statusText: response.statusText,
-			headers: newHdrs
-		});
-	}
-	// no cache, fetch image, apply Cloudflare lossless compression
-	response = await fetch(url, {cf: {polish: &quot;lossless&quot;}});
-	let newHdrs = fixHeaders(url, response.status, response.headers);
+function validate(path) {
+    for (var i = 0; i &lt; whitelist.length; i++) {
+        if (path.startsWith(whitelist[i]) || path.startsWith(&quot;/file&quot; + whitelist[i]))
+            return true; 
+    }
+    return false;
+}
 
-  if(response.status === 200){
-
-    response = new Response(response.body, {
-      status: response.status,
-      statusText: response.statusText,
-      headers: newHdrs
+async function handleRequest(request) {
+    var u = new URL(request.url);
+    u.host = tg_host;
+    if (!validate(u.pathname))
+        return new Response('Unauthorized', {
+            status: 403
+        });
+    var req = new Request(u, {
+        method: request.method,
+        headers: request.headers,
+        body: request.body
     });
-  }else{
-    response = new Response('File not found!', { status: 404 })
-  }
-
-	event.waitUntil(cache.put(url, response.clone()));
-	return response;
+    const result = await fetch(req);
+    return result;
 }
 </code></pre>
-<p>脚本参考<br />
-<a href="https://blog.meow.page/archives/free-personal-image-hosting-with-backblaze-b2-and-cloudflare-workers/">https://blog.meow.page/archives/free-personal-image-hosting-with-backblaze-b2-and-cloudflare-workers/</a><br />
-<a href="https://jross.me/free-personal-image-hosting-with-backblaze-b2-and-cloudflare-workers/">https://jross.me/free-personal-image-hosting-with-backblaze-b2-and-cloudflare-workers/</a></p>
-<p>我在脚本上的修改是把<code>b2Domain</code>改为b2的host，这样脚本更容易理解一些。</p>
-<p>最后你可以使用自己的域名做一个route就可以使用自己的域名，cf workers的域名在国内墙的比较厉害...</p>
-<h2><a id="%E6%8E%A8%E8%8D%90%E4%B8%80%E4%B8%AA%E5%9B%BE%E7%89%87%E7%BD%91%E7%AB%99" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>推荐一个图片网站</h2>
-<p><a href="https://unsplash.com">https://unsplash.com</a></p>
+<p>最后强烈建议使用自己的域名，不要用workers的域名，国内被墙了。</p>
 
 
 			

@@ -124,85 +124,229 @@
 	<article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
 		<div class="meta">
 			<div class="date">
-				<time datetime="2017-04-05T09:00:45+08:00" itemprop="datePublished">2017/04/05</time>
+				<time datetime="2017-05-21T09:00:44+08:00" itemprop="datePublished">2017/05/21</time>
 			</div>
 			
 			 
 			
 		</div>
-		<h1 class="title" itemprop="name"><a href="16661412450896.html" itemprop="url">
-		MySql 空间索引</a></h1>
+		<h1 class="title" itemprop="name"><a href="16661412449263.html" itemprop="url">
+		设计模式 简单工厂 工厂方法 抽象工厂</a></h1>
 		<div class="entry-content" itemprop="articleBody">
 			
-			<p>Mysql5.7版本之后支持空间索引，试用下实现离我最近的功能。<br />
-感觉查询速度还是没有es快，但是小数据量也是一个可用的办法。</p>
-<pre><code class="language-sql">create database geo_test default charset = utf8mb4;
-use geo_test;
+			<p>针对实体user，希望写一系列的功能，能够实现数据库的增删改查等功能。</p>
+<pre><code class="language-java">    public static void main(String[] args) {
+        User u = new User();
+        u.setName(&quot;methol&quot;);
 
-create table t_dealer
-(
-    id bigint not null auto_increment primary key,
-    dealer_name varchar(255) not null,
-    city_code varchar(45) null,
-    phone varchar(32) null,
-    lat decimal(10,7) null,
-    lon decimal(10,7) null,
-    create_time datetime null
-)default charset = utf8mb4;
-create index idx_name on t_dealer (dealer_name);
-comment on table t_dealer is '基本信息表';
-comment on column dealer_name is '@cname:名称';
-comment on column address is '@cname:地址';
-comment on column city_code is '@cname:城市编码';
-comment on column phone is '@cname:电话';
-comment on column lat is '@cname:纬度';
-comment on column lon is '@cname:经度';
-comment on column create_time is '@cname:创建时间';
-
-# 添加geo点
-alter table t_dealer
-add pnt POINT NULL comment '经纬度的geo点';
-# 从经纬度中补全数据
-update t_dealer set pnt = point(lat,lon);
-# 改为not null之后才能添加索引
-alter table t_dealer MODIFY pnt POINT not null;
-# 添加索引，这种索引要求字段not null
-ALTER TABLE t_dealer ADD SPATIAL INDEX spatIdx(pnt);
-
- 
-# 几种空间对象比较方法 
-SET @g1 = GEOMFROMTEXT('Polygon((30.7108682140 114.0961681600,30.6890070000 114.5951950000,
-30.2507470000 114.5767980000,30.2507470000 114.1030670000,30.7108682140 114.0961681600))');
-SET @g2 = pointfromtext('Point(30.476421 114.403866)');
- 
-# 注意：比较的都是外包络几何类型对象 
-# 包含
-select * from t_dealer where MBRCONTAINS(@g1,pnt);
-SELECT MBRCONTAINS(@g1,@g2), MBRCONTAINS(@g2,@g1), MBRCONTAINS(@g1,@g1);
-# 被包含
-select * from t_dealer where MBRWITHIN(pnt,@g1);
-SELECT MBRWITHIN(@g2,@g1),MBRWITHIN(@g1,@g2);
-# 不相交 
-SELECT MBRDISJOINT(@g1,@g2);
-# 相等 
-SELECT MBREQUAL(@g1,@g2);
-# 相交 
-SELECT MBRINTERSECTS(@g1,@g2);
-# 重叠 
-SELECT MBROVERLAPS(@g1,@g2);
-# 相切 
-SELECT MBRTOUCHES(@g1,@g2);
-# 距离 单位 m
-select id,dealer_name,city_code,phone,lat,lon,
-  GLength(LineStringFromWKB(linestring(pnt,pointfromtext('Point(30.476421 114.403866)'))))*100*1000 as distance
-from t_dealer
-order by distance asc;
-
-
+        add(u);
+        edit(u);
+    }
+    
+    public static void add(User user){
+        System.out.println(&quot;save user【&quot; + user.getName() + &quot;】 to db&quot;);
+    }
+    
+    public static void edit(User user){
+        System.out.println(&quot;edit user【&quot; + user.getName() + &quot;】, and save to db&quot;);
+    }
 </code></pre>
-<p><img src="https://pic.tuzhihao.com/upic/20210418/214849-WBvCWV.png" alt="离我最近查询实例" /></p>
-<p>数据下载:<br />
-<a href="media/16661412450896/dealer_insert.zip">dealer_insert.zip</a></p>
+<p>上面的方法虽然基本上实现了功能，但是不利于程序以后的扩展和复用，代码也不容易维护。<br />
+通过封装、继承、多态把程序的耦合度降低，使用设计模式可以使得程序更加灵活，后期容易修改，也更加易于复用。<br />
+有了如下的代码：</p>
+<pre><code class="language-plain_text">package mode.factory.simple;
+
+import mode.factory.bean.User;
+
+public interface Operation {
+
+    void operate(User user);
+
+}
+</code></pre>
+<pre><code class="language-plain_text">
+package mode.factory.simple;
+
+import mode.factory.bean.User;
+
+public class AddOperate implements Operation {
+
+    @Override
+    public void operate(User user) {
+        System.out.println(&quot;save user【&quot; + user.getName() + &quot;】 to db&quot;);
+    }
+}
+</code></pre>
+<pre><code class="language-plain_text">package mode.factory.simple;
+
+import mode.factory.bean.User;
+
+public class EditOperate implements Operation {
+
+    @Override
+    public void operate(User user) {
+        System.out.println(&quot;edit user【&quot; + user.getName() + &quot;】, and save to db&quot;);
+    }
+}
+</code></pre>
+<pre><code class="language-plain_text">    public static void main(String[] args) {
+        User u = new User();
+        u.setName(&quot;methol&quot;);
+
+        // 不同的操作需要new不同的类操作
+        Operation addOperate = new AddOperate();
+        addOperate.operate(u);
+        Operation editOperate = new EditOperate();
+        editOperate.operate(u);
+    }
+</code></pre>
+<p>上述代码已经经过封装，并且也适合之后的代码扩展，但是还是有一个问题，如果后期想通过不同的参数（事先不知道是要执行edit还是add），那么就要通过条件判断要做的操作，这时简单工厂模式可能就是一个比较好的选择。</p>
+<h2><a id="%E7%AE%80%E5%8D%95%E5%B7%A5%E5%8E%82%E6%A8%A1%E5%BC%8F%E4%B8%8E%E5%B7%A5%E5%8E%82%E6%A8%A1%E5%BC%8F" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>简单工厂模式与工厂模式</h2>
+<pre><code class="language-plain_text">package mode.factory.simple;
+
+public class OperateFactory {
+    public static Operation findOperation(String operation) {
+        switch (operation) {
+            case &quot;add&quot;:
+                return new AddOperate();
+            case &quot;edit&quot;:
+                return new EditOperate();
+            default:
+                return null;
+        }
+    }
+}
+</code></pre>
+<p>通过工厂类来帮我们new一个对象，而不是直接在代码中需要的地方new一个对象，在同一个地方管理，后期的代码维护和扩展性都强了很多。<br />
+或者这时想增加一个delete方法，只需要继承<code>Operation</code>类，写一个方法，然后在<code>OperateFactory</code>增加一个case即可。<br />
+<strong>简单工厂模式</strong>，就是一个简单的创建产品(<code>Operation</code>)的工具，可以是<code>AddOperate</code>类，也可以是<code>EditOperate</code>类，甚至他们之间没有任何关系也是没问题的。<br />
+<strong>工厂模式</strong>，他也是一个简单的创建产品(<code>Operation</code>)的工具，但是他有一个区别是所有的产品(<code>AddOperate</code>，<code>EditOperate</code>)都是继承(实现)<code>Operation</code>这个父类的，父类中有抽象的方法，之后都是调用同一个方法来做操作。<br />
+使用中，很少使用简单工厂模式，大多都是工厂模式，谈到工厂模式，基本上都是指的工厂模式。</p>
+<pre><code class="language-java">    public static void main(String[] args) {
+        User u = new User();
+        u.setName(&quot;methol&quot;);
+
+        // 不同的操作需要new不同的类操作
+        Operation addOperate = new AddOperate();
+        addOperate.operate(u);
+        Operation editOperate = new EditOperate();
+        editOperate.operate(u);
+
+        // 使用一个简单的工厂，让工厂来帮我们选择
+        OperateFactory.findOperation(&quot;add&quot;).operate(u);
+        OperateFactory.findOperation(&quot;edit&quot;).operate(u);
+    }
+</code></pre>
+<h2><a id="%E5%B7%A5%E5%8E%82%E6%96%B9%E6%B3%95" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>工厂方法</h2>
+<p>对<code>Operation</code>做了一些小的修改，增加了一个方法</p>
+<pre><code class="language-plain_text">public interface Operation {
+
+    void operate(User user);
+
+    Operation createDefault(String operationType);
+}
+</code></pre>
+<pre><code class="language-plain_text">public class AddOperate implements Operation {
+
+    @Override
+    public void operate(User user) {
+        System.out.println(&quot;save user【&quot; + user.getName() + &quot;】 to db&quot;);
+    }
+
+    @Override
+    public Operation createDefault(String operationType) {
+        return OperateFactory.findOperation(operationType);
+    }
+}
+</code></pre>
+<pre><code class="language-plain_text">public class EditOperate implements Operation {
+
+    @Override
+    public void operate(User user) {
+        System.out.println(&quot;edit user【&quot; + user.getName() + &quot;】, and save to db&quot;);
+    }
+
+    @Override
+    public Operation createDefault(String operationType) {
+        return OperateFactory.findOperation(operationType);
+    }
+}
+</code></pre>
+<p>工厂方法主要系是两个元素，产品(<code>Operation</code>)和创建者(<code>OperateFactory</code>)。<br />
+而工厂方法就是一个创建者这个类的一个方法而已，这个方法就是用来封装产品的创建。<br />
+和工厂模式的区别是，工厂模式的最大优点在于工厂类中包含了逻辑判断，根据(客户端)传入的参数动态实例化相关的类，那么对于客户端来说，他是不需要关心产品(<code>Operation</code>)的，他只需要关心传入的参数。而工厂模式这时把这一动作延后，接口定义了一个用来创建对象的接口，让子类决定实例化哪个类，工厂方法使一个类的实例化过程延迟到其子类。</p>
+<h2><a id="%E6%8A%BD%E8%B1%A1%E5%B7%A5%E5%8E%82" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>抽象工厂</h2>
+<p>抽象工厂，顾名思义，就是对工厂进行抽象。<br />
+工厂方法和工厂模式都是对产品抽象封装，通过一个工厂，生产多种产品。<br />
+抽象工厂就是通过不同的工厂生产不同的产品。<br />
+还是上面的例子，<code>OperateFactory</code>创建了新增和修改两种操作(产品)，此时有一个新的需求来了，之前用的数据库使mysql，现在想改成oracle，此时就对OperateFactory进行抽象。</p>
+<pre><code class="language-plain_text">package mode.factory.abstracs;
+
+import mode.factory.bean.User;
+import mode.factory.simple.Operation;
+
+public interface Factory {
+
+    void add(User user);
+
+    void edit(User user);
+
+    Operation createDefault(String operationType);
+}
+</code></pre>
+<p>接口申明了，不管是申明工厂，都需要有add和edit这两种产品的生产。不同的接口只需要实现这个接口，做自己的操作即可。同时不同的工厂还可以实现自己独有的产品的生产。</p>
+<pre><code class="language-plain_text">package mode.factory.abstracs;
+
+import mode.factory.bean.User;
+import mode.factory.simple.Operation;
+
+public class MysqlOperateFactory implements Factory {
+    @Override
+    public void add(User user) {
+        createDefault(&quot;add&quot;).operate(user);
+    }
+
+    @Override
+    public void edit(User user) {
+        createDefault(&quot;edit&quot;).operate(user);
+    }
+
+    @Override
+    public Operation createDefault(String operationType) {
+        return new MysqlOperate().findOperation(operationType);
+    }
+}
+</code></pre>
+<pre><code class="language-plain_text">package mode.factory.abstracs;
+
+import mode.factory.bean.User;
+import mode.factory.simple.Operation;
+
+public class OracleOperateFactory implements Factory {
+    @Override
+    public void add(User user) {
+        createDefault(&quot;add&quot;).operate(user);
+    }
+
+    @Override
+    public void edit(User user) {
+        createDefault(&quot;edit&quot;).operate(user);
+    }
+
+    @Override
+    public Operation createDefault(String operationType) {
+        return new OracleOperate().findOperation(operationType);
+    }
+}
+</code></pre>
+<p>这里也用了工厂方法的思想，抽象工厂的模式实现了工厂线的扩展。</p>
+<h2><a id="%E5%B0%8F%E7%BB%93" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>小结</h2>
+<ol>
+<li>工厂模式就是一个类，它用来根据客户端(参数)具体的实例化某个对象。</li>
+<li>工厂方法也是实例化对象，但是他把这个过程延迟到了子类，由子类决定具体实例化哪个对象。</li>
+<li>抽象工厂是对工厂的扩展。他是在工厂方法的上面做的进一步的抽象。</li>
+<li>工厂模式是用来生产产品的，不能增加产品；工厂方法是用来生产产品，同时也可以增加产品（实现接口，增加产品）；抽象工厂用来增加工厂的，他不能增加产品。</li>
+</ol>
 
 
 			

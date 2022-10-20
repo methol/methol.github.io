@@ -124,49 +124,62 @@
 	<article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
 		<div class="meta">
 			<div class="date">
-				<time datetime="2015-03-29T09:00:44+08:00" itemprop="datePublished">2015/03/29</time>
+				<time datetime="2015-04-08T09:00:44+08:00" itemprop="datePublished">2015/04/08</time>
 			</div>
 			
 			 
 			
 		</div>
-		<h1 class="title" itemprop="name"><a href="16661412449855.html" itemprop="url">
-		八皇后问题</a></h1>
+		<h1 class="title" itemprop="name"><a href="16661412449189.html" itemprop="url">
+		遍历所有01序列</a></h1>
 		<div class="entry-content" itemprop="articleBody">
 			
-			<pre><code class="language-c">#include &lt;iostream&gt;
-#include &lt;algorithm&gt;
-using namespace std;
-const int size=8;
-int eq[]={0,1,2,3,4,5,6,7};
-long cc=0;
-int eightqueen(){
-  while(next_permutation(eq,eq+8)){
-    bool ok=true;
-    int i,j;
-    //不可能存在同行同列，判断是不是相同对角线就可以了
-    for(i=0;i&lt;size &amp;&amp; ok;i++){
-      for(j=0;j&lt;size &amp;&amp; ok;j++){
-        if(i==j) continue;
-        if( (i-eq[i]==j-eq[j])||(i+eq[i]==j+eq[j]) ) //判断是不是在同一对角线
-          ok=false;
-      }
+			<p>逻辑判断题，有很多个条件，1,0表示真,假，遍历所有的可能情况，递归操作。</p>
+<pre><code class="language-java">/**
+ * Created by Methol on 2015/4/8.
+ */
+public class Main {
+
+  static int a[] ={0,0,0};
+
+  public static void show(){
+    for (int i = 0; i &lt; a.length; i++) {
+      System.out.print(a[i]+&quot; &quot;);
     }
-    if(ok){
-      cc++;
-      for(i=0;i&lt;size;i++){
-        cout&lt;&lt;eq[i];
-      }
-      cout&lt;&lt;endl;
-    }
+    System.out.println();
   }
-  return cc;
-}
-int main(){
-  cout&lt;&lt;endl&lt;&lt;eightqueen()&lt;&lt;endl;
-  return 0;
+
+  public  static void f(int i){
+
+    if(i&gt;=a.length){
+      //这里写操作
+      show();
+      return;
+    }
+
+    a[i] = 0;
+    f(i+1);
+
+    a[i] = 1;
+    f(i+1);
+
+  }
+
+  public static void main(String []args){
+    f(0);
+  }
 }
 </code></pre>
+<hr />
+<p>输出结果：</p>
+<p>0 0 0<br />
+0 0 1<br />
+0 1 0<br />
+0 1 1<br />
+1 0 0<br />
+1 0 1<br />
+1 1 0<br />
+1 1 1</p>
 
 
 			

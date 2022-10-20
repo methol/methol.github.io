@@ -4,7 +4,7 @@
 	<meta charset="utf-8">
 	<title>  
 	  
-  	Methol
+  	telegram bot api proxy - Methol
   	
 	</title>
 
@@ -118,57 +118,62 @@
 		</div>	
 		<div class="mid-col">
 			<div class="mid-col-container"> <div id="content" class="inner">
-<div itemscope itemtype="http://schema.org/Blog">
 
-
-	<article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
-		<div class="meta">
-			<div class="date">
-				<time datetime="2015-09-06T09:00:45+08:00" itemprop="datePublished">2015/09/06</time>
-			</div>
-			
-			 
-			
-		</div>
-		<h1 class="title" itemprop="name"><a href="16661412450464.html" itemprop="url">
-		shadowsocks用户连接数查看脚本</a></h1>
+	<article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+		<h1 class="title" itemprop="name">telegram bot api proxy</h1>
 		<div class="entry-content" itemprop="articleBody">
-			
-			<pre><code class="language-shell">#!/bin/bash
-cd ~
-echo  &gt;shadowsocks_clients.txt
-for ((i=9101; i&lt;9105; i++)); do
-echo ${i}: &gt;&gt;shadowsocks_clients.txt
-lsof -i -n -P | egrep -c &quot;:${i}.+ESTABLISHED&quot;  &gt;&gt;shadowsocks_clients.txt
-lsof -i -n -P | egrep &quot;:${i}.+ESTABLISHED&quot;  &gt;&gt;shadowsocks_clients.txt
-echo  &gt;&gt;shadowsocks_clients.txt
-echo  &gt;&gt;shadowsocks_clients.txt
-done
+			<p>众所周知的原因，大陆无法直接访问telegram api，使用各种代理工具都不够稳定，可能中断。<br />
+可以使用cloudflare workers来代理telegram bot api，在国内可以正常给机器人发消息，脚本如下：</p>
+<pre><code class="language-js">// 这里可以设置bot白名单，写入你的bot id即可，防止滥用
+const whitelist = [
+  &quot;/bot5245255:&quot;,
+  &quot;/bot5065435:&quot;
+];
+const tg_host = &quot;api.telegram.org&quot;;
 
-cat shadowsocks_clients.txt
+addEventListener('fetch', event =&gt; {
+    event.respondWith(handleRequest(event.request))
+})
+
+function validate(path) {
+    for (var i = 0; i &lt; whitelist.length; i++) {
+        if (path.startsWith(whitelist[i]) || path.startsWith(&quot;/file&quot; + whitelist[i]))
+            return true; 
+    }
+    return false;
+}
+
+async function handleRequest(request) {
+    var u = new URL(request.url);
+    u.host = tg_host;
+    if (!validate(u.pathname))
+        return new Response('Unauthorized', {
+            status: 403
+        });
+    var req = new Request(u, {
+        method: request.method,
+        headers: request.headers,
+        body: request.body
+    });
+    const result = await fetch(req);
+    return result;
+}
 </code></pre>
+<p>最后强烈建议使用自己的域名，不要用workers的域名，国内被墙了。</p>
 
-
-			
-			
 		</div>
-
 	</article>
-  
+	<div class="share-comment">
+	 
 
-</div>
-<nav id="pagenavi">
-	 <a class="prev" href="all_10.html">Prev</a>  
-	 <a class="next" href="all_12.html">Next</a> 
-	<div class="center"><a href="archives.html">Blog Archives</a></div>
+	  
+	    <div id="disqus_thread"></div>
+	  
 
-</nav>
+	  
 
-</div>
-
-
-
-        </div>
+	</div>
+</div>        </div>
 			<footer id="footer" class="inner">Copyright &copy; 2014
 Powered by <a target="_blank" href="http://www.mweb.im">MWeb</a> &nbsp;&nbsp; 
 Theme by <a href="http://shashankmehta.in/archive/2012/greyshade.html">Shashank Mehta</a>
@@ -191,6 +196,8 @@ Theme by <a href="http://shashankmehta.in/archive/2012/greyshade.html">Shashank 
 
 
 
+
+<script src="asset/prism.js"></script>
 
 
 <style type="text/css">

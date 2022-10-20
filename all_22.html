@@ -124,151 +124,50 @@
 	<article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
 		<div class="meta">
 			<div class="date">
-				<time datetime="2015-01-06T09:00:45+08:00" itemprop="datePublished">2015/01/06</time>
+				<time datetime="2015-03-19T09:00:45+08:00" itemprop="datePublished">2015/03/19</time>
 			</div>
 			
 			 
 			
 		</div>
-		<h1 class="title" itemprop="name"><a href="16661412450602.html" itemprop="url">
-		java关键词过滤算法</a></h1>
+		<h1 class="title" itemprop="name"><a href="16661412450821.html" itemprop="url">
+		Ubuntu设置交换文件</a></h1>
 		<div class="entry-content" itemprop="articleBody">
 			
-			<pre><code class="language-java">/**
- * java关键字过滤
- * HashMap实现DFA算法
- * 关键词替换为*
- * @author Methol
- */
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
-@SuppressWarnings({ &quot;rawtypes&quot;, &quot;unchecked&quot; })
-public class KeywordFilter {
-  /** 直接禁止的 */
-  private HashMap keysMap = new HashMap();
-  static final String tihuantxt = &quot;**********************************************************&quot;;
-  private int matchType = 1; // 1:最小长度匹配 2：最大长度匹配
-
-  public void addKeywords(List&lt;String&gt; keywords) {
-    for (int i = 0; i &lt; keywords.size(); i++) {
-      String key = keywords.get(i).trim();
-      HashMap nowhash = null;
-      nowhash = keysMap;
-      for (int j = 0; j &lt; key.length(); j++) {
-        char word = key.charAt(j);
-        Object wordMap = nowhash.get(word);
-        if (wordMap != null) {
-          nowhash = (HashMap) wordMap;
-        } else {
-          HashMap&lt;String, String&gt; newWordHash = new HashMap&lt;String, String&gt;();
-          newWordHash.put(&quot;isEnd&quot;, &quot;0&quot;);
-          nowhash.put(word, newWordHash);
-          nowhash = newWordHash;
-        }
-        if (j == key.length() - 1) {
-          nowhash.put(&quot;isEnd&quot;, &quot;1&quot;);
-        }
-      }
-    }
-  }
-
-  /**
-   * 重置关键词
-   */
-  public void clearKeywords() {
-    keysMap.clear();
-  }
-
-  /**
-   * 检查一个字符串从begin位置起开始是否有keyword符合， 如果有符合的keyword值，返回值为匹配keyword的长度，否则返回零
-   * flag 1:最小长度匹配 2：最大长度匹配
-   */
-  private int checkKeyWords(String txt, int begin, int flag) {
-    HashMap nowhash = null;
-    nowhash = keysMap;
-    int maxMatchRes = 0;
-    int res = 0;
-    int l = txt.length();
-    char word = 0;
-    for (int i = begin; i &lt; l; i++) {
-      word = txt.charAt(i);
-      Object wordMap = nowhash.get(word);
-      if (wordMap != null) {
-        res++;
-        nowhash = (HashMap) wordMap;
-        if (((String) nowhash.get(&quot;isEnd&quot;)).equals(&quot;1&quot;)) {
-          if (flag == 1) {
-            wordMap = null;
-            nowhash = null;
-            txt = null;
-            return res;
-          } else {
-            maxMatchRes = res;
-          }
-        }
-      } else {
-        txt = null;
-        nowhash = null;
-        return maxMatchRes;
-      }
-    }
-    txt = null;
-    nowhash = null;
-    return maxMatchRes;
-  }
-
-  /**
-   * 返回txt中关键字的列表
-   */
-  public String getTxtKeyWords(String txt) {
-    Set set = new HashSet();
-    int l = txt.length();
-    String newtxt = new String();
-    for (int i = 0; i &lt; l;) {
-      int len = checkKeyWords(txt, i, matchType);
-      if (len &gt; 0) {
-        newtxt += txt.substring(0, i);
-        newtxt += tihuantxt.substring(0, len);
-        newtxt += txt.substring(i + len, txt.length());
-        txt = newtxt;
-        newtxt = &quot;&quot;;
-        i += len;
-      } else {
-        i++;
-      }
-    }
-    return txt;
-  }
-
-  /**
-   * 仅判断txt中是否有关键字
-   */
-  public boolean isContentKeyWords(String txt) {
-    for (int i = 0; i &lt; txt.length(); i++) {
-      int len = checkKeyWords(txt, i, 1);
-      if (len &gt; 0) {
-        return true;
-      }
-    }
-    txt = null;
-    return false;
-  }
-
-  public int getMatchType() {
-    return matchType;
-  }
-
-  public void setMatchType(int matchType) {
-    this.matchType = matchType;
-  }
-}
-</code></pre>
-<p>​</p>
+			<h3><a id="%E9%A6%96%E5%85%88%E8%A6%81%E5%85%88%E8%AF%B4%E6%98%8E%E4%BC%98%E5%8C%96%E4%BF%AE%E6%94%B9swap" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>首先要先说明优化修改swap</h3>
+<p>在ubuntu 里面，swappiness的值的大小对如何使用swap分区是有着很大的联系的。</p>
+<p>swappiness=0的时候表示最大限度使用物理内存，然后才是 swap空间，</p>
+<p>swappiness＝100的时候表示积极的使用swap分区，并且把内存上的数据及时的搬运到swap空间里面。</p>
+<p>两个极端，对于ubuntu的默认设置，这个值等于60，建议修改为10。</p>
+<h3><a id="%E4%BF%AE%E6%94%B9swappiness%E7%9A%84%E5%80%BC%E7%9A%84%E5%A4%A7%E5%B0%8F%E7%9A%84%E5%85%B7%E4%BD%93%E6%93%8D%E4%BD%9C%E6%96%B9%E6%B3%95" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>修改swappiness的值的大小的具体操作方法</h3>
+<p>1.查看你的系统里面的swappiness<br />
+<code>cat /proc/sys/vm/swappiness</code></p>
+<p>不出意外的话，你应该看到是 60</p>
+<p>2.修改swappiness值为10</p>
+<p><code>sysctl vm.swappiness=10</code></p>
+<p>但是这只是临时性的修改，在你重启系统后会恢复默认的60，所以，还要做一步：</p>
+<p><code>vim /etc/sysctl.conf</code></p>
+<p>在这个文档的最后加上这样一行:</p>
+<p><code>vm.swappiness=10</code></p>
+<p>然后保存，重启。ok，你的设置就生效了。</p>
+<h3><a id="%E8%AE%BE%E7%BD%AE%E4%BA%A4%E6%8D%A2%E6%96%87%E4%BB%B6" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>设置交换文件</h3>
+<p><code>mkdir /swap</code><br />
+然后进入目录<br />
+<code>cd /swap</code><br />
+创建自己希望的交换分区文件的大小<br />
+<code>sudo dd if=/dev/zero of=swapfile bs=1M count=2k</code><br />
+(创建2G的swap, 这步比较慢 创建分区的大小就= bs * count)<br />
+成功后会有提示，这时候查看swap文件夹下会多一个交换文件（swapfile），文件名字你可以自己定义在上面创建命令里。<br />
+然后输入命令 <code>mkswap swapfile</code><br />
+挂载交换分区：<code>swapon swapfile</code><br />
+如果想卸载的话输入：<code>swapoff swapfile</code><br />
+卸载后可以删除这个文件，然后重新根据你新的需要创建和调整交换文件大小</p>
+<p>最后可以查看空间大小:<code>free -m</code><br />
+swap项后面的大小就是你设定交换文件的大小如果不为0就说明挂载成功了。</p>
+<p>自动挂在交换文件（交换分区）<br />
+自动挂载交换文件<br />
+输入命令 <code>vim /etc/fstab</code><br />
+在最后添加 <code>/swap/swapfile swap swap defaults 0 0</code></p>
 
 
 			
@@ -281,7 +180,7 @@ public class KeywordFilter {
 </div>
 <nav id="pagenavi">
 	 <a class="prev" href="all_21.html">Prev</a>  
-	
+	 <a class="next" href="all_23.html">Next</a> 
 	<div class="center"><a href="archives.html">Blog Archives</a></div>
 
 </nav>

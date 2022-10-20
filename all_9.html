@@ -124,29 +124,33 @@
 	<article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
 		<div class="meta">
 			<div class="date">
-				<time datetime="2015-09-06T09:00:45+08:00" itemprop="datePublished">2015/09/06</time>
+				<time datetime="2016-07-19T09:00:45+08:00" itemprop="datePublished">2016/07/19</time>
 			</div>
 			
 			 
 			
 		</div>
-		<h1 class="title" itemprop="name"><a href="16661412450464.html" itemprop="url">
-		shadowsocks用户连接数查看脚本</a></h1>
+		<h1 class="title" itemprop="name"><a href="16661412450247.html" itemprop="url">
+		ubuntu部分软件不能使用中文输入法</a></h1>
 		<div class="entry-content" itemprop="articleBody">
 			
-			<pre><code class="language-shell">#!/bin/bash
-cd ~
-echo  &gt;shadowsocks_clients.txt
-for ((i=9101; i&lt;9105; i++)); do
-echo ${i}: &gt;&gt;shadowsocks_clients.txt
-lsof -i -n -P | egrep -c &quot;:${i}.+ESTABLISHED&quot;  &gt;&gt;shadowsocks_clients.txt
-lsof -i -n -P | egrep &quot;:${i}.+ESTABLISHED&quot;  &gt;&gt;shadowsocks_clients.txt
-echo  &gt;&gt;shadowsocks_clients.txt
-echo  &gt;&gt;shadowsocks_clients.txt
-done
-
-cat shadowsocks_clients.txt
+			<p>ubuntu安装了fcitx之后，安装了搜狗输入法，但是还是不能在wine下的QQ下输入中文，包括Intellij IDEA有时候也不行。<br />
+看网上的教程，好像是因为有ibus的存在，而且默认为ibus，所以才不行的，有一个简单的解决办法，就是在这些软件的启动脚本前加一行命令，就可以解决了。<br />
+例如：<br />
+Intellij IDEA，启动脚本是 <code>/home/methol/software/idea-IU-162.1121.32/bin/idea.sh</code>，使用vim编辑，在下面这段文字前加上这段话。</p>
+<pre><code class="language-plain_text"># ---------------------------------------------------------------------
+# Run the IDE.
+# ---------------------------------------------------------------------
 </code></pre>
+<p>加上：</p>
+<pre><code class="language-plain_text">XMODIFIERS=&quot;@im=fcitx&quot;
+export XMODIFIERS
+</code></pre>
+<p>如图：<br />
+<img src="https://pic.tuzhihao.com/upic/20210418/214922-q6TJTM.png" alt="IDEA脚本示例" /></p>
+<p>Wine QQ的启动脚本是<code>/opt/longene/qq/qq.sh</code><br />
+如图：<br />
+<img src="https://pic.tuzhihao.com/upic/20210418/214922-q6TJTM.png" alt="Wine QQ 脚本示例" /></p>
 
 
 			

@@ -124,397 +124,233 @@
 	<article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
 		<div class="meta">
 			<div class="date">
-				<time datetime="2017-05-14T09:00:44+08:00" itemprop="datePublished">2017/05/14</time>
+				<time datetime="2017-08-19T09:00:45+08:00" itemprop="datePublished">2017/08/19</time>
 			</div>
 			
 			 
 			
 		</div>
-		<h1 class="title" itemprop="name"><a href="16661412449464.html" itemprop="url">
-		布隆过滤器和Guava的实现</a></h1>
+		<h1 class="title" itemprop="name"><a href="16661412451143.html" itemprop="url">
+		CountDownLatch和CyclicBarrier</a></h1>
 		<div class="entry-content" itemprop="articleBody">
 			
-			<h2><a id="%E4%BB%8B%E7%BB%8D" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>介绍</h2>
-<p>布隆过滤器实际上是一个很长的二进制向量和一系列的随机映射函数。可用于检索一个元素是否在一个集合中。</p>
-<h2><a id="%E4%BD%BF%E7%94%A8%E5%9C%BA%E6%99%AF" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>使用场景</h2>
-<ul>
-<li>一个大型的爬虫网络中，判断某一个网址是否被访问过。</li>
-<li>大数据量的词语(句子)去重。</li>
-</ul>
-<h2><a id="%E5%8E%9F%E7%90%86" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>原理</h2>
-<p>布隆过滤器的核心实现是一个超大的位数组和几个哈希函数。假设数组的长度为m，哈希函数的个数为k。<br />
-<img src="https://pic.tuzhihao.com/upic/20210418/214747-djSEpK.png" alt="布隆过滤器原理图" /><br />
-如上图：假设集合里面有x,y,z，通过hash函数计算后的结果为a,b,c，那么w[a],w[b],w[c]都会表标记为1。假设现在有3个hash函数，如图3个不同颜色的线，分别计算出不同的结果，并标记为1。当判断某一个元素是否在一个集合的时候，就通过判断这三个hash的结果，如果都是1，说明该元素在这个集合中。如果有一个为0，说明该元素不在此集合中。因此，这也是存在误判的原因。<br />
-总的来说，bloom filter是以极低的的错误去换取空间和时间。</p>
-<h2><a id="%E4%BC%98%E7%82%B9" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>优点</h2>
-<ul>
-<li>有很好的空间和时间效率。</li>
-<li>不存在漏报的问题，就是说如果元素存在的话，那必定的到的是正确的结果，这个元素确实是存在的。</li>
-<li>不是用原始数据进行的判断，对于某些敏感的数据也是可以适用的。</li>
-</ul>
-<h2><a id="%E7%BC%BA%E7%82%B9" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>缺点</h2>
-<ul>
-<li>误报率随着元素的增加，误报（将不存在的元素判定为存在）也会越严重。</li>
-<li>不能删除已添加的元素，因为是多个hash函数的结果值对应一个元素。</li>
-</ul>
-<h2><a id="%E8%87%AA%E5%B7%B1%E5%AE%9E%E7%8E%B0%E4%B8%80%E4%B8%AA%E7%AE%80%E5%8D%95%E7%9A%84bloomfilter" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>自己实现一个简单的BloomFilter</h2>
-<pre><code class="language-java">public interface BloomFilter&lt;T&gt; {
+			<h2><a id="%E4%BD%BF%E7%94%A8%E5%9C%BA%E6%99%AF" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>使用场景</h2>
+<h3><a id="%E5%9C%BA%E6%99%AF%E4%B8%80" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>场景一</h3>
+<p>工作中需要在web服务对外之前，spring的bean初始化的时候加载数据到缓存中。<br />
+但是由于数据量过大，需要多线程加载。要求所有的缓存加载成功之后，这个bean才初始化成功，程序继续往下走。</p>
+<h3><a id="%E5%9C%BA%E6%99%AF%E4%BA%8C" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>场景二</h3>
+<p>商务合作的需求，需要显示的数据来自合作方和我们自己的数据库中。<br />
+之前是只显示我们数据库点数据，现在合作方提供了一个接口让我实时调用对方的接口，并把两部分的数据合并后返回给前端。<br />
+但是由于合作方的接口不是特别稳定，而且也不能保证高可用，所以可以考虑同时从我们和合作方取数据，设置超时时间，如果都返回了数据就合并给前端，如果对方未能返回数据，还是有我们自己的数据能显示给用户的。</p>
+<h2><a id="countdownlatch%E5%92%8Ccyclicbarrier" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>CountDownLatch和CyclicBarrier</h2>
+<p>综合上述两个场景，我看了CountDownLatch和CyclicBarrier，看说明觉得比较适合我的使用。</p>
+<h3><a id="countdownlatch" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>CountDownLatch</h3>
+<pre><code class="language-plain_text">package countdownlatchtest;
+
+import com.google.common.collect.Maps;
+
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.CountDownLatch;
+
+public class CountDownLatchService {
+
+    private CountDownLatch countDownLatch = new CountDownLatch(4);
 
     /**
-     * 添加一个数据到bloomfilter内
-     *
-     * @param element 要添加的元素
+     * 用来存储所有线程的运行结果
      */
-    void add(T element);
+    private ConcurrentMap&lt;String, String&gt; resultMap = Maps.newConcurrentMap();
 
-    /**
-     * 判断该过滤器内是否存在元素
-     *
-     * @param element 被判断的元素
-     * @return 是否存在
-     */
-    boolean contains(T element);
+
+
+    public CountDownLatch getCountDownLatch() {
+        return countDownLatch;
+    }
+
+    public ConcurrentMap&lt;String, String&gt; getResultMap() {
+        return resultMap;
+    }
 }
+</code></pre>
+<pre><code class="language-plain_text">package countdownlatchtest;
 
+import org.apache.commons.lang3.RandomUtils;
 
-import java.util.BitSet;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.CountDownLatch;
 
-public class SimpleBloomFilter implements BloomFilter&lt;String&gt; {
+public class Worker implements Runnable {
 
+    private ConcurrentMap&lt;String, String&gt; map;
+    private CountDownLatch countDownLatch;
 
-    /**
-     * 存储的bit容量
-     */
-    private static final int DEFAULT_SIZE = Integer.MAX_VALUE;
-
-    /**
-     * 存储标志位的bits
-     */
-    private BitSet bits = new BitSet(DEFAULT_SIZE);
-
-    /**
-     * 不同hash函数的种子
-     */
-    private static final int[] seeds = new int[]{113, 213, 3111, 397, 611, 532};
-    /**
-     * hash函数的数组
-     */
-    private SimpleHash[] hashFunction = new SimpleHash[seeds.length];
-
-    public SimpleBloomFilter() {
-        // 默认初始化 hashFunction
-        for (int i = 0; i &lt; seeds.length; i++) {
-            hashFunction[i] = new SimpleHash(DEFAULT_SIZE, seeds[i]);
-        }
+    public Worker(ConcurrentMap&lt;String, String&gt; map, CountDownLatch countDownLatch) {
+        this.map = map;
+        this.countDownLatch = countDownLatch;
     }
 
     @Override
-    public void add(String element) {
-        for (SimpleHash function : hashFunction) {
-            final int hash = function.hash(element);
-            bits.set(hash, true);
-        }
-    }
+    public void run() {
 
-    @Override
-    public boolean contains(String element) {
-        for (SimpleHash function : hashFunction) {
-            if (!bits.get(function.hash(element))) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private static class SimpleHash {
-
-        private int cap;
-        private int seed;
-
-        private SimpleHash(int cap, int seed) {
-            this.cap = cap;
-            this.seed = seed;
+        // 这里写代码做某些事
+        System.out.println(Thread.currentThread().getName() + &quot;\t开始了...&quot;);
+        final int sleep = RandomUtils.nextInt(5, 20);
+        try {
+            Thread.sleep(sleep * 1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
 
-        /**
-         * 简单的写一个hash算法
-         */
-        public int hash(String value) {
-            int result = 0;
-            int len = value.length();
-            for (int i = 0; i &lt; len; i++) {
-                result = seed * result + value.charAt(i) + value.hashCode();
-            }
-            // 把值的范围控制在cap内
-            return (cap - 1) &amp; result;
-        }
+        // 添加结果到map中
+        map.putIfAbsent(Thread.currentThread().getName(), String.valueOf(sleep));
+
+        // 告诉 countDownLatch ，当前线程完成了
+        System.out.println(Thread.currentThread().getName() + &quot;\t结束了...&quot;);
+        countDownLatch.countDown();
     }
 }
 
 </code></pre>
-<h2><a id="guava%E4%B8%AD%E7%9A%84bloomfilter" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>Guava中的BloomFilter</h2>
-<p>主要是两个类，<code>com.google.common.hash.BloomFilter</code>和<code>com.google.common.hash.BloomFilterStrategies</code>。</p>
-<pre><code class="language-java">  /** The bit set of the BloomFilter (not necessarily power of 2!) */
-  private final BitArray bits;
+<pre><code class="language-plain_text">package countdownlatchtest;
 
-  /** Number of hashes per element */
-  private final int numHashFunctions;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
-  /** The funnel to translate Ts to bytes */
-  private final Funnel&lt;? super T&gt; funnel;
+public class Main {
 
-  /**
-   * The strategy we employ to map an element T to {@code numHashFunctions} bit indexes.
-   */
-  private final Strategy strategy;
+    public static void main(String[] args) {
+        final ExecutorService executorService = Executors.newFixedThreadPool(6);
+        for (int i = 0; i &lt; 3; i++) {
+            // 模拟多次执行任务
+            doTask(executorService);
+        }
+    }
+
+    private static void doTask(ExecutorService executorService) {
+        CountDownLatchService countDownLatchService = new CountDownLatchService();
+        for (int i = 0; i &lt; 4; i++) {
+            Worker worker = new Worker(countDownLatchService.getResultMap(), countDownLatchService.getCountDownLatch());
+            executorService.submit(worker);
+        }
+        try {
+            // 阻塞在这里，等待其他线程执行完成
+            countDownLatchService.getCountDownLatch().await();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        System.out.println(&quot;所有线程执行成功&quot;);
+        System.out.println(&quot;打印结果如下：\n&quot; + countDownLatchService.getResultMap());
+    }
+
+}
 </code></pre>
-<p>四个成员变量，<code>BitArray</code>是<code>BloomFilterStrategies</code>中的静态内部类。作用和上面的<code>BitSet</code>类似。有基本的get和set方法，同时提供了一些其他常用的方法。</p>
-<pre><code class="language-java">  static final class BitArray {
-    final long[] data;
-    long bitCount;
+<h3><a id="cyclicbarrier" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>CyclicBarrier</h3>
+<pre><code class="language-plain_text">package cyclicbarriertest;
 
-    BitArray(long bits) {
-      this(new long[Ints.checkedCast(LongMath.divide(bits, 64, RoundingMode.CEILING))]);
-    }
+import com.google.common.collect.Maps;
 
-    // Used by serialization
-    BitArray(long[] data) {
-      checkArgument(data.length &gt; 0, &quot;data length is zero!&quot;);
-      this.data = data;
-      long bitCount = 0;
-      for (long value : data) {
-        bitCount += Long.bitCount(value);
-      }
-      this.bitCount = bitCount;
-    }
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.CyclicBarrier;
 
-    /** Returns true if the bit changed value. */
-    boolean set(long index) {
-      if (!get(index)) {
-        data[(int) (index &gt;&gt;&gt; 6)] |= (1L &lt;&lt; index);
-        bitCount++;
-        return true;
-      }
-      return false;
-    }
-
-    boolean get(long index) {
-      return (data[(int) (index &gt;&gt;&gt; 6)] &amp; (1L &lt;&lt; index)) != 0;
-    }
-
-    /** Number of bits */
-    long bitSize() {
-      return (long) data.length * Long.SIZE;
-    }
-
-    /** Number of set bits (1s) */
-    long bitCount() {
-      return bitCount;
-    }
-
-    BitArray copy() {
-      return new BitArray(data.clone());
-    }
-
-    /** Combines the two BitArrays using bitwise OR. */
-    void putAll(BitArray array) {
-      checkArgument(
-          data.length == array.data.length,
-          &quot;BitArrays must be of equal length (%s != %s)&quot;,
-          data.length,
-          array.data.length);
-      bitCount = 0;
-      for (int i = 0; i &lt; data.length; i++) {
-        data[i] |= array.data[i];
-        bitCount += Long.bitCount(data[i]);
-      }
-    }
-
-    @Override
-    public boolean equals(@Nullable Object o) {
-      if (o instanceof BitArray) {
-        BitArray bitArray = (BitArray) o;
-        return Arrays.equals(data, bitArray.data);
-      }
-      return false;
-    }
-
-    @Override
-    public int hashCode() {
-      return Arrays.hashCode(data);
-    }
-  }
-</code></pre>
-<p><code>numHashFunctions</code>是表示一个元素对应了几个hash函数，和上面<code>hashFunction.length</code>是一个意思。<br />
-<code>strategy</code>是把元素映射为hash值的策略，类似上面的<code>hashFunction</code>。<code>BloomFilter</code>定了了<code>Strategy</code>接口。<code>put</code>方法把<code>numHashFunctions</code>个通过计算后的值放入bitArray中。<code>mightContain</code>返回该过滤器是否可能含有元素T。<code>ordinal</code>就是枚举类的<code>ordinal()</code>。</p>
-<pre><code class="language-java">  interface Strategy extends java.io.Serializable {
+public class CyclicBarrierService implements Runnable {
 
     /**
-     * Sets {@code numHashFunctions} bits of the given bit array, by hashing a user element.
+     * 表示当有4个线程执行完的时候，会调用第二个参数 barrierAction 的start()方法
      *
-     * &lt;p&gt;Returns whether any bits changed as a result of this operation.
+     * 所以本类实现 Runnable 接口，传入this
      */
-    &lt;T&gt; boolean put(T object, Funnel&lt;? super T&gt; funnel, int numHashFunctions, BitArray bits);
+    private CyclicBarrier cyclicBarrier = new CyclicBarrier(4, this);
 
     /**
-     * Queries {@code numHashFunctions} bits of the given bit array, by hashing a user element;
-     * returns {@code true} if and only if all selected bits are set.
+     * 用来存储所有线程的运行结果
      */
-    &lt;T&gt; boolean mightContain(
-        T object, Funnel&lt;? super T&gt; funnel, int numHashFunctions, BitArray bits);
+    private ConcurrentMap&lt;String, String&gt; resultMap = Maps.newConcurrentMap();
 
-    /**
-     * Identifier used to encode this strategy, when marshalled as part of a BloomFilter. Only
-     * values in the [-128, 127] range are valid for the compact serial form. Non-negative values
-     * are reserved for enums defined in BloomFilterStrategies; negative values are reserved for any
-     * custom, stateful strategy we may define (e.g. any kind of strategy that would depend on user
-     * input).
-     */
-    int ordinal();
-  }
+    @Override
+    public void run() {
+        System.out.println(&quot;所有线程执行成功&quot;);
+        System.out.println(&quot;打印结果如下：\n&quot; + resultMap);
+    }
+
+    public ConcurrentMap&lt;String, String&gt; getResultMap() {
+        return resultMap;
+    }
+
+    public CyclicBarrier getCyclicBarrier() {
+        return cyclicBarrier;
+    }
+}
 </code></pre>
-<p>并在<code>BloomFilterStrategies</code>中给出了两个实现的枚举。</p>
-<pre><code class="language-java">  MURMUR128_MITZ_32() {
-    @Override
-    public &lt;T&gt; boolean put(
-        T object, Funnel&lt;? super T&gt; funnel, int numHashFunctions, BitArray bits) {
-      long bitSize = bits.bitSize();
-      long hash64 = Hashing.murmur3_128().hashObject(object, funnel).asLong();
-      int hash1 = (int) hash64;
-      int hash2 = (int) (hash64 &gt;&gt;&gt; 32);
+<pre><code class="language-plain_text">package cyclicbarriertest;
 
-      boolean bitsChanged = false;
-      for (int i = 1; i &lt;= numHashFunctions; i++) {
-        int combinedHash = hash1 + (i * hash2);
-        // Flip all the bits if it's negative (guaranteed positive number)
-        if (combinedHash &lt; 0) {
-          combinedHash = ~combinedHash;
-        }
-        bitsChanged |= bits.set(combinedHash % bitSize);
-      }
-      return bitsChanged;
-    }
+import org.apache.commons.lang3.RandomUtils;
 
-    @Override
-    public &lt;T&gt; boolean mightContain(
-        T object, Funnel&lt;? super T&gt; funnel, int numHashFunctions, BitArray bits) {
-      long bitSize = bits.bitSize();
-      long hash64 = Hashing.murmur3_128().hashObject(object, funnel).asLong();
-      int hash1 = (int) hash64;
-      int hash2 = (int) (hash64 &gt;&gt;&gt; 32);
+import java.util.concurrent.BrokenBarrierException;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.CyclicBarrier;
 
-      for (int i = 1; i &lt;= numHashFunctions; i++) {
-        int combinedHash = hash1 + (i * hash2);
-        // Flip all the bits if it's negative (guaranteed positive number)
-        if (combinedHash &lt; 0) {
-          combinedHash = ~combinedHash;
-        }
-        if (!bits.get(combinedHash % bitSize)) {
-          return false;
-        }
-      }
-      return true;
-    }
-  },
-  /**
-   * This strategy uses all 128 bits of {@link Hashing#murmur3_128} when hashing. It looks different
-   * than the implementation in MURMUR128_MITZ_32 because we're avoiding the multiplication in the
-   * loop and doing a (much simpler) += hash2. We're also changing the index to a positive number by
-   * AND'ing with Long.MAX_VALUE instead of flipping the bits.
-   */
-  MURMUR128_MITZ_64() {
-    @Override
-    public &lt;T&gt; boolean put(
-        T object, Funnel&lt;? super T&gt; funnel, int numHashFunctions, BitArray bits) {
-      long bitSize = bits.bitSize();
-      byte[] bytes = Hashing.murmur3_128().hashObject(object, funnel).getBytesInternal();
-      long hash1 = lowerEight(bytes);
-      long hash2 = upperEight(bytes);
+public class Worker implements Runnable {
 
-      boolean bitsChanged = false;
-      long combinedHash = hash1;
-      for (int i = 0; i &lt; numHashFunctions; i++) {
-        // Make the combined hash positive and indexable
-        bitsChanged |= bits.set((combinedHash &amp; Long.MAX_VALUE) % bitSize);
-        combinedHash += hash2;
-      }
-      return bitsChanged;
+    private ConcurrentMap&lt;String, String&gt; map;
+    private CyclicBarrier cyclicBarrier;
+
+    public Worker(ConcurrentMap&lt;String, String&gt; map, CyclicBarrier cyclicBarrier) {
+        this.map = map;
+        this.cyclicBarrier = cyclicBarrier;
     }
 
     @Override
-    public &lt;T&gt; boolean mightContain(
-        T object, Funnel&lt;? super T&gt; funnel, int numHashFunctions, BitArray bits) {
-      long bitSize = bits.bitSize();
-      byte[] bytes = Hashing.murmur3_128().hashObject(object, funnel).getBytesInternal();
-      long hash1 = lowerEight(bytes);
-      long hash2 = upperEight(bytes);
+    public void run() {
 
-      long combinedHash = hash1;
-      for (int i = 0; i &lt; numHashFunctions; i++) {
-        // Make the combined hash positive and indexable
-        if (!bits.get((combinedHash &amp; Long.MAX_VALUE) % bitSize)) {
-          return false;
+        // 这里写代码做某些事
+        System.out.println(Thread.currentThread().getName() + &quot;\t开始了...&quot;);
+        final int sleep = RandomUtils.nextInt(5, 20);
+        try {
+            Thread.sleep(sleep * 1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
-        combinedHash += hash2;
-      }
-      return true;
-    }
 
-    private /* static */ long lowerEight(byte[] bytes) {
-      return Longs.fromBytes(
-          bytes[7], bytes[6], bytes[5], bytes[4], bytes[3], bytes[2], bytes[1], bytes[0]);
-    }
+        // 添加结果到map中
+        map.putIfAbsent(Thread.currentThread().getName(), String.valueOf(sleep));
 
-    private /* static */ long upperEight(byte[] bytes) {
-      return Longs.fromBytes(
-          bytes[15], bytes[14], bytes[13], bytes[12], bytes[11], bytes[10], bytes[9], bytes[8]);
-    }
-  };
-</code></pre>
-<p>Guava就是选取了这两个hash算法中的一个，创建一个BloomFilter可以指定其中的一个算法，具体的算法逻辑可以参看<a href="http://www.cyhone.com/2017/02/07/Introduce-to-BloomFilter/">解读BloomFilter算法</a><br />
-使用实例：</p>
-<pre><code class="language-java">    private static void bloomFilter() throws Exception {
-        final BloomFilter&lt;String&gt; dealIdBloomFilter = BloomFilter.create(new Funnel&lt;String&gt;() {
-            @Override
-            public void funnel(String from, PrimitiveSink into) {
-                into.putString(from, Charsets.UTF_8);
-            }
-        }, 3000000, 0.0000001d);
-        BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(new File(&quot;C:\\Users\\Methol\\Desktop\\jiaokao-word.txt&quot;)), &quot;utf-8&quot;));
-        String line;
-        int i = 0;
-        StringBuilder sb = new StringBuilder();
-        while ((line = br.readLine()) != null) {
-            if (!dealIdBloomFilter.mightContain(line)) {
-                dealIdBloomFilter.put(line);
-                sb.append(line).append(&quot;\n&quot;);
-                i++;
-            }
-            if (i % 1000 == 0) {
-                FileUtils.write(new File(&quot;C:\\Users\\Methol\\Desktop\\bloomFilterDistinct.txt&quot;),
-                        sb.toString(), Charsets.UTF_8, true);
-                sb = new StringBuilder();
-            }
+        try {
+            // 告诉 cyclicBarrier ，当前线程完成了
+            System.out.println(Thread.currentThread().getName() + &quot;\t结束了...&quot;);
+            cyclicBarrier.await();
+        } catch (InterruptedException | BrokenBarrierException e) {
+            e.printStackTrace();
         }
-        FileUtils.write(new File(&quot;C:\\Users\\Methol\\Desktop\\bloomFilterDistinct.txt&quot;),
-                sb.toString(), Charsets.UTF_8, true);
     }
+}
 </code></pre>
-<h2><a id="%E6%89%A9%E5%B1%95" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>扩展</h2>
-<p>同样对大数据量的内容进行滤重，当时还想到了用spark，不过这个真的有点大炮打小鸟的感觉，用起来代码是非常简单，但是单单就滤重这件事来说，还是BloomFilter好用。<br />
-800w行的句子，滤重后有200w，spark的用时比BloomFilter略多。<br />
-贴一段spark的代码：</p>
-<pre><code class="language-java">    private static void spark() {
-        System.setProperty(&quot;hadoop.home.dir&quot;, &quot;D:\\server\\hadoop-common-2.2.0\\&quot;);
-        SparkConf conf = new SparkConf().setAppName(&quot;Text String Distinct&quot;).setMaster(&quot;local&quot;).set(&quot;spark.executor.memory&quot;, &quot;1g&quot;);
-        JavaSparkContext sc = new JavaSparkContext(conf);
-        JavaRDD&lt;String&gt; textFile = sc.textFile(&quot;C:\\Users\\Methol\\Desktop\\jiaokao-word.txt&quot;);
-        final JavaRDD&lt;String&gt; distinct = textFile.distinct();
-        final long count = distinct.count();
-        System.out.println(count);
-        distinct.coalesce(1).saveAsTextFile(&quot;C:\\Users\\Methol\\Desktop\\distinct&quot;);
+<pre><code class="language-plain_text">package cyclicbarriertest;
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+public class Main {
+
+    public static void main(String[] args) {
+        final ExecutorService executorService = Executors.newFixedThreadPool(6);
+        for (int j = 0; j &lt; 3; j++) {
+            // 模拟多次任务执行
+            doTask(executorService);
+        }
     }
+
+    private static void doTask(ExecutorService executorService) {
+        CyclicBarrierService cyclicBarrierService = new CyclicBarrierService();
+        for (int i = 0; i &lt; 4; i++) {
+            Worker worker = new Worker(cyclicBarrierService.getResultMap(), cyclicBarrierService.getCyclicBarrier());
+            executorService.submit(worker);
+        }
+    }
+}
+
 </code></pre>
+<h2><a id="%E6%80%BB%E7%BB%93" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>总结</h2>
+<p>写了上面两个例子，后面发现场景一适合用<code>CountDownLatch</code>，场景二适合用<code>CyclicBarrier</code>。场景一我们基本上不存在有任务不能执行完的情况，基本上做到计数器不归0，即使服务启动了也没办法正常使用，场景二很多情况都是任务不能正常的执行完成。</p>
 
 
 			

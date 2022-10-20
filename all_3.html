@@ -124,233 +124,70 @@
 	<article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
 		<div class="meta">
 			<div class="date">
-				<time datetime="2017-08-19T09:00:45+08:00" itemprop="datePublished">2017/08/19</time>
+				<time datetime="2021-04-18T09:00:44+08:00" itemprop="datePublished">2021/04/18</time>
 			</div>
 			
 			 
 			
 		</div>
-		<h1 class="title" itemprop="name"><a href="16661412451143.html" itemprop="url">
-		CountDownLatch和CyclicBarrier</a></h1>
+		<h1 class="title" itemprop="name"><a href="16661412449981.html" itemprop="url">
+		三星电视换区</a></h1>
 		<div class="entry-content" itemprop="articleBody">
 			
-			<h2><a id="%E4%BD%BF%E7%94%A8%E5%9C%BA%E6%99%AF" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>使用场景</h2>
-<h3><a id="%E5%9C%BA%E6%99%AF%E4%B8%80" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>场景一</h3>
-<p>工作中需要在web服务对外之前，spring的bean初始化的时候加载数据到缓存中。<br />
-但是由于数据量过大，需要多线程加载。要求所有的缓存加载成功之后，这个bean才初始化成功，程序继续往下走。</p>
-<h3><a id="%E5%9C%BA%E6%99%AF%E4%BA%8C" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>场景二</h3>
-<p>商务合作的需求，需要显示的数据来自合作方和我们自己的数据库中。<br />
-之前是只显示我们数据库点数据，现在合作方提供了一个接口让我实时调用对方的接口，并把两部分的数据合并后返回给前端。<br />
-但是由于合作方的接口不是特别稳定，而且也不能保证高可用，所以可以考虑同时从我们和合作方取数据，设置超时时间，如果都返回了数据就合并给前端，如果对方未能返回数据，还是有我们自己的数据能显示给用户的。</p>
-<h2><a id="countdownlatch%E5%92%8Ccyclicbarrier" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>CountDownLatch和CyclicBarrier</h2>
-<p>综合上述两个场景，我看了CountDownLatch和CyclicBarrier，看说明觉得比较适合我的使用。</p>
-<h3><a id="countdownlatch" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>CountDownLatch</h3>
-<pre><code class="language-plain_text">package countdownlatchtest;
-
-import com.google.common.collect.Maps;
-
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.CountDownLatch;
-
-public class CountDownLatchService {
-
-    private CountDownLatch countDownLatch = new CountDownLatch(4);
-
-    /**
-     * 用来存储所有线程的运行结果
-     */
-    private ConcurrentMap&lt;String, String&gt; resultMap = Maps.newConcurrentMap();
-
-
-
-    public CountDownLatch getCountDownLatch() {
-        return countDownLatch;
-    }
-
-    public ConcurrentMap&lt;String, String&gt; getResultMap() {
-        return resultMap;
-    }
-}
-</code></pre>
-<pre><code class="language-plain_text">package countdownlatchtest;
-
-import org.apache.commons.lang3.RandomUtils;
-
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.CountDownLatch;
-
-public class Worker implements Runnable {
-
-    private ConcurrentMap&lt;String, String&gt; map;
-    private CountDownLatch countDownLatch;
-
-    public Worker(ConcurrentMap&lt;String, String&gt; map, CountDownLatch countDownLatch) {
-        this.map = map;
-        this.countDownLatch = countDownLatch;
-    }
-
-    @Override
-    public void run() {
-
-        // 这里写代码做某些事
-        System.out.println(Thread.currentThread().getName() + &quot;\t开始了...&quot;);
-        final int sleep = RandomUtils.nextInt(5, 20);
-        try {
-            Thread.sleep(sleep * 1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-        // 添加结果到map中
-        map.putIfAbsent(Thread.currentThread().getName(), String.valueOf(sleep));
-
-        // 告诉 countDownLatch ，当前线程完成了
-        System.out.println(Thread.currentThread().getName() + &quot;\t结束了...&quot;);
-        countDownLatch.countDown();
-    }
-}
-
-</code></pre>
-<pre><code class="language-plain_text">package countdownlatchtest;
-
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
-public class Main {
-
-    public static void main(String[] args) {
-        final ExecutorService executorService = Executors.newFixedThreadPool(6);
-        for (int i = 0; i &lt; 3; i++) {
-            // 模拟多次执行任务
-            doTask(executorService);
-        }
-    }
-
-    private static void doTask(ExecutorService executorService) {
-        CountDownLatchService countDownLatchService = new CountDownLatchService();
-        for (int i = 0; i &lt; 4; i++) {
-            Worker worker = new Worker(countDownLatchService.getResultMap(), countDownLatchService.getCountDownLatch());
-            executorService.submit(worker);
-        }
-        try {
-            // 阻塞在这里，等待其他线程执行完成
-            countDownLatchService.getCountDownLatch().await();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        System.out.println(&quot;所有线程执行成功&quot;);
-        System.out.println(&quot;打印结果如下：\n&quot; + countDownLatchService.getResultMap());
-    }
-
-}
-</code></pre>
-<h3><a id="cyclicbarrier" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>CyclicBarrier</h3>
-<pre><code class="language-plain_text">package cyclicbarriertest;
-
-import com.google.common.collect.Maps;
-
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.CyclicBarrier;
-
-public class CyclicBarrierService implements Runnable {
-
-    /**
-     * 表示当有4个线程执行完的时候，会调用第二个参数 barrierAction 的start()方法
-     *
-     * 所以本类实现 Runnable 接口，传入this
-     */
-    private CyclicBarrier cyclicBarrier = new CyclicBarrier(4, this);
-
-    /**
-     * 用来存储所有线程的运行结果
-     */
-    private ConcurrentMap&lt;String, String&gt; resultMap = Maps.newConcurrentMap();
-
-    @Override
-    public void run() {
-        System.out.println(&quot;所有线程执行成功&quot;);
-        System.out.println(&quot;打印结果如下：\n&quot; + resultMap);
-    }
-
-    public ConcurrentMap&lt;String, String&gt; getResultMap() {
-        return resultMap;
-    }
-
-    public CyclicBarrier getCyclicBarrier() {
-        return cyclicBarrier;
-    }
-}
-</code></pre>
-<pre><code class="language-plain_text">package cyclicbarriertest;
-
-import org.apache.commons.lang3.RandomUtils;
-
-import java.util.concurrent.BrokenBarrierException;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.CyclicBarrier;
-
-public class Worker implements Runnable {
-
-    private ConcurrentMap&lt;String, String&gt; map;
-    private CyclicBarrier cyclicBarrier;
-
-    public Worker(ConcurrentMap&lt;String, String&gt; map, CyclicBarrier cyclicBarrier) {
-        this.map = map;
-        this.cyclicBarrier = cyclicBarrier;
-    }
-
-    @Override
-    public void run() {
-
-        // 这里写代码做某些事
-        System.out.println(Thread.currentThread().getName() + &quot;\t开始了...&quot;);
-        final int sleep = RandomUtils.nextInt(5, 20);
-        try {
-            Thread.sleep(sleep * 1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-        // 添加结果到map中
-        map.putIfAbsent(Thread.currentThread().getName(), String.valueOf(sleep));
-
-        try {
-            // 告诉 cyclicBarrier ，当前线程完成了
-            System.out.println(Thread.currentThread().getName() + &quot;\t结束了...&quot;);
-            cyclicBarrier.await();
-        } catch (InterruptedException | BrokenBarrierException e) {
-            e.printStackTrace();
-        }
-    }
-}
-</code></pre>
-<pre><code class="language-plain_text">package cyclicbarriertest;
-
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
-public class Main {
-
-    public static void main(String[] args) {
-        final ExecutorService executorService = Executors.newFixedThreadPool(6);
-        for (int j = 0; j &lt; 3; j++) {
-            // 模拟多次任务执行
-            doTask(executorService);
-        }
-    }
-
-    private static void doTask(ExecutorService executorService) {
-        CyclicBarrierService cyclicBarrierService = new CyclicBarrierService();
-        for (int i = 0; i &lt; 4; i++) {
-            Worker worker = new Worker(cyclicBarrierService.getResultMap(), cyclicBarrierService.getCyclicBarrier());
-            executorService.submit(worker);
-        }
-    }
-}
-
-</code></pre>
-<h2><a id="%E6%80%BB%E7%BB%93" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>总结</h2>
-<p>写了上面两个例子，后面发现场景一适合用<code>CountDownLatch</code>，场景二适合用<code>CyclicBarrier</code>。场景一我们基本上不存在有任务不能执行完的情况，基本上做到计数器不归0，即使服务启动了也没办法正常使用，场景二很多情况都是任务不能正常的执行完成。</p>
+			<h2><a id="apple-tv-4k%E6%8C%82%E4%BA%86" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>Apple TV 4k 挂了</h2>
+<p>家里的Apple TV 4k突然自己就挂掉了，应该不是硬件的问题，感觉是软件的问题，但是背后一个接口都没有，也没办法自己升级系统。</p>
+<p>周末拿到Apple店里，给的理由大陆不卖，所以也不修，只能到香港修。</p>
+<p>这就GG了...</p>
+<p>因为我主要是看Youtube、Nas视频、emby视频、netflix，安卓盒子的性能都太弱了，只能看看流媒体。</p>
+<p>而且Apple TV的infuse神器，Youtube今年也支持4k了，真是唯一选择。</p>
+<p>好在快开发布会了，等下一代吧，所以只能先不买了。</p>
+<h2><a id="%E4%B8%89%E6%98%9F%E7%94%B5%E8%A7%86%E6%8D%A2%E5%8C%BA" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>三星电视换区</h2>
+<p>然后就研究起了我的电视，因为之前是有爱奇艺、腾讯那些视频的。所以看看能不能先装一个youtube看看。</p>
+<p>系统是三星自己的tizen系统，应用只能去自带的应用商店下载。那这没办法了，只能换区。</p>
+<p>果然，就搜到了2篇文章，已经说的很详细了，我这里只是对我自己的电视操作做一个备份。</p>
+<p><a href="https://sspai.com/post/59549">https://sspai.com/post/59549</a></p>
+<p><a href="https://joveng.myds.me:8888/tv-unlock/">https://joveng.myds.me:8888/tv-unlock/</a></p>
+<h3><a id="%E6%AD%A5%E9%AA%A4" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>步骤</h3>
+<ol>
+<li>带有红外的智能手机请下载「IR Service Remote」的APP。</li>
+</ol>
+<p><a href="media/16661412449981/IR_Service_Remote-com.wolf.servicercsam-v1.2-Android_4.4+.apk">IR_Service_Remote-com.wolf.servicercsam-v1.2-Android_4.4+.apk</a></p>
+<p>在电视处于亮屏的状态下，打开「IR Service remote」依次按下「S1」-「S2」即可进入工程模式菜单</p>
+<p><img src="https://pic.tuzhihao.com/upic/20210418/214505-x5fw8P.png" alt="image-20210418212716653" /></p>
+<ol start="2">
+<li>
+<p>使用电视遥控器「方向键」将光标移动到「Option」选项，按一下「确定键」进入，然后使用手机拍照当前画面。进入之后可以看到「Local Set」选项是「CHI_DTV」，意味当前系统是国区。</p>
+<p>将光标移动到「Local Set」选项并按下「确定键」进入，在弹出的「Local Set List」列表里移到你想要切换的地区代码，美区选择「AD_AU2」，港区选择「HKG_DTV」，之后按下遥控器「确定键」后会自动返回。</p>
+<p><img src="https://pic.tuzhihao.com/upic/20210418/214529-8B2zzw.png" alt="image-20210418212855744" /></p>
+</li>
+<li>
+<p>再次进入到「MRT Option」选项，进入「Language Set」选项并确保此处参数显示为「China」，返回并进入「Region」确保此处参数显示为「asia_dtv」，其余的参数按照之前拍的照片依次复原即可。「Production Option」和「Engineer Option」同理。</p>
+</li>
+<li>
+<p>重启电视。</p>
+</li>
+<li>
+<p>使用遥控器依次选择「设置」-「支持」-「自诊断」-「重置 Smart Hub」，输入 PIN 码「0000」后系统桌面会重启。</p>
+<p><img src="https://pic.tuzhihao.com/upic/20210418/214531-b2YyAM.png" alt="image-20210418213026402" /></p>
+</li>
+<li>
+<p>重启之后光标移动到「apps」会弹出「同意条款」页面，注意即便当前电视的系统语言为简体中文，但此页面应为英文界面。使用电视原厂遥控器在「同意条款」页面以此按下「静音」-「音量 +」-「频道 +」-「静音」按键，电视会弹出「Internet 服务位置设置」选项。选择香港。</p>
+<p><img src="https://pic.tuzhihao.com/upic/20210418/214533-6bqY6X.png" alt="image-20210418213101873" /></p>
+</li>
+<li>
+<p>最后同意协议，安装app就行了！</p>
+<p><img src="https://pic.tuzhihao.com/upic/20210418/214535-hHG7r1.png" alt="image-20210418213749906" /></p>
+</li>
+</ol>
+<h2><a id="%E5%A4%87%E4%BB%BD%E5%8F%82%E6%95%B0%E6%88%AA%E5%9B%BE" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>备份参数截图</h2>
+<h3><a id="%E4%BF%AE%E6%94%B9%E5%89%8D%E5%9B%BD%E5%8C%BA" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>修改前(国区)</h3>
+<p><img src="https://pic.tuzhihao.com/upic/20210418/214540-9KWi3f.png" alt="image-20210418213525967" /></p>
+<p><img src="https://pic.tuzhihao.com/upic/20210418/214545-wC0kFH.png" alt="image-20210418213536752" /></p>
+<p><img src="https://pic.tuzhihao.com/upic/20210418/214549-zvrLvw.png" alt="image-20210418213549420" /></p>
+<h3><a id="%E4%BF%AE%E6%94%B9%E5%90%8E%E6%B8%AF%E5%8C%BA" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>修改后(港区)</h3>
+<p><img src="https://pic.tuzhihao.com/upic/20210418/214551-2jMHOy.png" alt="image-20210418213446438" /></p>
+<p><img src="https://pic.tuzhihao.com/upic/20210418/214554-aMRDcj.png" alt="image-20210418213500655" /></p>
+<p><img src="https://pic.tuzhihao.com/upic/20210418/214558-B0a473.png" alt="image-20210418213510547" /></p>
 
 
 			

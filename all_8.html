@@ -124,263 +124,85 @@
 	<article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
 		<div class="meta">
 			<div class="date">
-				<time datetime="2016-04-11T09:00:45+08:00" itemprop="datePublished">2016/04/11</time>
+				<time datetime="2017-04-05T09:00:45+08:00" itemprop="datePublished">2017/04/05</time>
 			</div>
 			
 			 
 			
 		</div>
-		<h1 class="title" itemprop="name"><a href="16661412450064.html" itemprop="url">
-		web上传文件夹</a></h1>
+		<h1 class="title" itemprop="name"><a href="16661412450896.html" itemprop="url">
+		MySql 空间索引</a></h1>
 		<div class="entry-content" itemprop="articleBody">
 			
-			<p>使用html5的api来上传文件夹，只有chrome支持。</p>
-<pre><code class="language-html">&lt;!DOCTYPE html&gt;
-&lt;html lang=&quot;en&quot;&gt;
-&lt;head&gt;
-  &lt;meta charset=&quot;UTF-8&quot;&gt;
-  &lt;title&gt;Title&lt;/title&gt;
-&lt;/head&gt;
-&lt;body&gt;
-&lt;input id=&quot;upload&quot; type='file' name=&quot;file&quot; webkitdirectory&gt;
-&lt;button id=&quot;button&quot;&gt;按钮&lt;/button&gt;
-&lt;/body&gt;
-&lt;script src=&quot;//libs.useso.com/js/jquery/1.11.1/jquery.min.js&quot; type=&quot;text/javascript&quot;&gt;&lt;/script&gt;
-&lt;script type=&quot;text/javascript&quot;&gt;
-  function Map() {
-    /**
-     * 结构
-     * @param key
-     * @param value
-     */
-    function Struct(key, value) {
-      this.key = key;
-      this.value = value;
-    }
+			<p>Mysql5.7版本之后支持空间索引，试用下实现离我最近的功能。<br />
+感觉查询速度还是没有es快，但是小数据量也是一个可用的办法。</p>
+<pre><code class="language-sql">create database geo_test default charset = utf8mb4;
+use geo_test;
 
-    /**
-     * 数据存放数组
-     */
-    this.arr = [];
-    /**
-     * 增加数据
-     * @param key {String}
-     * @param value {Object}
-     */
-    this.put = function (key, value) {
-      for (var i = 0; i &lt; this.arr.length; i++) {
-        if (this.arr[i].key === key) {
-          this.arr[i].value = value;
-          return;
-        }
-      }
-      this.arr[this.arr.length] = new Struct(key, value);
-    };
-    /**
-     * 通过key获取数据
-     * @param key {String}
-     * @returns {Object}
-     */
-    this.get = function (key) {
-      for (var i = 0; i &lt; this.arr.length; i++) {
-        if (this.arr[i].key === key) {
-          return this.arr[i].value;
-        }
-      }
-      return null;
-    };
-    /**
-     * 删除数据
-     * @param key{String}
-     */
-    this.remove = function (key) {
-      var v;
-      for (var i = 0; i &lt; this.arr.length; i++) {
-        v = this.arr[i];
-        if (v.key === key) {
-          this.arr.splice(i, 1);
-          return;
-        }
-      }
-    };
-    /**
-     * 是否存在key
-     * @param key {String}
-     * @returns {boolean}
-     */
-    this.containsKey = function (key) {
-      var v;
-      for (var i = 0; i &lt; this.arr.length; i++) {
-        v = this.arr[i];
-        if (v.key === key) {
-          return true;
-        }
-      }
-      return false;
-    };
-    /**
-     * 获取map数据量
-     * @returns {Number}
-     */
-    this.size = function () {
-      return this.arr.length;
-    };
-    /**
-     * 判断Map是否为空
-     * @returns {boolean}
-     */
-    this.isEmpty = function () {
-      return this.arr.length &lt;= 0;
-    };
-    /**
-     * 全部清空
-     */
-    this.removeAll = function () {
-      this.arr = [];
-    };
-  }
-&lt;/script&gt;
-&lt;script type=&quot;text/javascript&quot;&gt;
-  var host = &quot;http://example.com&quot;;  // 远程服务器地址
-  var map = new Map();  // 用来存放文件夹路径和id的键值对
-  var files = [];
-
-  $(&quot;#upload&quot;).change(function () {
-    files = this.files;
-    console.log(files);
-  });
-
-  $(&quot;#button&quot;).on(&quot;click&quot;, function () {
-    for (var i = 0; i &lt; files.length; i++) {
-      var file = files[i];
-      console.log(file);
-      var path = getFolder(file.webkitRelativePath);
-      var folderId = getFolderIdFromMap(path);
-      // 创建文件
-      uploadResource(file, folderId, 10001);
-    }
-  });
-
-  function uploadResource(file, folderId, projectId) {
-    var filepath = null;
-    var formData = new FormData();
-    formData.append(&quot;text&quot;, file);
-    $.ajax({
-      url: host + &quot;/sys/upload/uploadProjectResource&quot;,
-      type: &quot;POST&quot;,
-      data: formData,
-      xhrFields: {
-        withCredentials: true // 确保请求会携带上Cookie
-      },
-      enctype: 'multipart/form-data',
-      processData: false,  // tell jQuery not to process the data
-      contentType: false,
-      complete: function (respResult) {
-        if (respResult.status == 200) {
-          filepath = respResult.responseText;
-          $.ajax({
-            url: host + &quot;/project/resource/create&quot;,
-            type: &quot;post&quot;,
-            dataType: &quot;json&quot;,
-            xhrFields: {
-              withCredentials: true
-            },
-            beforeSend: function (xhr) {
-              xhr.setRequestHeader(&quot;Content-Type&quot;, &quot;application/json&quot;);
-            },
-            data: JSON.stringify({
-              &quot;projectId&quot;: projectId,
-              &quot;resourceContent&quot;: filepath,
-              &quot;resourceName&quot;: file.name,
-              &quot;folderId&quot;: folderId,
-              &quot;type&quot;: 20  // 当前是文件资源
-            }),
-            success: function (data) {
-              console.log(data);
-            },
-            error: function (respResult) {
-            }
-          });
-        } else {
-        }
-      }
-    });
-  }
-
-  function getFolderIdFromMap(path) {
-    var folderId = map.get(path);
-    var folderName = path.substring(path.lastIndexOf(&quot;/&quot;) + 1, path.length);
-    var localFolder = 0;
-    if (path.indexOf(&quot;/&quot;) &gt; 0) {
-      // 说明当前不是最高级目录，是子目录
-      localFolder = getFolderIdFromMap(path.substring(0, path.lastIndexOf(&quot;/&quot;)));
-    }
-    if (folderId == null) {
-      $.ajax({
-        async: false,
-        url: host + &quot;/project/resource/create/folder&quot;,
-        type: &quot;post&quot;,
-        dataType: &quot;json&quot;,
-        xhrFields: {
-          withCredentials: true
-        },
-        beforeSend: function (xhr) {
-          xhr.setRequestHeader(&quot;Content-Type&quot;, &quot;application/json&quot;);
-        },
-        data: JSON.stringify({
-          &quot;projectId&quot;: 10001,
-          &quot;folderName&quot;: folderName,
-          &quot;folderId&quot;: localFolder
-        }),
-        success: function (data) {
-          console.log(data);
-          folderId = data.id;
-          map.put(path, folderId);
-        },
-        error: function (respResult) {
-        }
-      });
-    }
-    return folderId;
-  }
-
-  function getFolder(path) {
-    console.log(path);
-    var index = path.lastIndexOf(&quot;/&quot;);
-    return path.substring(0, index);
-  }
-&lt;/script&gt;
-
-&lt;/html&gt;
-</code></pre>
-<p>服务器采用java，用了接受文件和创建文件夹。<br />
-文件夹也是虚拟的，采用在当前记录增加parentId来存储父节点，实现树的结构。<br />
-表结构：</p>
-<pre><code class="language-sql">CREATE TABLE t_project_resource_folder
+create table t_dealer
 (
-    id BIGINT(20) PRIMARY KEY NOT NULL COMMENT '主键',
-    folder_name VARCHAR(255) DEFAULT '' COMMENT '文件夹名',
-    parent_id BIGINT(20) DEFAULT '0' NOT NULL COMMENT '父文件夹id,0表示顶级目录'
-)
-CREATE TABLE t_project_resource
-(
-    id BIGINT(20) PRIMARY KEY NOT NULL COMMENT '主键',
-    resource_name VARCHAR(255) NOT NULL COMMENT '资源名',
-    resource_content VARCHAR(255) COMMENT '资源内容,通常是放在oss文件的url',
-    resource_folder_id BIGINT(20) DEFAULT '0' COMMENT '资源文件夹ID,0表示文件处于顶级目录'
-)
+    id bigint not null auto_increment primary key,
+    dealer_name varchar(255) not null,
+    city_code varchar(45) null,
+    phone varchar(32) null,
+    lat decimal(10,7) null,
+    lon decimal(10,7) null,
+    create_time datetime null
+)default charset = utf8mb4;
+create index idx_name on t_dealer (dealer_name);
+comment on table t_dealer is '基本信息表';
+comment on column dealer_name is '@cname:名称';
+comment on column address is '@cname:地址';
+comment on column city_code is '@cname:城市编码';
+comment on column phone is '@cname:电话';
+comment on column lat is '@cname:纬度';
+comment on column lon is '@cname:经度';
+comment on column create_time is '@cname:创建时间';
+
+# 添加geo点
+alter table t_dealer
+add pnt POINT NULL comment '经纬度的geo点';
+# 从经纬度中补全数据
+update t_dealer set pnt = point(lat,lon);
+# 改为not null之后才能添加索引
+alter table t_dealer MODIFY pnt POINT not null;
+# 添加索引，这种索引要求字段not null
+ALTER TABLE t_dealer ADD SPATIAL INDEX spatIdx(pnt);
+
+ 
+# 几种空间对象比较方法 
+SET @g1 = GEOMFROMTEXT('Polygon((30.7108682140 114.0961681600,30.6890070000 114.5951950000,
+30.2507470000 114.5767980000,30.2507470000 114.1030670000,30.7108682140 114.0961681600))');
+SET @g2 = pointfromtext('Point(30.476421 114.403866)');
+ 
+# 注意：比较的都是外包络几何类型对象 
+# 包含
+select * from t_dealer where MBRCONTAINS(@g1,pnt);
+SELECT MBRCONTAINS(@g1,@g2), MBRCONTAINS(@g2,@g1), MBRCONTAINS(@g1,@g1);
+# 被包含
+select * from t_dealer where MBRWITHIN(pnt,@g1);
+SELECT MBRWITHIN(@g2,@g1),MBRWITHIN(@g1,@g2);
+# 不相交 
+SELECT MBRDISJOINT(@g1,@g2);
+# 相等 
+SELECT MBREQUAL(@g1,@g2);
+# 相交 
+SELECT MBRINTERSECTS(@g1,@g2);
+# 重叠 
+SELECT MBROVERLAPS(@g1,@g2);
+# 相切 
+SELECT MBRTOUCHES(@g1,@g2);
+# 距离 单位 m
+select id,dealer_name,city_code,phone,lat,lon,
+  GLength(LineStringFromWKB(linestring(pnt,pointfromtext('Point(30.476421 114.403866)'))))*100*1000 as distance
+from t_dealer
+order by distance asc;
+
+
 </code></pre>
-<p>服务器端接口的代码：</p>
-<pre><code class="language-java">@RequestMapping(value = &quot;&quot;, method = RequestMethod.POST)
-public ResponseEntity&lt;String&gt; upload(MultipartFile text) throws Exception {
-  String fileName = text.getOriginalFilename();
-  int lastDot = fileName.lastIndexOf(&quot;.&quot;);
-  String type = fileName.substring(lastDot + 1);
-  String sb = &quot;uploads&quot; + &quot;/&quot; + UUID.randomUUID().toString() + &quot;.&quot; + type;
-  String uploadPath = storageProvider.upload(sb, text);  // 调用service接口把文件存到oss中，返回文件在oss的地址
-  return ResponseEntity.ok(uploadPath);
-}
-</code></pre>
+<p><img src="https://pic.tuzhihao.com/upic/20210418/214849-WBvCWV.png" alt="离我最近查询实例" /></p>
+<p>数据下载:<br />
+<a href="media/16661412450896/dealer_insert.zip">dealer_insert.zip</a></p>
 
 
 			

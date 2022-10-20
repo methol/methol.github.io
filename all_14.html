@@ -124,100 +124,42 @@
 	<article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
 		<div class="meta">
 			<div class="date">
-				<time datetime="2015-04-10T09:00:44+08:00" itemprop="datePublished">2015/04/10</time>
+				<time datetime="2015-04-26T09:00:44+08:00" itemprop="datePublished">2015/04/26</time>
 			</div>
 			
 			 
 			
 		</div>
-		<h1 class="title" itemprop="name"><a href="16661412449917.html" itemprop="url">
-		全排列</a></h1>
+		<h1 class="title" itemprop="name"><a href="16661412449667.html" itemprop="url">
+		安装pure-ftp服务以及设置虚拟用户</a></h1>
 		<div class="entry-content" itemprop="articleBody">
 			
-			<pre><code class="language-java">/**
- * Created by Methol on 2015/4/10.
- * 根据A数组的大小，输出 1 ~ A.length 的全排列
- */
-public class Main {
+			<p>今天才算是终于把ghost的bolg弄好了，但是还是很麻烦，都是自己搭建的，没有好的管理平台，传文件也很麻烦，就装了一个pure-ftp，来上传和下载文件什么的。</p>
+<p>命令不多，就下面几条。</p>
+<pre><code class="language-plain_text">#安装pure-ftpd
+apt-get install pure-ftpd
+# 在系统中添加相应的用户和组，如用户ftpuser 和组ftpgroup 
+groupadd ftpgroup
+useradd ftpuser -g ftpgroup -d /home/ftp -s /sbin/nologin 
+# 添加虚拟用户，如添加ftpmethol，并指定查看目录为/srv/ghost
+pure-pw useradd ftpmethol -u ftpuser -g ftpgroup -d /srv/ghost
+# 根据提示输入两次密码
 
-    static int A[] = new int[5];
+# 让 pure-ftpd 建立虚拟用户数据
+pure-pw mkdb
 
-    /*
-     根据A数组的大小，输出 1 ~ A.length 的全排列
-     @param cur 当前元素的位置
-     */
-    public static void next_permutation(int cur) {
-        if (cur == A.length) {         //递归边界
-            //在这里打印输出，也就是说在这里写具体要操作的函数，A中有排列好的序列
-            for (int i = 0; i &lt; A.length; i++) {
-                System.out.print(A[i] + &quot; &quot;);
-            }
-            System.out.println();
-        } else {
-            for (int i = 0; i &lt;= A.length; i++) {
-                boolean ok = true;
-                for (int j = 0; j &lt; cur; j++) {
-                    if (A[j] == i) ok = false;         //如果i已经在A[0]~A[cur-1]出现过，则不能再选
-                }
-                if (ok) {
-                    A[cur] = i;
-                    next_permutation(cur + 1);    //递归调用
-                }
-            }
-        }
-    }
+# 重启服务
+/etc/init.d/pure-ftpd restart
 
-    public static void main(String[] args) {
-        next_permutation(0);
-    }
-
-}
 </code></pre>
-<hr />
-<pre><code class="language-java">/**
- * Created by Methol on 2015/4/10.
- * 输出数组P中元素的全排列。
- */
-public class Main {
- 
-  static int A[] = new int[5];
-  static int P[] = {1,2,3};
- 
-  /*
-   输出数组P中元素的全排列。
-   @param cur 当前元素的位置
-   */
-  public static void next_permutation(int cur) {
-    if (cur == P.length) {         //递归边界
-      //在这里打印输出，也就是说在这里写具体要操作的函数，A中有排列好的序列
-      for (int i = 0; i &lt; P.length; i++) {
-        System.out.print(A[i] + &quot; &quot;);
-      }
-      System.out.println();
-    } else {
-      for (int i = 0; i &lt; P.length; i++) {
-        if(i==0 || P[i]!=P[i-1]) {
-          int c1 = 0 ,c2 = 0;
-          //统计A[0]~A[cur-1]中P[i]出现的次数
-          for (int j = 0; j &lt; cur ; j++)
-            if(A[j] == P[i])  c1++;
-          //统计P中P[i]出现的次数
-          for (int j = 0; j &lt; P.length; j++)
-            if( P[i] == P[j] )  c2++;
-          if(c1 &lt; c2){   //当c1&lt;c2的时候说明还有可以选的，递归调用
-            A[cur] = P[i];
-            next_permutation(cur+1);
-          }
-        }
-      }
-    }
-  }
-   
-  public static void main(String[] args) {
-    next_permutation(0);
-  }
- 
-}
+<p>但是往往这样弄完之后，还是不能登陆成功，会提示用户密码验证失败，解决办法：</p>
+<pre><code class="language-plain_text"># 在/etc/pure-ftpd/auth下，创建一个软链接
+cd /etc/pure-ftpd/auth
+ln -s /etc/pure-ftpd/conf/PureDB 60puredb
+</code></pre>
+<p>其他重要配置：</p>
+<pre><code class="language-plain_text"># 匿名用户登录改为否
+/etc/pure-ftpd/conf/NoAnonymous  内容改为no
 </code></pre>
 
 

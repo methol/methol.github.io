@@ -124,130 +124,263 @@
 	<article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
 		<div class="meta">
 			<div class="date">
-				<time datetime="2015-07-24T09:00:44+08:00" itemprop="datePublished">2015/07/24</time>
+				<time datetime="2016-04-11T09:00:45+08:00" itemprop="datePublished">2016/04/11</time>
 			</div>
 			
 			 
 			
 		</div>
-		<h1 class="title" itemprop="name"><a href="16661412449730.html" itemprop="url">
-		单例模式</a></h1>
+		<h1 class="title" itemprop="name"><a href="16661412450064.html" itemprop="url">
+		web上传文件夹</a></h1>
 		<div class="entry-content" itemprop="articleBody">
 			
-			<h3><a id="%E6%87%92%E6%B1%89%E5%BC%8F%EF%BC%8C%E7%BA%BF%E7%A8%8B%E4%B8%8D%E5%AE%89%E5%85%A8" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a><del>懒汉式，线程不安全</del></h3>
-<p>当被问到要实现一个单例模式时，很多人的第一反应是写出如下的代码，包括教科书上也是这样教我们的。</p>
-<pre><code class="language-java">public class Singleton {
-    private static Singleton instance;
-    private Singleton (){}
+			<p>使用html5的api来上传文件夹，只有chrome支持。</p>
+<pre><code class="language-html">&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;head&gt;
+  &lt;meta charset=&quot;UTF-8&quot;&gt;
+  &lt;title&gt;Title&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;input id=&quot;upload&quot; type='file' name=&quot;file&quot; webkitdirectory&gt;
+&lt;button id=&quot;button&quot;&gt;按钮&lt;/button&gt;
+&lt;/body&gt;
+&lt;script src=&quot;//libs.useso.com/js/jquery/1.11.1/jquery.min.js&quot; type=&quot;text/javascript&quot;&gt;&lt;/script&gt;
+&lt;script type=&quot;text/javascript&quot;&gt;
+  function Map() {
+    /**
+     * 结构
+     * @param key
+     * @param value
+     */
+    function Struct(key, value) {
+      this.key = key;
+      this.value = value;
+    }
 
-    public static Singleton getInstance() {
-     if (instance == null) {
-         instance = new Singleton();
-     }
-     return instance;
-    }
-}
-</code></pre>
-<p>这段代码简单明了，而且使用了懒加载模式，但是却存在致命的问题。当有多个线程并行调用 getInstance() 的时候，就会创建多个实例。也就是说在多线程下不能正常工作。</p>
-<h3><a id="%E6%87%92%E6%B1%89%E5%BC%8F%EF%BC%8C%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>懒汉式，线程安全</h3>
-<p>为了解决上面的问题，最简单的方法是将整个 getInstance() 方法设为同步（==synchronized==）。</p>
-<pre><code class="language-java">public static synchronized Singleton getInstance() {
-    if (instance == null) {
-        instance = new Singleton();
-    }
-    return instance;
-}
-</code></pre>
-<p>虽然做到了线程安全，并且解决了多实例的问题，但是它并不高效。因为在任何时候只能有一个线程调用 getInstance() 方法。但是同步操作只需要在第一次调用时才被需要，即第一次创建单例实例对象时。这就引出了双重检验锁。</p>
-<h3><a id="%E5%8F%8C%E9%87%8D%E6%A3%80%E9%AA%8C%E9%94%81" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>双重检验锁</h3>
-<p>双重检验锁模式（double checked locking pattern），是一种使用同步块加锁的方法。程序员称其为双重检查锁，因为会有两次检查<code>instance == null</code>，一次是在同步块外，一次是在同步块内。为什么在同步块内还要再检验一次？因为可能会有多个线程一起进入同步块外的 if，如果在同步块内不进行二次检验的话就会生成多个实例了。</p>
-<pre><code class="language-java">public static Singleton getSingleton() {
-    if (instance == null) {   //Single Checked
-        synchronized (Singleton.class) {
-            if (instance == null) {   //Double Checked
-                instance = new Singleton();
-            }
+    /**
+     * 数据存放数组
+     */
+    this.arr = [];
+    /**
+     * 增加数据
+     * @param key {String}
+     * @param value {Object}
+     */
+    this.put = function (key, value) {
+      for (var i = 0; i &lt; this.arr.length; i++) {
+        if (this.arr[i].key === key) {
+          this.arr[i].value = value;
+          return;
         }
-    }
-    return instance ;
-}
-</code></pre>
-<p>这段代码看起来很完美，很可惜，它是有问题。主要在于<code>instance = new Singleton()</code>这句，这并非是一个原子操作，事实上在 JVM 中这句话大概做了下面 3 件事情。</p>
-<ul>
-<li>1.给 instance 分配内存</li>
-<li>2.调用 Singleton 的构造函数来初始化成员变量</li>
-<li>3.将instance对象指向分配的内存空间（执行完这步 instance 就为非 null 了）</li>
-</ul>
-<p>但是在 JVM 的即时编译器中存在指令重排序的优化。也就是说上面的第二步和第三步的顺序是不能保证的，最终的执行顺序可能是 1-2-3 也可能是 1-3-2。如果是后者，则在 3 执行完毕、2 未执行之前，被线程二抢占了，这时 instance 已经是非 null 了（但却没有初始化），所以线程二会直接返回 instance，然后使用，然后顺理成章地报错。</p>
-<p>我们只需要将 instance 变量声明成 volatile 就可以了。</p>
-<pre><code class="language-java">public class Singleton {
-    private volatile static Singleton instance; //声明成 volatile
-    private Singleton (){}
-
-    public static Singleton getSingleton() {
-        if (instance == null) {                         
-            synchronized (Singleton.class) {
-                if (instance == null) {       
-                    instance = new Singleton();
-                }
-            }
+      }
+      this.arr[this.arr.length] = new Struct(key, value);
+    };
+    /**
+     * 通过key获取数据
+     * @param key {String}
+     * @returns {Object}
+     */
+    this.get = function (key) {
+      for (var i = 0; i &lt; this.arr.length; i++) {
+        if (this.arr[i].key === key) {
+          return this.arr[i].value;
         }
-        return instance;
-    }
+      }
+      return null;
+    };
+    /**
+     * 删除数据
+     * @param key{String}
+     */
+    this.remove = function (key) {
+      var v;
+      for (var i = 0; i &lt; this.arr.length; i++) {
+        v = this.arr[i];
+        if (v.key === key) {
+          this.arr.splice(i, 1);
+          return;
+        }
+      }
+    };
+    /**
+     * 是否存在key
+     * @param key {String}
+     * @returns {boolean}
+     */
+    this.containsKey = function (key) {
+      var v;
+      for (var i = 0; i &lt; this.arr.length; i++) {
+        v = this.arr[i];
+        if (v.key === key) {
+          return true;
+        }
+      }
+      return false;
+    };
+    /**
+     * 获取map数据量
+     * @returns {Number}
+     */
+    this.size = function () {
+      return this.arr.length;
+    };
+    /**
+     * 判断Map是否为空
+     * @returns {boolean}
+     */
+    this.isEmpty = function () {
+      return this.arr.length &lt;= 0;
+    };
+    /**
+     * 全部清空
+     */
+    this.removeAll = function () {
+      this.arr = [];
+    };
+  }
+&lt;/script&gt;
+&lt;script type=&quot;text/javascript&quot;&gt;
+  var host = &quot;http://example.com&quot;;  // 远程服务器地址
+  var map = new Map();  // 用来存放文件夹路径和id的键值对
+  var files = [];
 
+  $(&quot;#upload&quot;).change(function () {
+    files = this.files;
+    console.log(files);
+  });
+
+  $(&quot;#button&quot;).on(&quot;click&quot;, function () {
+    for (var i = 0; i &lt; files.length; i++) {
+      var file = files[i];
+      console.log(file);
+      var path = getFolder(file.webkitRelativePath);
+      var folderId = getFolderIdFromMap(path);
+      // 创建文件
+      uploadResource(file, folderId, 10001);
+    }
+  });
+
+  function uploadResource(file, folderId, projectId) {
+    var filepath = null;
+    var formData = new FormData();
+    formData.append(&quot;text&quot;, file);
+    $.ajax({
+      url: host + &quot;/sys/upload/uploadProjectResource&quot;,
+      type: &quot;POST&quot;,
+      data: formData,
+      xhrFields: {
+        withCredentials: true // 确保请求会携带上Cookie
+      },
+      enctype: 'multipart/form-data',
+      processData: false,  // tell jQuery not to process the data
+      contentType: false,
+      complete: function (respResult) {
+        if (respResult.status == 200) {
+          filepath = respResult.responseText;
+          $.ajax({
+            url: host + &quot;/project/resource/create&quot;,
+            type: &quot;post&quot;,
+            dataType: &quot;json&quot;,
+            xhrFields: {
+              withCredentials: true
+            },
+            beforeSend: function (xhr) {
+              xhr.setRequestHeader(&quot;Content-Type&quot;, &quot;application/json&quot;);
+            },
+            data: JSON.stringify({
+              &quot;projectId&quot;: projectId,
+              &quot;resourceContent&quot;: filepath,
+              &quot;resourceName&quot;: file.name,
+              &quot;folderId&quot;: folderId,
+              &quot;type&quot;: 20  // 当前是文件资源
+            }),
+            success: function (data) {
+              console.log(data);
+            },
+            error: function (respResult) {
+            }
+          });
+        } else {
+        }
+      }
+    });
+  }
+
+  function getFolderIdFromMap(path) {
+    var folderId = map.get(path);
+    var folderName = path.substring(path.lastIndexOf(&quot;/&quot;) + 1, path.length);
+    var localFolder = 0;
+    if (path.indexOf(&quot;/&quot;) &gt; 0) {
+      // 说明当前不是最高级目录，是子目录
+      localFolder = getFolderIdFromMap(path.substring(0, path.lastIndexOf(&quot;/&quot;)));
+    }
+    if (folderId == null) {
+      $.ajax({
+        async: false,
+        url: host + &quot;/project/resource/create/folder&quot;,
+        type: &quot;post&quot;,
+        dataType: &quot;json&quot;,
+        xhrFields: {
+          withCredentials: true
+        },
+        beforeSend: function (xhr) {
+          xhr.setRequestHeader(&quot;Content-Type&quot;, &quot;application/json&quot;);
+        },
+        data: JSON.stringify({
+          &quot;projectId&quot;: 10001,
+          &quot;folderName&quot;: folderName,
+          &quot;folderId&quot;: localFolder
+        }),
+        success: function (data) {
+          console.log(data);
+          folderId = data.id;
+          map.put(path, folderId);
+        },
+        error: function (respResult) {
+        }
+      });
+    }
+    return folderId;
+  }
+
+  function getFolder(path) {
+    console.log(path);
+    var index = path.lastIndexOf(&quot;/&quot;);
+    return path.substring(0, index);
+  }
+&lt;/script&gt;
+
+&lt;/html&gt;
+</code></pre>
+<p>服务器采用java，用了接受文件和创建文件夹。<br />
+文件夹也是虚拟的，采用在当前记录增加parentId来存储父节点，实现树的结构。<br />
+表结构：</p>
+<pre><code class="language-sql">CREATE TABLE t_project_resource_folder
+(
+    id BIGINT(20) PRIMARY KEY NOT NULL COMMENT '主键',
+    folder_name VARCHAR(255) DEFAULT '' COMMENT '文件夹名',
+    parent_id BIGINT(20) DEFAULT '0' NOT NULL COMMENT '父文件夹id,0表示顶级目录'
+)
+CREATE TABLE t_project_resource
+(
+    id BIGINT(20) PRIMARY KEY NOT NULL COMMENT '主键',
+    resource_name VARCHAR(255) NOT NULL COMMENT '资源名',
+    resource_content VARCHAR(255) COMMENT '资源内容,通常是放在oss文件的url',
+    resource_folder_id BIGINT(20) DEFAULT '0' COMMENT '资源文件夹ID,0表示文件处于顶级目录'
+)
+</code></pre>
+<p>服务器端接口的代码：</p>
+<pre><code class="language-java">@RequestMapping(value = &quot;&quot;, method = RequestMethod.POST)
+public ResponseEntity&lt;String&gt; upload(MultipartFile text) throws Exception {
+  String fileName = text.getOriginalFilename();
+  int lastDot = fileName.lastIndexOf(&quot;.&quot;);
+  String type = fileName.substring(lastDot + 1);
+  String sb = &quot;uploads&quot; + &quot;/&quot; + UUID.randomUUID().toString() + &quot;.&quot; + type;
+  String uploadPath = storageProvider.upload(sb, text);  // 调用service接口把文件存到oss中，返回文件在oss的地址
+  return ResponseEntity.ok(uploadPath);
 }
 </code></pre>
-<p>有些人认为使用 volatile 的原因是可见性，也就是可以保证线程在本地不会存有 instance 的副本，每次都是去主内存中读取。但其实是不对的。使用 volatile 的主要原因是其另一个特性：禁止指令重排序优化。也就是说，在 volatile 变量的赋值操作后面会有一个内存屏障（生成的汇编代码上），读操作不会被重排序到内存屏障之前。比如上面的例子，取操作必须在执行完 1-2-3 之后或者 1-3-2 之后，不存在执行到 1-3 然后取到值的情况。从「先行发生原则」的角度理解的话，就是对于一个 volatile 变量的写操作都先行发生于后面对这个变量的读操作（这里的“后面”是时间上的先后顺序）。</p>
-<p>但是特别注意在 Java 5 以前的版本使用了 volatile 的双检锁还是有问题的。其原因是 Java 5 以前的 JMM （Java 内存模型）是存在缺陷的，即时将变量声明成 volatile 也不能完全避免重排序，主要是 volatile 变量前后的代码仍然存在重排序问题。这个 volatile 屏蔽重排序的问题在 Java 5 中才得以修复，所以在这之后才可以放心使用 volatile。</p>
-<p>相信你不会喜欢这种复杂又隐含问题的方式，当然我们有更好的实现线程安全的单例模式的办法。</p>
-<h3><a id="%E9%A5%BF%E6%B1%89%E5%BC%8Fstatic-final-field" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>饿汉式 static final field</h3>
-<p>这种方法非常简单，因为单例的实例被声明成 static 和 final 变量了，在第一次加载类到内存中时就会初始化，所以创建实例本身是线程安全的。</p>
-<pre><code class="language-java">public class Singleton {  
-    private static class SingletonHolder {  
-        private static final Singleton INSTANCE = new Singleton();  
-    }  
-    private Singleton (){}  
-    public static final Singleton getInstance() {  
-        return SingletonHolder.INSTANCE;
-    }  
-}
-</code></pre>
-<p>这种写法仍然使用JVM本身机制保证了线程安全问题；由于 SingletonHolder 是私有的，除了 getInstance() 之外没有办法访问它，因此它是懒汉式的；同时读取实例的时候不会进行同步，没有性能缺陷；也不依赖 JDK 版本。</p>
-<h3><a id="%E6%9E%9A%E4%B8%BEenum" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>枚举 Enum</h3>
-<p>用枚举写单例实在太简单了！这也是它最大的优点。下面这段代码就是声明枚举实例的通常做法。</p>
-<pre><code class="language-java">public enum EasySingleton{
-    INSTANCE;
-}
-</code></pre>
-<p>我们可以通过EasySingleton.INSTANCE来访问实例，这比调用getInstance()方法简单多了。创建枚举默认就是线程安全的，所以不需要担心double checked locking，而且还能防止反序列化导致重新创建新的对象。但是还是很少看到有人这样写，可能是因为不太熟悉吧。</p>
-<h3><a id="%E6%80%BB%E7%BB%93" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>总结</h3>
-<p>一般来说，单例模式有五种写法：懒汉、饿汉、双重检验锁、静态内部类、枚举。上述所说都是线程安全的实现，文章开头给出的第一种方法不算正确的写法。<br />
-就我个人而言，一般情况下直接使用==<strong>饿汉式</strong>==就好了，如果明确要求要懒加载（lazy initialization）会倾向于使用==<strong>静态内部类</strong>==，如果涉及到反序列化创建对象时会试着使用==<strong>枚举</strong>==的方式来实现单例。</p>
-<h3><a id="read-more" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>Read More</h3>
-<blockquote>
-<ul>
-<li><a href="http://javarevisited.blogspot.sg/2014/05/double-checked-locking-on-singleton-in-java.html">Double Checked Locking on Singleton Class in Java</a></li>
-</ul>
-</blockquote>
-<blockquote>
-<ul>
-<li><a href="http://javarevisited.blogspot.sg/2012/07/why-enum-singleton-are-better-in-java.html">Why Enum Singleton are better in Java</a></li>
-</ul>
-</blockquote>
-<blockquote>
-<ul>
-<li><a href="http://javarevisited.blogspot.com/2012/12/how-to-create-thread-safe-singleton-in-java-example.html">How to create thread safe Singleton in Java</a></li>
-</ul>
-</blockquote>
-<blockquote>
-<ul>
-<li><a href="http://javarevisited.blogspot.com/2011/03/10-interview-questions-on-singleton.html">10 Singleton Pattern Interview questions in Java</a></li>
-</ul>
-</blockquote>
-<p>转载：</p>
-<blockquote>
-<p><a href="http://wuchong.me/blog/2014/08/28/how-to-correctly-write-singleton-pattern/">如何正确地写出单例模式 | Jark's Blog</a></p>
-</blockquote>
 
 
 			
