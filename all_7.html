@@ -124,397 +124,229 @@
 	<article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
 		<div class="meta">
 			<div class="date">
-				<time datetime="2017-05-14T09:00:44+08:00" itemprop="datePublished">2017/05/14</time>
+				<time datetime="2017-05-21T09:00:44+08:00" itemprop="datePublished">2017/05/21</time>
 			</div>
 			
 			 
 			
 		</div>
-		<h1 class="title" itemprop="name"><a href="16661412449464.html" itemprop="url">
-		布隆过滤器和Guava的实现</a></h1>
+		<h1 class="title" itemprop="name"><a href="16661412449263.html" itemprop="url">
+		设计模式 简单工厂 工厂方法 抽象工厂</a></h1>
 		<div class="entry-content" itemprop="articleBody">
 			
-			<h2><a id="%E4%BB%8B%E7%BB%8D" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>介绍</h2>
-<p>布隆过滤器实际上是一个很长的二进制向量和一系列的随机映射函数。可用于检索一个元素是否在一个集合中。</p>
-<h2><a id="%E4%BD%BF%E7%94%A8%E5%9C%BA%E6%99%AF" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>使用场景</h2>
-<ul>
-<li>一个大型的爬虫网络中，判断某一个网址是否被访问过。</li>
-<li>大数据量的词语(句子)去重。</li>
-</ul>
-<h2><a id="%E5%8E%9F%E7%90%86" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>原理</h2>
-<p>布隆过滤器的核心实现是一个超大的位数组和几个哈希函数。假设数组的长度为m，哈希函数的个数为k。<br />
-<img src="https://pic.tuzhihao.com/upic/20210418/214747-djSEpK.png" alt="布隆过滤器原理图" /><br />
-如上图：假设集合里面有x,y,z，通过hash函数计算后的结果为a,b,c，那么w[a],w[b],w[c]都会表标记为1。假设现在有3个hash函数，如图3个不同颜色的线，分别计算出不同的结果，并标记为1。当判断某一个元素是否在一个集合的时候，就通过判断这三个hash的结果，如果都是1，说明该元素在这个集合中。如果有一个为0，说明该元素不在此集合中。因此，这也是存在误判的原因。<br />
-总的来说，bloom filter是以极低的的错误去换取空间和时间。</p>
-<h2><a id="%E4%BC%98%E7%82%B9" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>优点</h2>
-<ul>
-<li>有很好的空间和时间效率。</li>
-<li>不存在漏报的问题，就是说如果元素存在的话，那必定的到的是正确的结果，这个元素确实是存在的。</li>
-<li>不是用原始数据进行的判断，对于某些敏感的数据也是可以适用的。</li>
-</ul>
-<h2><a id="%E7%BC%BA%E7%82%B9" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>缺点</h2>
-<ul>
-<li>误报率随着元素的增加，误报（将不存在的元素判定为存在）也会越严重。</li>
-<li>不能删除已添加的元素，因为是多个hash函数的结果值对应一个元素。</li>
-</ul>
-<h2><a id="%E8%87%AA%E5%B7%B1%E5%AE%9E%E7%8E%B0%E4%B8%80%E4%B8%AA%E7%AE%80%E5%8D%95%E7%9A%84bloomfilter" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>自己实现一个简单的BloomFilter</h2>
-<pre><code class="language-java">public interface BloomFilter&lt;T&gt; {
+			<p>针对实体user，希望写一系列的功能，能够实现数据库的增删改查等功能。</p>
+<pre><code class="language-java">    public static void main(String[] args) {
+        User u = new User();
+        u.setName(&quot;methol&quot;);
 
-    /**
-     * 添加一个数据到bloomfilter内
-     *
-     * @param element 要添加的元素
-     */
-    void add(T element);
+        add(u);
+        edit(u);
+    }
+    
+    public static void add(User user){
+        System.out.println(&quot;save user【&quot; + user.getName() + &quot;】 to db&quot;);
+    }
+    
+    public static void edit(User user){
+        System.out.println(&quot;edit user【&quot; + user.getName() + &quot;】, and save to db&quot;);
+    }
+</code></pre>
+<p>上面的方法虽然基本上实现了功能，但是不利于程序以后的扩展和复用，代码也不容易维护。<br />
+通过封装、继承、多态把程序的耦合度降低，使用设计模式可以使得程序更加灵活，后期容易修改，也更加易于复用。<br />
+有了如下的代码：</p>
+<pre><code class="language-plain_text">package mode.factory.simple;
 
-    /**
-     * 判断该过滤器内是否存在元素
-     *
-     * @param element 被判断的元素
-     * @return 是否存在
-     */
-    boolean contains(T element);
+import mode.factory.bean.User;
+
+public interface Operation {
+
+    void operate(User user);
+
 }
+</code></pre>
+<pre><code class="language-plain_text">
+package mode.factory.simple;
 
+import mode.factory.bean.User;
 
-import java.util.BitSet;
-
-public class SimpleBloomFilter implements BloomFilter&lt;String&gt; {
-
-
-    /**
-     * 存储的bit容量
-     */
-    private static final int DEFAULT_SIZE = Integer.MAX_VALUE;
-
-    /**
-     * 存储标志位的bits
-     */
-    private BitSet bits = new BitSet(DEFAULT_SIZE);
-
-    /**
-     * 不同hash函数的种子
-     */
-    private static final int[] seeds = new int[]{113, 213, 3111, 397, 611, 532};
-    /**
-     * hash函数的数组
-     */
-    private SimpleHash[] hashFunction = new SimpleHash[seeds.length];
-
-    public SimpleBloomFilter() {
-        // 默认初始化 hashFunction
-        for (int i = 0; i &lt; seeds.length; i++) {
-            hashFunction[i] = new SimpleHash(DEFAULT_SIZE, seeds[i]);
-        }
-    }
+public class AddOperate implements Operation {
 
     @Override
-    public void add(String element) {
-        for (SimpleHash function : hashFunction) {
-            final int hash = function.hash(element);
-            bits.set(hash, true);
-        }
+    public void operate(User user) {
+        System.out.println(&quot;save user【&quot; + user.getName() + &quot;】 to db&quot;);
     }
+}
+</code></pre>
+<pre><code class="language-plain_text">package mode.factory.simple;
+
+import mode.factory.bean.User;
+
+public class EditOperate implements Operation {
 
     @Override
-    public boolean contains(String element) {
-        for (SimpleHash function : hashFunction) {
-            if (!bits.get(function.hash(element))) {
-                return false;
-            }
-        }
-        return true;
+    public void operate(User user) {
+        System.out.println(&quot;edit user【&quot; + user.getName() + &quot;】, and save to db&quot;);
     }
+}
+</code></pre>
+<pre><code class="language-plain_text">    public static void main(String[] args) {
+        User u = new User();
+        u.setName(&quot;methol&quot;);
 
-    private static class SimpleHash {
+        // 不同的操作需要new不同的类操作
+        Operation addOperate = new AddOperate();
+        addOperate.operate(u);
+        Operation editOperate = new EditOperate();
+        editOperate.operate(u);
+    }
+</code></pre>
+<p>上述代码已经经过封装，并且也适合之后的代码扩展，但是还是有一个问题，如果后期想通过不同的参数（事先不知道是要执行edit还是add），那么就要通过条件判断要做的操作，这时简单工厂模式可能就是一个比较好的选择。</p>
+<h2><a id="%E7%AE%80%E5%8D%95%E5%B7%A5%E5%8E%82%E6%A8%A1%E5%BC%8F%E4%B8%8E%E5%B7%A5%E5%8E%82%E6%A8%A1%E5%BC%8F" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>简单工厂模式与工厂模式</h2>
+<pre><code class="language-plain_text">package mode.factory.simple;
 
-        private int cap;
-        private int seed;
-
-        private SimpleHash(int cap, int seed) {
-            this.cap = cap;
-            this.seed = seed;
-        }
-
-        /**
-         * 简单的写一个hash算法
-         */
-        public int hash(String value) {
-            int result = 0;
-            int len = value.length();
-            for (int i = 0; i &lt; len; i++) {
-                result = seed * result + value.charAt(i) + value.hashCode();
-            }
-            // 把值的范围控制在cap内
-            return (cap - 1) &amp; result;
+public class OperateFactory {
+    public static Operation findOperation(String operation) {
+        switch (operation) {
+            case &quot;add&quot;:
+                return new AddOperate();
+            case &quot;edit&quot;:
+                return new EditOperate();
+            default:
+                return null;
         }
     }
 }
-
 </code></pre>
-<h2><a id="guava%E4%B8%AD%E7%9A%84bloomfilter" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>Guava中的BloomFilter</h2>
-<p>主要是两个类，<code>com.google.common.hash.BloomFilter</code>和<code>com.google.common.hash.BloomFilterStrategies</code>。</p>
-<pre><code class="language-java">  /** The bit set of the BloomFilter (not necessarily power of 2!) */
-  private final BitArray bits;
+<p>通过工厂类来帮我们new一个对象，而不是直接在代码中需要的地方new一个对象，在同一个地方管理，后期的代码维护和扩展性都强了很多。<br />
+或者这时想增加一个delete方法，只需要继承<code>Operation</code>类，写一个方法，然后在<code>OperateFactory</code>增加一个case即可。<br />
+<strong>简单工厂模式</strong>，就是一个简单的创建产品(<code>Operation</code>)的工具，可以是<code>AddOperate</code>类，也可以是<code>EditOperate</code>类，甚至他们之间没有任何关系也是没问题的。<br />
+<strong>工厂模式</strong>，他也是一个简单的创建产品(<code>Operation</code>)的工具，但是他有一个区别是所有的产品(<code>AddOperate</code>，<code>EditOperate</code>)都是继承(实现)<code>Operation</code>这个父类的，父类中有抽象的方法，之后都是调用同一个方法来做操作。<br />
+使用中，很少使用简单工厂模式，大多都是工厂模式，谈到工厂模式，基本上都是指的工厂模式。</p>
+<pre><code class="language-java">    public static void main(String[] args) {
+        User u = new User();
+        u.setName(&quot;methol&quot;);
 
-  /** Number of hashes per element */
-  private final int numHashFunctions;
+        // 不同的操作需要new不同的类操作
+        Operation addOperate = new AddOperate();
+        addOperate.operate(u);
+        Operation editOperate = new EditOperate();
+        editOperate.operate(u);
 
-  /** The funnel to translate Ts to bytes */
-  private final Funnel&lt;? super T&gt; funnel;
-
-  /**
-   * The strategy we employ to map an element T to {@code numHashFunctions} bit indexes.
-   */
-  private final Strategy strategy;
+        // 使用一个简单的工厂，让工厂来帮我们选择
+        OperateFactory.findOperation(&quot;add&quot;).operate(u);
+        OperateFactory.findOperation(&quot;edit&quot;).operate(u);
+    }
 </code></pre>
-<p>四个成员变量，<code>BitArray</code>是<code>BloomFilterStrategies</code>中的静态内部类。作用和上面的<code>BitSet</code>类似。有基本的get和set方法，同时提供了一些其他常用的方法。</p>
-<pre><code class="language-java">  static final class BitArray {
-    final long[] data;
-    long bitCount;
+<h2><a id="%E5%B7%A5%E5%8E%82%E6%96%B9%E6%B3%95" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>工厂方法</h2>
+<p>对<code>Operation</code>做了一些小的修改，增加了一个方法</p>
+<pre><code class="language-plain_text">public interface Operation {
 
-    BitArray(long bits) {
-      this(new long[Ints.checkedCast(LongMath.divide(bits, 64, RoundingMode.CEILING))]);
-    }
+    void operate(User user);
 
-    // Used by serialization
-    BitArray(long[] data) {
-      checkArgument(data.length &gt; 0, &quot;data length is zero!&quot;);
-      this.data = data;
-      long bitCount = 0;
-      for (long value : data) {
-        bitCount += Long.bitCount(value);
-      }
-      this.bitCount = bitCount;
-    }
+    Operation createDefault(String operationType);
+}
+</code></pre>
+<pre><code class="language-plain_text">public class AddOperate implements Operation {
 
-    /** Returns true if the bit changed value. */
-    boolean set(long index) {
-      if (!get(index)) {
-        data[(int) (index &gt;&gt;&gt; 6)] |= (1L &lt;&lt; index);
-        bitCount++;
-        return true;
-      }
-      return false;
-    }
-
-    boolean get(long index) {
-      return (data[(int) (index &gt;&gt;&gt; 6)] &amp; (1L &lt;&lt; index)) != 0;
-    }
-
-    /** Number of bits */
-    long bitSize() {
-      return (long) data.length * Long.SIZE;
-    }
-
-    /** Number of set bits (1s) */
-    long bitCount() {
-      return bitCount;
-    }
-
-    BitArray copy() {
-      return new BitArray(data.clone());
-    }
-
-    /** Combines the two BitArrays using bitwise OR. */
-    void putAll(BitArray array) {
-      checkArgument(
-          data.length == array.data.length,
-          &quot;BitArrays must be of equal length (%s != %s)&quot;,
-          data.length,
-          array.data.length);
-      bitCount = 0;
-      for (int i = 0; i &lt; data.length; i++) {
-        data[i] |= array.data[i];
-        bitCount += Long.bitCount(data[i]);
-      }
+    @Override
+    public void operate(User user) {
+        System.out.println(&quot;save user【&quot; + user.getName() + &quot;】 to db&quot;);
     }
 
     @Override
-    public boolean equals(@Nullable Object o) {
-      if (o instanceof BitArray) {
-        BitArray bitArray = (BitArray) o;
-        return Arrays.equals(data, bitArray.data);
-      }
-      return false;
+    public Operation createDefault(String operationType) {
+        return OperateFactory.findOperation(operationType);
+    }
+}
+</code></pre>
+<pre><code class="language-plain_text">public class EditOperate implements Operation {
+
+    @Override
+    public void operate(User user) {
+        System.out.println(&quot;edit user【&quot; + user.getName() + &quot;】, and save to db&quot;);
     }
 
     @Override
-    public int hashCode() {
-      return Arrays.hashCode(data);
+    public Operation createDefault(String operationType) {
+        return OperateFactory.findOperation(operationType);
     }
-  }
+}
 </code></pre>
-<p><code>numHashFunctions</code>是表示一个元素对应了几个hash函数，和上面<code>hashFunction.length</code>是一个意思。<br />
-<code>strategy</code>是把元素映射为hash值的策略，类似上面的<code>hashFunction</code>。<code>BloomFilter</code>定了了<code>Strategy</code>接口。<code>put</code>方法把<code>numHashFunctions</code>个通过计算后的值放入bitArray中。<code>mightContain</code>返回该过滤器是否可能含有元素T。<code>ordinal</code>就是枚举类的<code>ordinal()</code>。</p>
-<pre><code class="language-java">  interface Strategy extends java.io.Serializable {
+<p>工厂方法主要系是两个元素，产品(<code>Operation</code>)和创建者(<code>OperateFactory</code>)。<br />
+而工厂方法就是一个创建者这个类的一个方法而已，这个方法就是用来封装产品的创建。<br />
+和工厂模式的区别是，工厂模式的最大优点在于工厂类中包含了逻辑判断，根据(客户端)传入的参数动态实例化相关的类，那么对于客户端来说，他是不需要关心产品(<code>Operation</code>)的，他只需要关心传入的参数。而工厂模式这时把这一动作延后，接口定义了一个用来创建对象的接口，让子类决定实例化哪个类，工厂方法使一个类的实例化过程延迟到其子类。</p>
+<h2><a id="%E6%8A%BD%E8%B1%A1%E5%B7%A5%E5%8E%82" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>抽象工厂</h2>
+<p>抽象工厂，顾名思义，就是对工厂进行抽象。<br />
+工厂方法和工厂模式都是对产品抽象封装，通过一个工厂，生产多种产品。<br />
+抽象工厂就是通过不同的工厂生产不同的产品。<br />
+还是上面的例子，<code>OperateFactory</code>创建了新增和修改两种操作(产品)，此时有一个新的需求来了，之前用的数据库使mysql，现在想改成oracle，此时就对OperateFactory进行抽象。</p>
+<pre><code class="language-plain_text">package mode.factory.abstracs;
 
-    /**
-     * Sets {@code numHashFunctions} bits of the given bit array, by hashing a user element.
-     *
-     * &lt;p&gt;Returns whether any bits changed as a result of this operation.
-     */
-    &lt;T&gt; boolean put(T object, Funnel&lt;? super T&gt; funnel, int numHashFunctions, BitArray bits);
+import mode.factory.bean.User;
+import mode.factory.simple.Operation;
 
-    /**
-     * Queries {@code numHashFunctions} bits of the given bit array, by hashing a user element;
-     * returns {@code true} if and only if all selected bits are set.
-     */
-    &lt;T&gt; boolean mightContain(
-        T object, Funnel&lt;? super T&gt; funnel, int numHashFunctions, BitArray bits);
+public interface Factory {
 
-    /**
-     * Identifier used to encode this strategy, when marshalled as part of a BloomFilter. Only
-     * values in the [-128, 127] range are valid for the compact serial form. Non-negative values
-     * are reserved for enums defined in BloomFilterStrategies; negative values are reserved for any
-     * custom, stateful strategy we may define (e.g. any kind of strategy that would depend on user
-     * input).
-     */
-    int ordinal();
-  }
+    void add(User user);
+
+    void edit(User user);
+
+    Operation createDefault(String operationType);
+}
 </code></pre>
-<p>并在<code>BloomFilterStrategies</code>中给出了两个实现的枚举。</p>
-<pre><code class="language-java">  MURMUR128_MITZ_32() {
+<p>接口申明了，不管是申明工厂，都需要有add和edit这两种产品的生产。不同的接口只需要实现这个接口，做自己的操作即可。同时不同的工厂还可以实现自己独有的产品的生产。</p>
+<pre><code class="language-plain_text">package mode.factory.abstracs;
+
+import mode.factory.bean.User;
+import mode.factory.simple.Operation;
+
+public class MysqlOperateFactory implements Factory {
     @Override
-    public &lt;T&gt; boolean put(
-        T object, Funnel&lt;? super T&gt; funnel, int numHashFunctions, BitArray bits) {
-      long bitSize = bits.bitSize();
-      long hash64 = Hashing.murmur3_128().hashObject(object, funnel).asLong();
-      int hash1 = (int) hash64;
-      int hash2 = (int) (hash64 &gt;&gt;&gt; 32);
-
-      boolean bitsChanged = false;
-      for (int i = 1; i &lt;= numHashFunctions; i++) {
-        int combinedHash = hash1 + (i * hash2);
-        // Flip all the bits if it's negative (guaranteed positive number)
-        if (combinedHash &lt; 0) {
-          combinedHash = ~combinedHash;
-        }
-        bitsChanged |= bits.set(combinedHash % bitSize);
-      }
-      return bitsChanged;
+    public void add(User user) {
+        createDefault(&quot;add&quot;).operate(user);
     }
 
     @Override
-    public &lt;T&gt; boolean mightContain(
-        T object, Funnel&lt;? super T&gt; funnel, int numHashFunctions, BitArray bits) {
-      long bitSize = bits.bitSize();
-      long hash64 = Hashing.murmur3_128().hashObject(object, funnel).asLong();
-      int hash1 = (int) hash64;
-      int hash2 = (int) (hash64 &gt;&gt;&gt; 32);
-
-      for (int i = 1; i &lt;= numHashFunctions; i++) {
-        int combinedHash = hash1 + (i * hash2);
-        // Flip all the bits if it's negative (guaranteed positive number)
-        if (combinedHash &lt; 0) {
-          combinedHash = ~combinedHash;
-        }
-        if (!bits.get(combinedHash % bitSize)) {
-          return false;
-        }
-      }
-      return true;
-    }
-  },
-  /**
-   * This strategy uses all 128 bits of {@link Hashing#murmur3_128} when hashing. It looks different
-   * than the implementation in MURMUR128_MITZ_32 because we're avoiding the multiplication in the
-   * loop and doing a (much simpler) += hash2. We're also changing the index to a positive number by
-   * AND'ing with Long.MAX_VALUE instead of flipping the bits.
-   */
-  MURMUR128_MITZ_64() {
-    @Override
-    public &lt;T&gt; boolean put(
-        T object, Funnel&lt;? super T&gt; funnel, int numHashFunctions, BitArray bits) {
-      long bitSize = bits.bitSize();
-      byte[] bytes = Hashing.murmur3_128().hashObject(object, funnel).getBytesInternal();
-      long hash1 = lowerEight(bytes);
-      long hash2 = upperEight(bytes);
-
-      boolean bitsChanged = false;
-      long combinedHash = hash1;
-      for (int i = 0; i &lt; numHashFunctions; i++) {
-        // Make the combined hash positive and indexable
-        bitsChanged |= bits.set((combinedHash &amp; Long.MAX_VALUE) % bitSize);
-        combinedHash += hash2;
-      }
-      return bitsChanged;
+    public void edit(User user) {
+        createDefault(&quot;edit&quot;).operate(user);
     }
 
     @Override
-    public &lt;T&gt; boolean mightContain(
-        T object, Funnel&lt;? super T&gt; funnel, int numHashFunctions, BitArray bits) {
-      long bitSize = bits.bitSize();
-      byte[] bytes = Hashing.murmur3_128().hashObject(object, funnel).getBytesInternal();
-      long hash1 = lowerEight(bytes);
-      long hash2 = upperEight(bytes);
+    public Operation createDefault(String operationType) {
+        return new MysqlOperate().findOperation(operationType);
+    }
+}
+</code></pre>
+<pre><code class="language-plain_text">package mode.factory.abstracs;
 
-      long combinedHash = hash1;
-      for (int i = 0; i &lt; numHashFunctions; i++) {
-        // Make the combined hash positive and indexable
-        if (!bits.get((combinedHash &amp; Long.MAX_VALUE) % bitSize)) {
-          return false;
-        }
-        combinedHash += hash2;
-      }
-      return true;
+import mode.factory.bean.User;
+import mode.factory.simple.Operation;
+
+public class OracleOperateFactory implements Factory {
+    @Override
+    public void add(User user) {
+        createDefault(&quot;add&quot;).operate(user);
     }
 
-    private /* static */ long lowerEight(byte[] bytes) {
-      return Longs.fromBytes(
-          bytes[7], bytes[6], bytes[5], bytes[4], bytes[3], bytes[2], bytes[1], bytes[0]);
+    @Override
+    public void edit(User user) {
+        createDefault(&quot;edit&quot;).operate(user);
     }
 
-    private /* static */ long upperEight(byte[] bytes) {
-      return Longs.fromBytes(
-          bytes[15], bytes[14], bytes[13], bytes[12], bytes[11], bytes[10], bytes[9], bytes[8]);
+    @Override
+    public Operation createDefault(String operationType) {
+        return new OracleOperate().findOperation(operationType);
     }
-  };
+}
 </code></pre>
-<p>Guava就是选取了这两个hash算法中的一个，创建一个BloomFilter可以指定其中的一个算法，具体的算法逻辑可以参看<a href="http://www.cyhone.com/2017/02/07/Introduce-to-BloomFilter/">解读BloomFilter算法</a><br />
-使用实例：</p>
-<pre><code class="language-java">    private static void bloomFilter() throws Exception {
-        final BloomFilter&lt;String&gt; dealIdBloomFilter = BloomFilter.create(new Funnel&lt;String&gt;() {
-            @Override
-            public void funnel(String from, PrimitiveSink into) {
-                into.putString(from, Charsets.UTF_8);
-            }
-        }, 3000000, 0.0000001d);
-        BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(new File(&quot;C:\\Users\\Methol\\Desktop\\jiaokao-word.txt&quot;)), &quot;utf-8&quot;));
-        String line;
-        int i = 0;
-        StringBuilder sb = new StringBuilder();
-        while ((line = br.readLine()) != null) {
-            if (!dealIdBloomFilter.mightContain(line)) {
-                dealIdBloomFilter.put(line);
-                sb.append(line).append(&quot;\n&quot;);
-                i++;
-            }
-            if (i % 1000 == 0) {
-                FileUtils.write(new File(&quot;C:\\Users\\Methol\\Desktop\\bloomFilterDistinct.txt&quot;),
-                        sb.toString(), Charsets.UTF_8, true);
-                sb = new StringBuilder();
-            }
-        }
-        FileUtils.write(new File(&quot;C:\\Users\\Methol\\Desktop\\bloomFilterDistinct.txt&quot;),
-                sb.toString(), Charsets.UTF_8, true);
-    }
-</code></pre>
-<h2><a id="%E6%89%A9%E5%B1%95" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>扩展</h2>
-<p>同样对大数据量的内容进行滤重，当时还想到了用spark，不过这个真的有点大炮打小鸟的感觉，用起来代码是非常简单，但是单单就滤重这件事来说，还是BloomFilter好用。<br />
-800w行的句子，滤重后有200w，spark的用时比BloomFilter略多。<br />
-贴一段spark的代码：</p>
-<pre><code class="language-java">    private static void spark() {
-        System.setProperty(&quot;hadoop.home.dir&quot;, &quot;D:\\server\\hadoop-common-2.2.0\\&quot;);
-        SparkConf conf = new SparkConf().setAppName(&quot;Text String Distinct&quot;).setMaster(&quot;local&quot;).set(&quot;spark.executor.memory&quot;, &quot;1g&quot;);
-        JavaSparkContext sc = new JavaSparkContext(conf);
-        JavaRDD&lt;String&gt; textFile = sc.textFile(&quot;C:\\Users\\Methol\\Desktop\\jiaokao-word.txt&quot;);
-        final JavaRDD&lt;String&gt; distinct = textFile.distinct();
-        final long count = distinct.count();
-        System.out.println(count);
-        distinct.coalesce(1).saveAsTextFile(&quot;C:\\Users\\Methol\\Desktop\\distinct&quot;);
-    }
-</code></pre>
+<p>这里也用了工厂方法的思想，抽象工厂的模式实现了工厂线的扩展。</p>
+<h2><a id="%E5%B0%8F%E7%BB%93" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>小结</h2>
+<ol>
+<li>工厂模式就是一个类，它用来根据客户端(参数)具体的实例化某个对象。</li>
+<li>工厂方法也是实例化对象，但是他把这个过程延迟到了子类，由子类决定具体实例化哪个对象。</li>
+<li>抽象工厂是对工厂的扩展。他是在工厂方法的上面做的进一步的抽象。</li>
+<li>工厂模式是用来生产产品的，不能增加产品；工厂方法是用来生产产品，同时也可以增加产品（实现接口，增加产品）；抽象工厂用来增加工厂的，他不能增加产品。</li>
+</ol>
 
 
 			

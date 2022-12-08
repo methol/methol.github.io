@@ -124,54 +124,201 @@
 	<article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
 		<div class="meta">
 			<div class="date">
-				<time datetime="2022-10-20T16:28:16+08:00" itemprop="datePublished">2022/10/20</time>
+				<time datetime="2022-12-08T09:37:43+08:00" itemprop="datePublished">2022/12/08</time>
 			</div>
 			
 			 
 			
 		</div>
-		<h1 class="title" itemprop="name"><a href="16662544966970.html" itemprop="url">
-		telegram bot api proxy</a></h1>
+		<h1 class="title" itemprop="name"><a href="16704634630585.html" itemprop="url">
+		Synocommunity Package 使用Cloudflare Workers反向代理</a></h1>
 		<div class="entry-content" itemprop="articleBody">
 			
-			<p>众所周知的原因，大陆无法直接访问telegram api，使用各种代理工具都不够稳定，可能中断。<br />
-可以使用cloudflare workers来代理telegram bot api，在国内可以正常给机器人发消息，脚本如下：</p>
-<pre><code class="language-js">// 这里可以设置bot白名单，写入你的bot id即可，防止滥用
-const whitelist = [
-  &quot;/bot5245255:&quot;,
-  &quot;/bot5065435:&quot;
-];
-const tg_host = &quot;api.telegram.org&quot;;
+			<h2><a id="synocommunity%E7%AC%AC%E4%B8%89%E6%96%B9%E5%BA%94%E7%94%A8" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>Synocommunity 第三方应用</h2>
+<p><a href="https://synocommunity.com/">Synocommunity</a>提供了非常丰富和有用的第三方应用，具体可以去该网站查看。</p>
+<p>在中国由于众所周知的原因，访问和下载packages.synocommunity.com里面的内容非常慢。安装、更新应用一直无法正常访问。最简单的想法就是使用镜像网站，发现并没有，所以就通过Cloudflare Workers自己搭建了一个。</p>
+<p>搭建过程非常简单，我找到了一个专门用来反向代理的<a href="https://github.com/aD4wn/Workers-Proxy">GitHub项目</a>，然后修改了配置就可以使用了。</p>
+<p>你可以使用我搭建的 <code>https://synocommunity-packages.tuzhihao.com</code> 直接配置在你的群晖使用，参考下图：<br />
+<img src="https://file1.tuzhihao.com/20221208/YToVHb.png" alt="" /></p>
+<p>之后你就可以在社群里面找到丰富的插件，按需下载：<br />
+<img src="https://file1.tuzhihao.com/20221208/IzyeNy.png" alt="" /></p>
+<h2><a id="%E8%87%AA%E8%A1%8C%E6%90%AD%E5%BB%BA" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>自行搭建</h2>
+<h3><a id="%E8%84%9A%E6%9C%AC" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>脚本</h3>
+<p>当然你可以自己搭建一个，脚本如下，直接创建一个wokers，然后在线编辑，不用修改脚本内容。</p>
+<pre><code class="language-plain_text">// copy from https://raw.githubusercontent.com/aD4wn/Workers-Proxy/master/src/index.js
+
+// Website you intended to retrieve for users.
+const upstream = 'packages.synocommunity.com'
+
+// Custom pathname for the upstream website.
+const upstream_path = '/'
+
+// Website you intended to retrieve for users using mobile devices.
+const upstream_mobile = 'packages.synocommunity.com'
+
+// Countries and regions where you wish to suspend your service.
+const blocked_region = []
+
+// IP addresses which you wish to block from using your service.
+const blocked_ip_address = []
+
+// Whether to use HTTPS protocol for upstream address.
+const https = true
+
+// Whether to disable cache.
+const disable_cache = true
+
+// Replace texts.
+const replace_dict = {
+    '$upstream': '$custom_domain'
+}
+
+const replace_content_type = [
+  'text/html',
+  'application/json'
+]
+
 
 addEventListener('fetch', event =&gt; {
-    event.respondWith(handleRequest(event.request))
+    event.respondWith(fetchAndApply(event.request));
 })
 
-function validate(path) {
-    for (var i = 0; i &lt; whitelist.length; i++) {
-        if (path.startsWith(whitelist[i]) || path.startsWith(&quot;/file&quot; + whitelist[i]))
-            return true; 
-    }
-    return false;
-}
+async function fetchAndApply(request) {
 
-async function handleRequest(request) {
-    var u = new URL(request.url);
-    u.host = tg_host;
-    if (!validate(u.pathname))
-        return new Response('Unauthorized', {
+    const region = (request.headers.get('cf-ipcountry') || &quot;&quot;).toUpperCase();
+    const ip_address = request.headers.get('cf-connecting-ip') || &quot;&quot;;
+    const user_agent = request.headers.get('user-agent') || &quot;&quot;;
+
+    let response = null;
+    let url = new URL(request.url);
+    let url_hostname = url.hostname;
+
+    if (https == true) {
+        url.protocol = 'https:';
+    } else {
+        url.protocol = 'http:';
+    }
+
+    if (await device_status(user_agent)) {
+        var upstream_domain = upstream;
+    } else {
+        var upstream_domain = upstream_mobile;
+    }
+
+    url.host = upstream_domain;
+    if (url.pathname == '/') {
+        url.pathname = upstream_path;
+    } else {
+        url.pathname = upstream_path + url.pathname;
+    }
+
+    if (blocked_region.includes(region)) {
+        response = new Response('Access denied: WorkersProxy is not available in your region yet.', {
             status: 403
         });
-    var req = new Request(u, {
-        method: request.method,
-        headers: request.headers,
-        body: request.body
-    });
-    const result = await fetch(req);
-    return result;
+    } else if (blocked_ip_address.includes(ip_address)) {
+        response = new Response('Access denied: Your IP address is blocked by WorkersProxy.', {
+            status: 403
+        });
+    } else {
+        let method = request.method;
+        let request_headers = request.headers;
+        let new_request_headers = new Headers(request_headers);
+
+        new_request_headers.set('Host', upstream_domain);
+        new_request_headers.set('Referer', url.protocol + '//' + url_hostname);
+
+        let original_response = await fetch(url.href, {
+            method: method,
+            headers: new_request_headers
+        })
+
+        let original_response_clone = original_response.clone();
+        let original_text = null;
+        let response_headers = original_response.headers;
+        let new_response_headers = new Headers(response_headers);
+        let status = original_response.status;
+		
+		if (disable_cache) {
+			new_response_headers.set('Cache-Control', 'no-store');
+	    }
+
+        new_response_headers.set('access-control-allow-origin', '*');
+        new_response_headers.set('access-control-allow-credentials', true);
+        new_response_headers.delete('content-security-policy');
+        new_response_headers.delete('content-security-policy-report-only');
+        new_response_headers.delete('clear-site-data');
+		
+        if(new_response_headers.get(&quot;x-pjax-url&quot;)) {
+            new_response_headers.set(&quot;x-pjax-url&quot;, response_headers.get(&quot;x-pjax-url&quot;).replace(&quot;//&quot; + upstream_domain, &quot;//&quot; + url_hostname));
+        }
+		
+        const content_type = new_response_headers.get('content-type');
+        if (check_replace_response_text(content_type)) {
+            console.log('replace');
+            original_text = await replace_response_text(original_response_clone, upstream_domain, url_hostname);
+        } else {
+            original_text = original_response_clone.body
+        }
+		
+        response = new Response(original_text, {
+            status,
+            headers: new_response_headers
+        })
+    }
+    return response;
+}
+
+function check_replace_response_text(content_type) {
+  if(content_type == null){
+    return false;
+  }
+  return replace_content_type.some((v) =&gt; content_type.includes(v));
+}
+
+async function replace_response_text(response, upstream_domain, host_name) {
+    let text = await response.text()
+
+    var i, j;
+    for (i in replace_dict) {
+        j = replace_dict[i]
+        if (i == '$upstream') {
+            i = upstream_domain
+        } else if (i == '$custom_domain') {
+            i = host_name
+        }
+
+        if (j == '$upstream') {
+            j = upstream_domain
+        } else if (j == '$custom_domain') {
+            j = host_name
+        }
+
+        console.log(i, j);
+        let re = new RegExp(i, 'g')
+        text = text.replace(re, j);
+    }
+    return text;
+}
+
+
+async function device_status(user_agent_info) {
+    var agents = [&quot;Android&quot;, &quot;iPhone&quot;, &quot;SymbianOS&quot;, &quot;Windows Phone&quot;, &quot;iPad&quot;, &quot;iPod&quot;];
+    var flag = true;
+    for (var v = 0; v &lt; agents.length; v++) {
+        if (user_agent_info.indexOf(agents[v]) &gt; 0) {
+            flag = false;
+            break;
+        }
+    }
+    return flag;
 }
 </code></pre>
-<p>最后强烈建议使用自己的域名，不要用workers的域名，国内被墙了。</p>
+<h3><a id="%E6%A3%80%E6%9F%A5%E6%98%AF%E5%90%A6%E6%90%AD%E5%BB%BA%E6%88%90%E5%8A%9F" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>检查是否搭建成功</h3>
+<p>访问如下地址(host替换为你自己的)：<br />
+<a href="https://synocommunity-packages.tuzhihao.com/?package_update_channel=stable&amp;unique=synology_apollolake_218%2B&amp;build=42962&amp;major=7&amp;language=enu&amp;micro=1&amp;arch=apollolake&amp;minor=1&amp;timezone=Beijing&amp;group_id=7912&amp;nano=1">https://synocommunity-packages.tuzhihao.com/?package_update_channel=stable&amp;unique=synology_apollolake_218%2B&amp;build=42962&amp;major=7&amp;language=enu&amp;micro=1&amp;arch=apollolake&amp;minor=1&amp;timezone=Beijing&amp;group_id=7912&amp;nano=1</a></p>
+<p>检查返回的json里面的link地址是否已经被替换，成功替换就代表搭建成功，恭喜🎉<br />
+<img src="https://file1.tuzhihao.com/20221208/WHITjf.png" alt="" /></p>
 
 
 			

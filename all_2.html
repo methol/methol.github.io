@@ -124,142 +124,77 @@
 	<article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
 		<div class="meta">
 			<div class="date">
-				<time datetime="2022-10-19T09:24:04+08:00" itemprop="datePublished">2022/10/19</time>
+				<time datetime="2022-10-20T15:55:41+08:00" itemprop="datePublished">2022/10/20</time>
 			</div>
 			
 			 
 			
 		</div>
-		<h1 class="title" itemprop="name"><a href="16661426449923.html" itemprop="url">
-		使用backblaze B2 和 Cloudflare Wrokers做图床</a></h1>
+		<h1 class="title" itemprop="name"><a href="16662525413137.html" itemprop="url">
+		小号解决方案</a></h1>
 		<div class="entry-content" itemprop="articleBody">
 			
-			<p><img src="https://file1.tuzhihao.com/20221019/Ybv0U0.jpg" alt="" /></p>
-<h2><a id="%E4%B8%BA%E4%BB%80%E4%B9%88%E4%BD%BF%E7%94%A8bcakblaze-b2" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>为什么使用bcakblaze B2</h2>
+			<p>垃圾电话、短信、隐私泄漏开盒等原因，迫切需要有小号来应对这些问题。<br />
+阿里、运营商都有推出小号，我用的是电信，现在官方不给使用了。移动的小号还可以申请使用。</p>
+<p>那就说一下运营商小号和阿里小号的特点：</p>
+<h3><a id="%E8%BF%90%E8%90%A5%E5%95%86%E5%B0%8F%E5%8F%B7" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>运营商小号</h3>
 <ul>
-<li>免费，有10G的免费空间</li>
-<li>API友好，支持s3 API</li>
-<li>带宽联盟。使用Cloudflare中转获取图片不计流量费用</li>
+<li>电信不给申请，目前只有移动有，直接就把我给排除了</li>
+<li>运营商小号受到工信部同身份证5个号码的数量限制</li>
+<li>接收电话、短信及时，服务可靠</li>
+<li>自己身份的实名信息(有一些银行等机构用运营商号码作为实名认证的一个因素)</li>
 </ul>
-<p>怎么传图片就不赘述了，我用的是uPic，你可以用你喜欢的工具</p>
-<h2><a id="%E4%BD%BF%E7%94%A8bcakblaze-b2" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>使用bcakblaze B2</h2>
-<p>先注册，创建一个bucket<br />
-<img src="https://file1.tuzhihao.com/20221019/wIbtCx.png" alt="" /><br />
-然后上传一张图(也可以配置使用你的工具上传，或者网页上传)，然后记录如下信息</p>
-<ol>
-<li>Bucket Name</li>
-<li>Friendly URL里面的host</li>
-</ol>
-<p><img src="https://file1.tuzhihao.com/20221019/q1ZnJ9.png" alt="" /></p>
-<h2><a id="%E4%BD%BF%E7%94%A8cloudflare-workers" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>使用Cloudflare Workers</h2>
-<p>为什么使用wokers而不用cname的方式接入</p>
+<h3><a id="%E9%98%BF%E9%87%8C%E5%B0%8F%E5%8F%B7" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>阿里小号</h3>
 <ul>
-<li>去除URL中的 /file/<bucket-name> 部分</li>
-<li>去除一些从 Backblaze B2 响应的无用请求头</li>
-<li>加上基本的 CORS 请求头，以便允许图片嵌入到网站中</li>
-<li>为图片优化缓存 (浏览器的缓存, 以及 CDN 边界服务器上的缓存)</li>
+<li>非自己实名信息</li>
+<li>不受同身份证5号码限制</li>
+<li>可能随时涨价，现在36/年，还是比运营商便宜</li>
+<li>接通率不如运营商，至少我出现过一次漏接电话，目前还能接受</li>
 </ul>
-<p>先创建一个workers，然后写入如下脚本，只需要修改2个变量</p>
+<p>小号都有一个可能很大的问题就是说没就没了，特别是阿里这种。电信之前还是一直可以申请使用的，现在应该是只服务老用户，新用户不让用了。阿里的放号也是一段时间一段时间的，根本不可靠。而且这种垄断行业，想想都不可靠。号码不可靠意味着你不能用他来绑定你认为非常重要的服务。</p>
+<p>对比也有了，那就说一下我面临的问题，以及怎么解决：</p>
+<h3><a id="%E9%97%AE%E9%A2%98%EF%BC%9A" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>问题：</h3>
 <ol>
-<li>b2Bucket -&gt; 上述1</li>
-<li>b2Domain -&gt; 上述2</li>
+<li>不接骚扰电话。</li>
+<li>验证码短信正常接收。</li>
+<li>政府、银行等单位需要留我实名认证的电话。</li>
+<li>外卖、物流等能正常联系到我。</li>
 </ol>
-<pre><code class="language-js">'use strict';
-const b2Domain = 'f004.backblazeb2.com'; // configure this as per instructions above
-const b2Bucket = 'bucketName'; // configure this as per instructions above
-const b2UrlPath = `/file/${b2Bucket}/`;
-addEventListener('fetch', event =&gt; {
-	return event.respondWith(fileReq(event));
-});
-
-// define the file extensions we wish to add basic access control headers to
-const corsFileTypes = ['png', 'jpg', 'gif', 'jpeg', 'webp'];
-
-// backblaze returns some additional headers that are useful for debugging, but unnecessary in production. We can remove these to save some size
-const removeHeaders = [
-	'x-bz-content-sha1',
-	'x-bz-file-id',
-	'x-bz-file-name',
-	'x-bz-info-src_last_modified_millis',
-	'X-Bz-Upload-Timestamp',
-	'x-bz-server-side-encryption',
-	'x-bz-client-unauthorized-to-read',
-	'Expires'
-];
-const expiration = 31536000; // override browser cache for images - 1 year
-
-// define a function we can re-use to fix headers
-const fixHeaders = function(url, status, headers){
-	let newHdrs = new Headers(headers);
-	// add basic cors headers for images
-	if(corsFileTypes.includes(url.pathname.split('.').pop())){
-		newHdrs.set('Access-Control-Allow-Origin', '*');
-	}
-	// override browser cache for files when 200
-	if(status === 200){
-		newHdrs.set('Cache-Control', &quot;public, max-age=&quot; + expiration);
-	}else{
-		// only cache other things for 5 minutes
-		newHdrs.set('Cache-Control', 'public, max-age=300');
-	}
-	// set ETag for efficient caching where possible
-	const ETag = newHdrs.get('x-bz-content-sha1') || newHdrs.get('x-bz-info-src_last_modified_millis') || newHdrs.get('x-bz-file-id');
-	if(ETag){
-		newHdrs.set('ETag', ETag);
-	}
-	// remove unnecessary headers
-	removeHeaders.forEach(header =&gt; {
-		newHdrs.delete(header);
-	});
-	return newHdrs;
-};
-
-async function fileReq(event){
-	const cache = caches.default; // Cloudflare edge caching
-	const url = new URL(event.request.url);
-	if(!url.pathname.startsWith(b2UrlPath)){ 
-		url.pathname = b2UrlPath + url.pathname;
-        // console.log(url.pathname);
-	}
-    url.host = b2Domain;
-    // console.log(url);
-	let response = await cache.match(url); // try to find match for this request in the edge cache
-	if(response){
-		// use cache found on Cloudflare edge. Set X-Worker-Cache header for helpful debug
-		let newHdrs = fixHeaders(url, response.status, response.headers);
-		newHdrs.set('X-Worker-Cache', &quot;true&quot;);
-		return new Response(response.body, {
-			status: response.status,
-			statusText: response.statusText,
-			headers: newHdrs
-		});
-	}
-	// no cache, fetch image, apply Cloudflare lossless compression
-	response = await fetch(url, {cf: {polish: &quot;lossless&quot;}});
-	let newHdrs = fixHeaders(url, response.status, response.headers);
-
-  if(response.status === 200){
-
-    response = new Response(response.body, {
-      status: response.status,
-      statusText: response.statusText,
-      headers: newHdrs
-    });
-  }else{
-    response = new Response('File not found!', { status: 404 })
-  }
-
-	event.waitUntil(cache.put(url, response.clone()));
-	return response;
-}
-</code></pre>
-<p>脚本参考<br />
-<a href="https://blog.meow.page/archives/free-personal-image-hosting-with-backblaze-b2-and-cloudflare-workers/">https://blog.meow.page/archives/free-personal-image-hosting-with-backblaze-b2-and-cloudflare-workers/</a><br />
-<a href="https://jross.me/free-personal-image-hosting-with-backblaze-b2-and-cloudflare-workers/">https://jross.me/free-personal-image-hosting-with-backblaze-b2-and-cloudflare-workers/</a></p>
-<p>我在脚本上的修改是把<code>b2Domain</code>改为b2的host，这样脚本更容易理解一些。</p>
-<p>最后你可以使用自己的域名做一个route就可以使用自己的域名，cf workers的域名在国内墙的比较厉害...</p>
-<h2><a id="%E6%8E%A8%E8%8D%90%E4%B8%80%E4%B8%AA%E5%9B%BE%E7%89%87%E7%BD%91%E7%AB%99" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>推荐一个图片网站</h2>
-<p><a href="https://unsplash.com">https://unsplash.com</a></p>
+<h3><a id="%E6%88%91%E5%8F%91%E7%8E%B0%E7%9A%84%E4%B8%80%E4%BA%9B%E7%8E%B0%E8%B1%A1" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>我发现的一些现象</h3>
+<ol>
+<li>银行等类似行业是最喜欢打骚扰电话的，而且往往他们有你的真实信息，这个躲不掉。</li>
+<li>不要相信政府部门，他们也会泄漏你的电话，比如车管所。</li>
+<li>电商平台可能泄漏你的电话，频繁发推广短信(注意：他们一般不会打电话骚扰你)。</li>
+<li>快递是一个很容易泄漏你个人信息的场景，而且都是很重要的信息（电话、姓名、门牌号）</li>
+<li>各APP使用手机号注册(法规要求)，然后对于隐私信息的管理一言难尽。</li>
+</ol>
+<p>对照上面运营商小号和阿里小号都不能很完美的解决问题，因此我搞了一个自己的小号方案。<br />
+我用了一个有实体卡的副卡，买了1个阿里小号来解决我的问题。<br />
+我把这两个卡归类为<strong>能给我打电话的卡</strong>和<strong>能给我发短信的卡</strong>。<br />
+阿里的小号用来做能给我打电话的卡，我用来接外卖和快递的电话。并且1年或者2年更新一次，外卖和物流不写真实姓名，最多只留到楼栋号。更新的代价也不大，就是几个常用的外卖、电商平台。<br />
+自建的副卡用来做各种APP注册，政府、银行行业的联系电话，我不需要接他们的电话，只需要及时接收到短信即可。骚扰短信无法避免，但是还好的是他不会打断你，电话是一个都没有了。而且这个电话是我自己在运营商实名认证过的，所以有一些认证的场景也能很好的做到。最重要的这是一个实体的卡，运营商没道理无缘无故停止服务。最差后面我也可以搞一个保号的套餐，一只开着就好。</p>
+<h2><a id="%E9%98%BF%E9%87%8C%E5%B0%8F%E5%8F%B7" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>阿里小号</h2>
+<p>这里就不多赘述了，可以买的时候买一个就行了，设置什么的都比较简单。</p>
+<h2><a id="%E5%89%AF%E5%8D%A1%E7%9F%AD%E4%BF%A1%E5%B0%8F%E5%8F%B7" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>副卡短信小号</h2>
+<p>准备一个不用的Android手机，安装2个app<br />
+<a href="https://github.com/pppscn/SmsForwarder">https://github.com/pppscn/SmsForwarder</a><br />
+<a href="https://github.com/telegram-sms/telegram-sms-china">https://github.com/telegram-sms/telegram-sms-china</a></p>
+<p>第一个是一个短信转发的软件，可以对接各种通知渠道，我用的是bark，体验非常好。<br />
+<img src="https://file1.tuzhihao.com/20221020/z6m8nF.png" alt="" /></p>
+<p>第二个是一个tg的软件，比单纯的转发短信多了手机状态的监控，还可以用它来发短信<br />
+<img src="https://file1.tuzhihao.com/20221020/wf8XHi.png" alt="" /><br />
+使用手机自带的4g网络，不连接wifi，即使家里断网也不用担心。tg无法国内直接访问，可以参考<a href="./16662544966970.html">这篇文章</a>，部署一个代理即可。</p>
+<p>安装两个的原因也很简单，主备比较可靠，第一个送达快，第二个有更多功能。<br />
+然后就是注意设置开机自启，防止清后台，就可以了。</p>
+<h2><a id="%E6%80%BB%E7%BB%93" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>总结</h2>
+<ol>
+<li>可以显著解决骚扰电话的问题，因为除了我自己本身的电话(大部分是亲戚、同事等熟人拨打)，阿里小号转发的电话之外，不会收到别的垃圾电话了。如果副卡实在有必要，可以开一段时间的呼叫转移解决接电话的问题，之后关闭。</li>
+<li>目前来看，我用了大半年的阿里小号，没有接到骚扰电话和垃圾短信(可能视情况延长更换时间)。我主要是把这个电话留在快递和外卖上面。</li>
+<li>两个APP来转发短信，送达率非常可靠。</li>
+<li>手机因为长时间充电，有电池鼓包问题。目前解决方案是用小米的智能开关，定时开关，充放电会好一些。但是还不太安全，后面准备换成专门的机器，用来收发短信，已经有很成熟的方案了，淘宝有卖的。类似树莓派那种小机器。</li>
+<li>各大APP隐私泄漏问题无法解决，这个实在没办法，用手机号注册是写在法规的，只能寄希望于国内越来越严格的隐私保护政策。</li>
+<li>短信号还是会收到营销短信，这个我个人还能忍受，它发就发吧。</li>
+</ol>
 
 
 			

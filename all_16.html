@@ -124,101 +124,51 @@
 	<article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
 		<div class="meta">
 			<div class="date">
-				<time datetime="2015-04-10T09:00:44+08:00" itemprop="datePublished">2015/04/10</time>
+				<time datetime="2015-04-19T09:00:45+08:00" itemprop="datePublished">2015/04/19</time>
 			</div>
 			
 			 
 			
 		</div>
-		<h1 class="title" itemprop="name"><a href="16661412449917.html" itemprop="url">
-		全排列</a></h1>
+		<h1 class="title" itemprop="name"><a href="16661412451072.html" itemprop="url">
+		Hibernate中Session.load与Session.get的区别</a></h1>
 		<div class="entry-content" itemprop="articleBody">
 			
-			<pre><code class="language-java">/**
- * Created by Methol on 2015/4/10.
- * 根据A数组的大小，输出 1 ~ A.length 的全排列
- */
-public class Main {
-
-    static int A[] = new int[5];
-
-    /*
-     根据A数组的大小，输出 1 ~ A.length 的全排列
-     @param cur 当前元素的位置
-     */
-    public static void next_permutation(int cur) {
-        if (cur == A.length) {         //递归边界
-            //在这里打印输出，也就是说在这里写具体要操作的函数，A中有排列好的序列
-            for (int i = 0; i &lt; A.length; i++) {
-                System.out.print(A[i] + &quot; &quot;);
-            }
-            System.out.println();
-        } else {
-            for (int i = 0; i &lt;= A.length; i++) {
-                boolean ok = true;
-                for (int j = 0; j &lt; cur; j++) {
-                    if (A[j] == i) ok = false;         //如果i已经在A[0]~A[cur-1]出现过，则不能再选
-                }
-                if (ok) {
-                    A[cur] = i;
-                    next_permutation(cur + 1);    //递归调用
-                }
-            }
-        }
-    }
-
-    public static void main(String[] args) {
-        next_permutation(0);
-    }
-
+			<p><code>Session.load()/get()</code>方法均可以根据指定的实体类和id从数据库读取记录，并返回与之对应的实体对象。</p>
+<p>其区别在于：<br /><br />
+如果未能发现符合条件的记录，get方法返回null，而load方法会抛出一个ObjectNotFoundException。<br />
+Load方法可返回实体的代理类实例，而get方法永远直接返回实体类。<br />
+load方法可以充分利用内部缓存和二级缓存中的现有数据，而get方法则仅仅在内部缓存中进行数据查找，如没有发现对应数据，将越过二级缓存，直接调用SQL完成数据读取。</p>
+<p>上面是看别人写的，我自己觉得<br /><br />
+<strong>get()主要用于数据库有可能存在，也有可能不存在的时候，需要从数据库取出数据的时候。<br />
+load()主要用于可以肯定数据库中有这一条记录的时候，从数据库中去除这条数据。</strong></p>
+<p>下面两个例子，第一个是通过订单号得到订单这个实体类对象，第二个是通过订单号，从数据库中删除这条数据。</p>
+<pre><code class="language-java">//通过订单号得到订单这个实体类对象，不能肯定这个订单是不是在数据库中存在
+public Order getOrder(int orderid) {
+  Session session = sessionFactory.getCurrentSession();
+  Order order = null;
+  try {
+    order = (Order) session.get(Order.class, orderid);
+  } catch (RuntimeException e) {
+    throw e;
+  }
+  return order;
 }
 </code></pre>
 <hr />
-<pre><code class="language-java">/**
- * Created by Methol on 2015/4/10.
- * 输出数组P中元素的全排列。
- */
-public class Main {
- 
-  static int A[] = new int[5];
-  static int P[] = {1,2,3};
- 
-  /*
-   输出数组P中元素的全排列。
-   @param cur 当前元素的位置
-   */
-  public static void next_permutation(int cur) {
-    if (cur == P.length) {         //递归边界
-      //在这里打印输出，也就是说在这里写具体要操作的函数，A中有排列好的序列
-      for (int i = 0; i &lt; P.length; i++) {
-        System.out.print(A[i] + &quot; &quot;);
-      }
-      System.out.println();
-    } else {
-      for (int i = 0; i &lt; P.length; i++) {
-        if(i==0 || P[i]!=P[i-1]) {
-          int c1 = 0 ,c2 = 0;
-          //统计A[0]~A[cur-1]中P[i]出现的次数
-          for (int j = 0; j &lt; cur ; j++)
-            if(A[j] == P[i])  c1++;
-          //统计P中P[i]出现的次数
-          for (int j = 0; j &lt; P.length; j++)
-            if( P[i] == P[j] )  c2++;
-          if(c1 &lt; c2){   //当c1&lt;c2的时候说明还有可以选的，递归调用
-            A[cur] = P[i];
-            next_permutation(cur+1);
-          }
-        }
-      }
-    }
-  }
-   
-  public static void main(String[] args) {
-    next_permutation(0);
-  }
- 
-}
+<pre><code class="language-java">	//通过订单号，从数据库中删除这条数据，可以肯定数据库中有这一条数据
+	public int deleteOrder(int orderId) {
+		Session session = sessionFactory.getCurrentSession();
+		try {
+			Order order = (Order) session.load(Order.class, orderId);
+			session.delete(order);
+		} catch (Exception e) {
+			return -1;
+		}
+		return 0;
+	}	
 </code></pre>
+<p>参见<a href="http://blog.csdn.net/zhaoshl_368/article/details/6577103">http://blog.csdn.net/zhaoshl_368/article/details/6577103</a></p>
 
 
 			

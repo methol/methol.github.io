@@ -124,70 +124,142 @@
 	<article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
 		<div class="meta">
 			<div class="date">
-				<time datetime="2021-04-18T09:00:44+08:00" itemprop="datePublished">2021/04/18</time>
+				<time datetime="2022-10-19T09:24:04+08:00" itemprop="datePublished">2022/10/19</time>
 			</div>
 			
 			 
 			
 		</div>
-		<h1 class="title" itemprop="name"><a href="16661412449981.html" itemprop="url">
-		三星电视换区</a></h1>
+		<h1 class="title" itemprop="name"><a href="16661426449923.html" itemprop="url">
+		使用backblaze B2 和 Cloudflare Wrokers做图床</a></h1>
 		<div class="entry-content" itemprop="articleBody">
 			
-			<h2><a id="apple-tv-4k%E6%8C%82%E4%BA%86" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>Apple TV 4k 挂了</h2>
-<p>家里的Apple TV 4k突然自己就挂掉了，应该不是硬件的问题，感觉是软件的问题，但是背后一个接口都没有，也没办法自己升级系统。</p>
-<p>周末拿到Apple店里，给的理由大陆不卖，所以也不修，只能到香港修。</p>
-<p>这就GG了...</p>
-<p>因为我主要是看Youtube、Nas视频、emby视频、netflix，安卓盒子的性能都太弱了，只能看看流媒体。</p>
-<p>而且Apple TV的infuse神器，Youtube今年也支持4k了，真是唯一选择。</p>
-<p>好在快开发布会了，等下一代吧，所以只能先不买了。</p>
-<h2><a id="%E4%B8%89%E6%98%9F%E7%94%B5%E8%A7%86%E6%8D%A2%E5%8C%BA" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>三星电视换区</h2>
-<p>然后就研究起了我的电视，因为之前是有爱奇艺、腾讯那些视频的。所以看看能不能先装一个youtube看看。</p>
-<p>系统是三星自己的tizen系统，应用只能去自带的应用商店下载。那这没办法了，只能换区。</p>
-<p>果然，就搜到了2篇文章，已经说的很详细了，我这里只是对我自己的电视操作做一个备份。</p>
-<p><a href="https://sspai.com/post/59549">https://sspai.com/post/59549</a></p>
-<p><a href="https://joveng.myds.me:8888/tv-unlock/">https://joveng.myds.me:8888/tv-unlock/</a></p>
-<h3><a id="%E6%AD%A5%E9%AA%A4" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>步骤</h3>
+			<p><img src="https://file1.tuzhihao.com/20221019/Ybv0U0.jpg" alt="" /></p>
+<h2><a id="%E4%B8%BA%E4%BB%80%E4%B9%88%E4%BD%BF%E7%94%A8bcakblaze-b2" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>为什么使用bcakblaze B2</h2>
+<ul>
+<li>免费，有10G的免费空间</li>
+<li>API友好，支持s3 API</li>
+<li>带宽联盟。使用Cloudflare中转获取图片不计流量费用</li>
+</ul>
+<p>怎么传图片就不赘述了，我用的是uPic，你可以用你喜欢的工具</p>
+<h2><a id="%E4%BD%BF%E7%94%A8bcakblaze-b2" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>使用bcakblaze B2</h2>
+<p>先注册，创建一个bucket<br />
+<img src="https://file1.tuzhihao.com/20221019/wIbtCx.png" alt="" /><br />
+然后上传一张图(也可以配置使用你的工具上传，或者网页上传)，然后记录如下信息</p>
 <ol>
-<li>带有红外的智能手机请下载「IR Service Remote」的APP。</li>
+<li>Bucket Name</li>
+<li>Friendly URL里面的host</li>
 </ol>
-<p><a href="https://file1.tuzhihao.com/file/Service_Remote_Control_1.2.apk">Service_Remote_Control_1.2.apk</a></p>
-<p>在电视处于亮屏的状态下，打开「IR Service remote」依次按下「S1」-「S2」即可进入工程模式菜单</p>
-<p><img src="https://pic.tuzhihao.com/upic/20210418/214505-x5fw8P.png" alt="image-20210418212716653" /></p>
-<ol start="2">
-<li>
-<p>使用电视遥控器「方向键」将光标移动到「Option」选项，按一下「确定键」进入，然后使用手机拍照当前画面。进入之后可以看到「Local Set」选项是「CHI_DTV」，意味当前系统是国区。</p>
-<p>将光标移动到「Local Set」选项并按下「确定键」进入，在弹出的「Local Set List」列表里移到你想要切换的地区代码，美区选择「AD_AU2」，港区选择「HKG_DTV」，之后按下遥控器「确定键」后会自动返回。</p>
-<p><img src="https://pic.tuzhihao.com/upic/20210418/214529-8B2zzw.png" alt="image-20210418212855744" /></p>
-</li>
-<li>
-<p>再次进入到「MRT Option」选项，进入「Language Set」选项并确保此处参数显示为「China」，返回并进入「Region」确保此处参数显示为「asia_dtv」，其余的参数按照之前拍的照片依次复原即可。「Production Option」和「Engineer Option」同理。</p>
-</li>
-<li>
-<p>重启电视。</p>
-</li>
-<li>
-<p>使用遥控器依次选择「设置」-「支持」-「自诊断」-「重置 Smart Hub」，输入 PIN 码「0000」后系统桌面会重启。</p>
-<p><img src="https://pic.tuzhihao.com/upic/20210418/214531-b2YyAM.png" alt="image-20210418213026402" /></p>
-</li>
-<li>
-<p>重启之后光标移动到「apps」会弹出「同意条款」页面，注意即便当前电视的系统语言为简体中文，但此页面应为英文界面。使用电视原厂遥控器在「同意条款」页面以此按下「静音」-「音量 +」-「频道 +」-「静音」按键，电视会弹出「Internet 服务位置设置」选项。选择香港。</p>
-<p><img src="https://pic.tuzhihao.com/upic/20210418/214533-6bqY6X.png" alt="image-20210418213101873" /></p>
-</li>
-<li>
-<p>最后同意协议，安装app就行了！</p>
-<p><img src="https://pic.tuzhihao.com/upic/20210418/214535-hHG7r1.png" alt="image-20210418213749906" /></p>
-</li>
+<p><img src="https://file1.tuzhihao.com/20221019/q1ZnJ9.png" alt="" /></p>
+<h2><a id="%E4%BD%BF%E7%94%A8cloudflare-workers" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>使用Cloudflare Workers</h2>
+<p>为什么使用wokers而不用cname的方式接入</p>
+<ul>
+<li>去除URL中的 /file/<bucket-name> 部分</li>
+<li>去除一些从 Backblaze B2 响应的无用请求头</li>
+<li>加上基本的 CORS 请求头，以便允许图片嵌入到网站中</li>
+<li>为图片优化缓存 (浏览器的缓存, 以及 CDN 边界服务器上的缓存)</li>
+</ul>
+<p>先创建一个workers，然后写入如下脚本，只需要修改2个变量</p>
+<ol>
+<li>b2Bucket -&gt; 上述1</li>
+<li>b2Domain -&gt; 上述2</li>
 </ol>
-<h2><a id="%E5%A4%87%E4%BB%BD%E5%8F%82%E6%95%B0%E6%88%AA%E5%9B%BE" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>备份参数截图</h2>
-<h3><a id="%E4%BF%AE%E6%94%B9%E5%89%8D%E5%9B%BD%E5%8C%BA" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>修改前(国区)</h3>
-<p><img src="https://pic.tuzhihao.com/upic/20210418/214540-9KWi3f.png" alt="image-20210418213525967" /></p>
-<p><img src="https://pic.tuzhihao.com/upic/20210418/214545-wC0kFH.png" alt="image-20210418213536752" /></p>
-<p><img src="https://pic.tuzhihao.com/upic/20210418/214549-zvrLvw.png" alt="image-20210418213549420" /></p>
-<h3><a id="%E4%BF%AE%E6%94%B9%E5%90%8E%E6%B8%AF%E5%8C%BA" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>修改后(港区)</h3>
-<p><img src="https://pic.tuzhihao.com/upic/20210418/214551-2jMHOy.png" alt="image-20210418213446438" /></p>
-<p><img src="https://pic.tuzhihao.com/upic/20210418/214554-aMRDcj.png" alt="image-20210418213500655" /></p>
-<p><img src="https://pic.tuzhihao.com/upic/20210418/214558-B0a473.png" alt="image-20210418213510547" /></p>
+<pre><code class="language-js">'use strict';
+const b2Domain = 'f004.backblazeb2.com'; // configure this as per instructions above
+const b2Bucket = 'bucketName'; // configure this as per instructions above
+const b2UrlPath = `/file/${b2Bucket}/`;
+addEventListener('fetch', event =&gt; {
+	return event.respondWith(fileReq(event));
+});
+
+// define the file extensions we wish to add basic access control headers to
+const corsFileTypes = ['png', 'jpg', 'gif', 'jpeg', 'webp'];
+
+// backblaze returns some additional headers that are useful for debugging, but unnecessary in production. We can remove these to save some size
+const removeHeaders = [
+	'x-bz-content-sha1',
+	'x-bz-file-id',
+	'x-bz-file-name',
+	'x-bz-info-src_last_modified_millis',
+	'X-Bz-Upload-Timestamp',
+	'x-bz-server-side-encryption',
+	'x-bz-client-unauthorized-to-read',
+	'Expires'
+];
+const expiration = 31536000; // override browser cache for images - 1 year
+
+// define a function we can re-use to fix headers
+const fixHeaders = function(url, status, headers){
+	let newHdrs = new Headers(headers);
+	// add basic cors headers for images
+	if(corsFileTypes.includes(url.pathname.split('.').pop())){
+		newHdrs.set('Access-Control-Allow-Origin', '*');
+	}
+	// override browser cache for files when 200
+	if(status === 200){
+		newHdrs.set('Cache-Control', &quot;public, max-age=&quot; + expiration);
+	}else{
+		// only cache other things for 5 minutes
+		newHdrs.set('Cache-Control', 'public, max-age=300');
+	}
+	// set ETag for efficient caching where possible
+	const ETag = newHdrs.get('x-bz-content-sha1') || newHdrs.get('x-bz-info-src_last_modified_millis') || newHdrs.get('x-bz-file-id');
+	if(ETag){
+		newHdrs.set('ETag', ETag);
+	}
+	// remove unnecessary headers
+	removeHeaders.forEach(header =&gt; {
+		newHdrs.delete(header);
+	});
+	return newHdrs;
+};
+
+async function fileReq(event){
+	const cache = caches.default; // Cloudflare edge caching
+	const url = new URL(event.request.url);
+	if(!url.pathname.startsWith(b2UrlPath)){ 
+		url.pathname = b2UrlPath + url.pathname;
+        // console.log(url.pathname);
+	}
+    url.host = b2Domain;
+    // console.log(url);
+	let response = await cache.match(url); // try to find match for this request in the edge cache
+	if(response){
+		// use cache found on Cloudflare edge. Set X-Worker-Cache header for helpful debug
+		let newHdrs = fixHeaders(url, response.status, response.headers);
+		newHdrs.set('X-Worker-Cache', &quot;true&quot;);
+		return new Response(response.body, {
+			status: response.status,
+			statusText: response.statusText,
+			headers: newHdrs
+		});
+	}
+	// no cache, fetch image, apply Cloudflare lossless compression
+	response = await fetch(url, {cf: {polish: &quot;lossless&quot;}});
+	let newHdrs = fixHeaders(url, response.status, response.headers);
+
+  if(response.status === 200){
+
+    response = new Response(response.body, {
+      status: response.status,
+      statusText: response.statusText,
+      headers: newHdrs
+    });
+  }else{
+    response = new Response('File not found!', { status: 404 })
+  }
+
+	event.waitUntil(cache.put(url, response.clone()));
+	return response;
+}
+</code></pre>
+<p>脚本参考<br />
+<a href="https://blog.meow.page/archives/free-personal-image-hosting-with-backblaze-b2-and-cloudflare-workers/">https://blog.meow.page/archives/free-personal-image-hosting-with-backblaze-b2-and-cloudflare-workers/</a><br />
+<a href="https://jross.me/free-personal-image-hosting-with-backblaze-b2-and-cloudflare-workers/">https://jross.me/free-personal-image-hosting-with-backblaze-b2-and-cloudflare-workers/</a></p>
+<p>我在脚本上的修改是把<code>b2Domain</code>改为b2的host，这样脚本更容易理解一些。</p>
+<p>最后你可以使用自己的域名做一个route就可以使用自己的域名，cf workers的域名在国内墙的比较厉害...</p>
+<h2><a id="%E6%8E%A8%E8%8D%90%E4%B8%80%E4%B8%AA%E5%9B%BE%E7%89%87%E7%BD%91%E7%AB%99" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>推荐一个图片网站</h2>
+<p><a href="https://unsplash.com">https://unsplash.com</a></p>
 
 
 			

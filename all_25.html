@@ -124,36 +124,151 @@
 	<article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
 		<div class="meta">
 			<div class="date">
-				<time datetime="2018-03-10T09:00:45+08:00" itemprop="datePublished">2018/03/10</time>
+				<time datetime="2015-01-06T09:00:45+08:00" itemprop="datePublished">2015/01/06</time>
 			</div>
 			
 			 
 			
 		</div>
-		<h1 class="title" itemprop="name"><a href="16661412450320.html" itemprop="url">
-		防止iPhone自动下载iOS11升级</a></h1>
+		<h1 class="title" itemprop="name"><a href="16661412450602.html" itemprop="url">
+		java关键词过滤算法</a></h1>
 		<div class="entry-content" itemprop="articleBody">
 			
-			<h3><a id="%E5%AE%89%E8%A3%85tvos-beta%E6%8F%8F%E8%BF%B0%E6%96%87%E4%BB%B6" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>安装tvOS Beta描述文件</h3>
-<p>使用 iOS 端的 Safari 浏览器点击  <strong><a href="https://tuzhihao.com/upload/tvos/tvos11.mobileconfig">https://tuzhihao.com/upload/tvos/tvos11.mobileconfig</a></strong> 安装，或是使用 PC 下载后邮件发送到 iOS 设备，用自带的 Mail 打开也可安装。安装完成后重启手机，便不会再收到任何的系统更新了。</p>
-<h2><a id="%E5%B1%8F%E8%94%BD%E6%9B%B4%E6%96%B0%E7%9A%84%E5%8E%9F%E7%90%86" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>屏蔽更新的原理</h2>
-<p>安装了<code>tvOS 11 Beta Software Profile</code>，设备便会去检测 tvOS 10 Beta 版的更新，显而易见的是，tvOS 系统仅能适用于 Apple TV，iOS 设备安装该描述文件后，检测到的更新无法适用，便会显示 : 您的软件是最新版本。</p>
-<h2><a id="%E6%B3%A8%E6%84%8F%E4%BA%8B%E9%A1%B9" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>注意事项</h2>
-<ol>
-<li>
-<p>该描述文件能用到2019年，估计到时候应该有tvOS 12的Beta文件了。</p>
-</li>
-<li>
-<p>如果之前装了可以升级测试版系统的描述文件，删除原来安装的描述文件，再安装本文件。</p>
-</li>
-<li>
-<p>安装之后连接 iTunes 时依然会提示有系统更新，忽略即可。</p>
-</li>
-<li>
-<p>已经自动下载好安装包的用户，可以进入设置——通用里面，找到【储存空间与iCloud用量】——【管理储存空间与iCloud用量】里面删除掉已安装的升级包，然后再安装描述文件。</p>
+			<pre><code class="language-java">/**
+ * java关键字过滤
+ * HashMap实现DFA算法
+ * 关键词替换为*
+ * @author Methol
+ */
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+@SuppressWarnings({ &quot;rawtypes&quot;, &quot;unchecked&quot; })
+public class KeywordFilter {
+  /** 直接禁止的 */
+  private HashMap keysMap = new HashMap();
+  static final String tihuantxt = &quot;**********************************************************&quot;;
+  private int matchType = 1; // 1:最小长度匹配 2：最大长度匹配
+
+  public void addKeywords(List&lt;String&gt; keywords) {
+    for (int i = 0; i &lt; keywords.size(); i++) {
+      String key = keywords.get(i).trim();
+      HashMap nowhash = null;
+      nowhash = keysMap;
+      for (int j = 0; j &lt; key.length(); j++) {
+        char word = key.charAt(j);
+        Object wordMap = nowhash.get(word);
+        if (wordMap != null) {
+          nowhash = (HashMap) wordMap;
+        } else {
+          HashMap&lt;String, String&gt; newWordHash = new HashMap&lt;String, String&gt;();
+          newWordHash.put(&quot;isEnd&quot;, &quot;0&quot;);
+          nowhash.put(word, newWordHash);
+          nowhash = newWordHash;
+        }
+        if (j == key.length() - 1) {
+          nowhash.put(&quot;isEnd&quot;, &quot;1&quot;);
+        }
+      }
+    }
+  }
+
+  /**
+   * 重置关键词
+   */
+  public void clearKeywords() {
+    keysMap.clear();
+  }
+
+  /**
+   * 检查一个字符串从begin位置起开始是否有keyword符合， 如果有符合的keyword值，返回值为匹配keyword的长度，否则返回零
+   * flag 1:最小长度匹配 2：最大长度匹配
+   */
+  private int checkKeyWords(String txt, int begin, int flag) {
+    HashMap nowhash = null;
+    nowhash = keysMap;
+    int maxMatchRes = 0;
+    int res = 0;
+    int l = txt.length();
+    char word = 0;
+    for (int i = begin; i &lt; l; i++) {
+      word = txt.charAt(i);
+      Object wordMap = nowhash.get(word);
+      if (wordMap != null) {
+        res++;
+        nowhash = (HashMap) wordMap;
+        if (((String) nowhash.get(&quot;isEnd&quot;)).equals(&quot;1&quot;)) {
+          if (flag == 1) {
+            wordMap = null;
+            nowhash = null;
+            txt = null;
+            return res;
+          } else {
+            maxMatchRes = res;
+          }
+        }
+      } else {
+        txt = null;
+        nowhash = null;
+        return maxMatchRes;
+      }
+    }
+    txt = null;
+    nowhash = null;
+    return maxMatchRes;
+  }
+
+  /**
+   * 返回txt中关键字的列表
+   */
+  public String getTxtKeyWords(String txt) {
+    Set set = new HashSet();
+    int l = txt.length();
+    String newtxt = new String();
+    for (int i = 0; i &lt; l;) {
+      int len = checkKeyWords(txt, i, matchType);
+      if (len &gt; 0) {
+        newtxt += txt.substring(0, i);
+        newtxt += tihuantxt.substring(0, len);
+        newtxt += txt.substring(i + len, txt.length());
+        txt = newtxt;
+        newtxt = &quot;&quot;;
+        i += len;
+      } else {
+        i++;
+      }
+    }
+    return txt;
+  }
+
+  /**
+   * 仅判断txt中是否有关键字
+   */
+  public boolean isContentKeyWords(String txt) {
+    for (int i = 0; i &lt; txt.length(); i++) {
+      int len = checkKeyWords(txt, i, 1);
+      if (len &gt; 0) {
+        return true;
+      }
+    }
+    txt = null;
+    return false;
+  }
+
+  public int getMatchType() {
+    return matchType;
+  }
+
+  public void setMatchType(int matchType) {
+    this.matchType = matchType;
+  }
+}
+</code></pre>
 <p>​</p>
-</li>
-</ol>
 
 
 			
@@ -165,8 +280,8 @@
 
 </div>
 <nav id="pagenavi">
-	 <a class="prev" href="all_4.html">Prev</a>  
-	 <a class="next" href="all_6.html">Next</a> 
+	 <a class="prev" href="all_24.html">Prev</a>  
+	
 	<div class="center"><a href="archives.html">Blog Archives</a></div>
 
 </nav>
