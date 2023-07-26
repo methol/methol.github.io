@@ -4,7 +4,7 @@
   <title><![CDATA[Methol]]></title>
   <link href="https://tuzhihao.com/atom.xml" rel="self"/>
   <link href="https://tuzhihao.com/"/>
-  <updated>2022-12-12T14:44:06+08:00</updated>
+  <updated>2022-12-12T14:44:11+08:00</updated>
   <id>https://tuzhihao.com/</id>
   <author>
     <name><![CDATA[]]></name>
@@ -23,10 +23,10 @@
 <p><a href="https://synocommunity.com/">Synocommunity</a>提供了非常丰富和有用的第三方应用，具体可以去该网站查看。</p>
 <p>在中国由于众所周知的原因，访问和下载packages.synocommunity.com里面的内容非常慢。安装、更新应用一直无法正常访问。最简单的想法就是使用镜像网站，发现并没有，所以就通过Cloudflare Workers自己搭建了一个。</p>
 <p>搭建过程非常简单，我找到了一个专门用来反向代理的<a href="https://github.com/aD4wn/Workers-Proxy">GitHub项目</a>，然后修改了配置就可以使用了。</p>
-<p>你可以使用我搭建的 <code>https://synocommunity-packages.tuzhihao.com</code> 直接配置在你的群晖使用，参考下图：<br />
-<img src="https://file1.tuzhihao.com/20221208/YToVHb.png" alt="" /></p>
+<p>你可以使用我搭建的 <code>https://synocommunity-packages.xsf.me</code> 直接配置在你的群晖使用，参考下图：<br />
+<img src="https://f1.xsf.me/20221208/YToVHb.png" alt="" /></p>
 <p>之后你就可以在社群里面找到丰富的插件，按需下载：<br />
-<img src="https://file1.tuzhihao.com/20221208/IzyeNy.png" alt="" /></p>
+<img src="https://f1.xsf.me/20221208/IzyeNy.png" alt="" /></p>
 <h2><a id="%E8%87%AA%E8%A1%8C%E6%90%AD%E5%BB%BA" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>自行搭建</h2>
 <h3><a id="%E8%84%9A%E6%9C%AC" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>脚本</h3>
 <p>当然你可以自己搭建一个，创建一个wokers，在线编辑，填入如下脚本内容。</p>
@@ -203,7 +203,7 @@ async function device_status(user_agent_info) {
 <p>访问如下地址(host替换为你自己的)：<br />
 <a href="https://synocommunity-packages.tuzhihao.com/?build=42962&amp;language=enu&amp;arch=apollolake">https://synocommunity-packages.tuzhihao.com/?build=42962&amp;language=enu&amp;arch=apollolake</a></p>
 <p>检查返回的json里面的link地址是否已经被替换，成功替换就代表搭建成功，恭喜🎉<br />
-<img src="https://file1.tuzhihao.com/20221208/WHITjf.png" alt="" /></p>
+<img src="https://f1.xsf.me/20221208/WHITjf.png" alt="" /></p>
 
 ]]></content>
   </entry>
@@ -488,12 +488,12 @@ async function fileReq(event){
 </ol>
 <p><a href="https://file1.tuzhihao.com/file/Service_Remote_Control_1.2.apk">Service_Remote_Control_1.2.apk</a></p>
 <p>在电视处于亮屏的状态下，打开「IR Service remote」依次按下「S1」-「S2」即可进入工程模式菜单</p>
-<p><img src="https://pic.tuzhihao.com/upic/20210418/214505-x5fw8P.png" alt="image-20210418212716653" /></p>
+<p><img src="https://pic.xsf.me/upic/20210418/214505-x5fw8P.png" alt="image-20210418212716653" /></p>
 <ol start="2">
 <li>
 <p>使用电视遥控器「方向键」将光标移动到「Option」选项，按一下「确定键」进入，然后使用手机拍照当前画面。进入之后可以看到「Local Set」选项是「CHI_DTV」，意味当前系统是国区。</p>
 <p>将光标移动到「Local Set」选项并按下「确定键」进入，在弹出的「Local Set List」列表里移到你想要切换的地区代码，美区选择「AD_AU2」，港区选择「HKG_DTV」，之后按下遥控器「确定键」后会自动返回。</p>
-<p><img src="https://pic.tuzhihao.com/upic/20210418/214529-8B2zzw.png" alt="image-20210418212855744" /></p>
+<p><img src="https://pic.xsf.me/upic/20210418/214529-8B2zzw.png" alt="image-20210418212855744" /></p>
 </li>
 <li>
 <p>再次进入到「MRT Option」选项，进入「Language Set」选项并确保此处参数显示为「China」，返回并进入「Region」确保此处参数显示为「asia_dtv」，其余的参数按照之前拍的照片依次复原即可。「Production Option」和「Engineer Option」同理。</p>
@@ -503,26 +503,26 @@ async function fileReq(event){
 </li>
 <li>
 <p>使用遥控器依次选择「设置」-「支持」-「自诊断」-「重置 Smart Hub」，输入 PIN 码「0000」后系统桌面会重启。</p>
-<p><img src="https://pic.tuzhihao.com/upic/20210418/214531-b2YyAM.png" alt="image-20210418213026402" /></p>
+<p><img src="https://pic.xsf.me/upic/20210418/214531-b2YyAM.png" alt="image-20210418213026402" /></p>
 </li>
 <li>
 <p>重启之后光标移动到「apps」会弹出「同意条款」页面，注意即便当前电视的系统语言为简体中文，但此页面应为英文界面。使用电视原厂遥控器在「同意条款」页面以此按下「静音」-「音量 +」-「频道 +」-「静音」按键，电视会弹出「Internet 服务位置设置」选项。选择香港。</p>
-<p><img src="https://pic.tuzhihao.com/upic/20210418/214533-6bqY6X.png" alt="image-20210418213101873" /></p>
+<p><img src="https://pic.xsf.me/upic/20210418/214533-6bqY6X.png" alt="image-20210418213101873" /></p>
 </li>
 <li>
 <p>最后同意协议，安装app就行了！</p>
-<p><img src="https://pic.tuzhihao.com/upic/20210418/214535-hHG7r1.png" alt="image-20210418213749906" /></p>
+<p><img src="https://pic.xsf.me/upic/20210418/214535-hHG7r1.png" alt="image-20210418213749906" /></p>
 </li>
 </ol>
 <h2><a id="%E5%A4%87%E4%BB%BD%E5%8F%82%E6%95%B0%E6%88%AA%E5%9B%BE" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>备份参数截图</h2>
 <h3><a id="%E4%BF%AE%E6%94%B9%E5%89%8D%E5%9B%BD%E5%8C%BA" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>修改前(国区)</h3>
-<p><img src="https://pic.tuzhihao.com/upic/20210418/214540-9KWi3f.png" alt="image-20210418213525967" /></p>
-<p><img src="https://pic.tuzhihao.com/upic/20210418/214545-wC0kFH.png" alt="image-20210418213536752" /></p>
-<p><img src="https://pic.tuzhihao.com/upic/20210418/214549-zvrLvw.png" alt="image-20210418213549420" /></p>
+<p><img src="https://pic.xsf.me/upic/20210418/214540-9KWi3f.png" alt="image-20210418213525967" /></p>
+<p><img src="https://pic.xsf.me/upic/20210418/214545-wC0kFH.png" alt="image-20210418213536752" /></p>
+<p><img src="https://pic.xsf.me/upic/20210418/214549-zvrLvw.png" alt="image-20210418213549420" /></p>
 <h3><a id="%E4%BF%AE%E6%94%B9%E5%90%8E%E6%B8%AF%E5%8C%BA" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>修改后(港区)</h3>
-<p><img src="https://pic.tuzhihao.com/upic/20210418/214551-2jMHOy.png" alt="image-20210418213446438" /></p>
-<p><img src="https://pic.tuzhihao.com/upic/20210418/214554-aMRDcj.png" alt="image-20210418213500655" /></p>
-<p><img src="https://pic.tuzhihao.com/upic/20210418/214558-B0a473.png" alt="image-20210418213510547" /></p>
+<p><img src="https://pic.xsf.me/upic/20210418/214551-2jMHOy.png" alt="image-20210418213446438" /></p>
+<p><img src="https://pic.xsf.me/upic/20210418/214554-aMRDcj.png" alt="image-20210418213500655" /></p>
+<p><img src="https://pic.xsf.me/upic/20210418/214558-B0a473.png" alt="image-20210418213510547" /></p>
 
 ]]></content>
   </entry>
@@ -1022,7 +1022,7 @@ public class OracleOperateFactory implements Factory {
 </ul>
 <h2><a id="%E5%8E%9F%E7%90%86" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>原理</h2>
 <p>布隆过滤器的核心实现是一个超大的位数组和几个哈希函数。假设数组的长度为m，哈希函数的个数为k。<br />
-<img src="https://pic.tuzhihao.com/upic/20210418/214747-djSEpK.png" alt="布隆过滤器原理图" /><br />
+<img src="https://pic.xsf.me/upic/20210418/214747-djSEpK.png" alt="布隆过滤器原理图" /><br />
 如上图：假设集合里面有x,y,z，通过hash函数计算后的结果为a,b,c，那么w[a],w[b],w[c]都会表标记为1。假设现在有3个hash函数，如图3个不同颜色的线，分别计算出不同的结果，并标记为1。当判断某一个元素是否在一个集合的时候，就通过判断这三个hash的结果，如果都是1，说明该元素在这个集合中。如果有一个为0，说明该元素不在此集合中。因此，这也是存在误判的原因。<br />
 总的来说，bloom filter是以极低的的错误去换取空间和时间。</p>
 <h2><a id="%E4%BC%98%E7%82%B9" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>优点</h2>
@@ -1470,7 +1470,7 @@ order by distance asc;
 
 
 </code></pre>
-<p><img src="https://pic.tuzhihao.com/upic/20210418/214849-WBvCWV.png" alt="离我最近查询实例" /></p>
+<p><img src="https://pic.xsf.me/upic/20210418/214849-WBvCWV.png" alt="离我最近查询实例" /></p>
 <p>数据下载:<br />
 <a href="media/16661412450896/dealer_insert.zip">dealer_insert.zip</a></p>
 
@@ -1496,10 +1496,10 @@ Intellij IDEA，启动脚本是 <code>/home/methol/software/idea-IU-162.1121.32/
 export XMODIFIERS
 </code></pre>
 <p>如图：<br />
-<img src="https://pic.tuzhihao.com/upic/20210418/214922-q6TJTM.png" alt="IDEA脚本示例" /></p>
+<img src="https://pic.xsf.me/upic/20210418/214922-q6TJTM.png" alt="IDEA脚本示例" /></p>
 <p>Wine QQ的启动脚本是<code>/opt/longene/qq/qq.sh</code><br />
 如图：<br />
-<img src="https://pic.tuzhihao.com/upic/20210418/214922-q6TJTM.png" alt="Wine QQ 脚本示例" /></p>
+<img src="https://pic.xsf.me/upic/20210418/214922-q6TJTM.png" alt="Wine QQ 脚本示例" /></p>
 
 ]]></content>
   </entry>
@@ -2633,7 +2633,7 @@ public class Main {
 <p>题目</p>
 </blockquote>
 <p>有一个由非负整数组成的三角形，第一行只有一个数，除了最下行之外每个数的左下方和右下方各有一个数，如下图：<br />
-<img src="https://pic.tuzhihao.com/upic/20210418/214820-gw8zqJ.jpg" alt="题目" /><br />
+<img src="https://pic.xsf.me/upic/20210418/214820-gw8zqJ.jpg" alt="题目" /><br />
 从第一行开始，每次可以往做下或右下走一格，直到走到最下行，把沿途经过的数全部加起来，如何走才能使得这个和最大。</p>
 <blockquote>
 <p>分析</p>
