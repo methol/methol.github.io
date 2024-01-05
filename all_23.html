@@ -124,50 +124,35 @@
 	<article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
 		<div class="meta">
 			<div class="date">
-				<time datetime="2015-03-19T09:00:45+08:00" itemprop="datePublished">2015/03/19</time>
+				<time datetime="2015-03-11T09:00:45+08:00" itemprop="datePublished">2015/03/11</time>
 			</div>
 			
 			 
 			
 		</div>
-		<h1 class="title" itemprop="name"><a href="16661412450821.html" itemprop="url">
-		Ubuntu设置交换文件</a></h1>
+		<h1 class="title" itemprop="name"><a href="16661412450391.html" itemprop="url">
+		ubuntu下安装mysql并开启远程登陆</a></h1>
 		<div class="entry-content" itemprop="articleBody">
 			
-			<h3><a id="%E9%A6%96%E5%85%88%E8%A6%81%E5%85%88%E8%AF%B4%E6%98%8E%E4%BC%98%E5%8C%96%E4%BF%AE%E6%94%B9swap" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>首先要先说明优化修改swap</h3>
-<p>在ubuntu 里面，swappiness的值的大小对如何使用swap分区是有着很大的联系的。</p>
-<p>swappiness=0的时候表示最大限度使用物理内存，然后才是 swap空间，</p>
-<p>swappiness＝100的时候表示积极的使用swap分区，并且把内存上的数据及时的搬运到swap空间里面。</p>
-<p>两个极端，对于ubuntu的默认设置，这个值等于60，建议修改为10。</p>
-<h3><a id="%E4%BF%AE%E6%94%B9swappiness%E7%9A%84%E5%80%BC%E7%9A%84%E5%A4%A7%E5%B0%8F%E7%9A%84%E5%85%B7%E4%BD%93%E6%93%8D%E4%BD%9C%E6%96%B9%E6%B3%95" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>修改swappiness的值的大小的具体操作方法</h3>
-<p>1.查看你的系统里面的swappiness<br />
-<code>cat /proc/sys/vm/swappiness</code></p>
-<p>不出意外的话，你应该看到是 60</p>
-<p>2.修改swappiness值为10</p>
-<p><code>sysctl vm.swappiness=10</code></p>
-<p>但是这只是临时性的修改，在你重启系统后会恢复默认的60，所以，还要做一步：</p>
-<p><code>vim /etc/sysctl.conf</code></p>
-<p>在这个文档的最后加上这样一行:</p>
-<p><code>vm.swappiness=10</code></p>
-<p>然后保存，重启。ok，你的设置就生效了。</p>
-<h3><a id="%E8%AE%BE%E7%BD%AE%E4%BA%A4%E6%8D%A2%E6%96%87%E4%BB%B6" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>设置交换文件</h3>
-<p><code>mkdir /swap</code><br />
-然后进入目录<br />
-<code>cd /swap</code><br />
-创建自己希望的交换分区文件的大小<br />
-<code>sudo dd if=/dev/zero of=swapfile bs=1M count=2k</code><br />
-(创建2G的swap, 这步比较慢 创建分区的大小就= bs * count)<br />
-成功后会有提示，这时候查看swap文件夹下会多一个交换文件（swapfile），文件名字你可以自己定义在上面创建命令里。<br />
-然后输入命令 <code>mkswap swapfile</code><br />
-挂载交换分区：<code>swapon swapfile</code><br />
-如果想卸载的话输入：<code>swapoff swapfile</code><br />
-卸载后可以删除这个文件，然后重新根据你新的需要创建和调整交换文件大小</p>
-<p>最后可以查看空间大小:<code>free -m</code><br />
-swap项后面的大小就是你设定交换文件的大小如果不为0就说明挂载成功了。</p>
-<p>自动挂在交换文件（交换分区）<br />
-自动挂载交换文件<br />
-输入命令 <code>vim /etc/fstab</code><br />
-在最后添加 <code>/swap/swapfile swap swap defaults 0 0</code></p>
+			<p>安装很简单，一行命令。<br />
+<code>apt-get install mysql-server</code><br />
+开启远程登陆。<br /><br />
+<code>netstat -an | grep 3306</code><br />
+显示结果：<em><em>tcp 0 0 127.0.0.1:3306 0.0.0.0:</em> LISTEN</em>*<br />
+从上面可以看出，mysql的3306端口只是监听本地的连接，这样就阻碍了外部IP对该数据库的访问，修改的办法其实很简单，进入到mysql的配置文件所在目录（<code>/etc/mysql/my.cnf</code>）下，找到文件中的如下内容：<br />
+<strong>bind-address = 127.0.0.1</strong><br />
+将bind-address注释掉就可以让别的ip访问。<br />
+然后登陆到mysql。</p>
+<p><code>mysql -uroot -pxxxxxxxx</code><br />
+输入以下命令。</p>
+<pre><code class="language-plain_text">mysql&gt; grant all on *.* to user_name@'%' identified by 'user_password';
+mysql &gt;use mysql;
+mysql&gt;update user set host = '%' where user = 'root';
+mysql&gt; flush privileges;
+</code></pre>
+<p>如果第三命令报错，看是不是root已经有了，primary key的错误，如果是的，可以忽略，执行下面一条命令。</p>
+<p>之后重启mysql就可以了。</p>
+<p><code>/etc/init.d/mysql restart</code></p>
 
 
 			
@@ -198,21 +183,89 @@ Theme by <a href="http://shashankmehta.in/archive/2012/greyshade.html">Shashank 
 	</div>
 
 
+<style>.mweb-charts{background:#fff;}
+body{ box-sizing: border-box;
+    margin: 0 auto;}
+@media print{
+    pre, code, pre code {
+     overflow: visible !important;
+     white-space: pre-wrap !important;       /* css-3 */
+     white-space: -moz-pre-wrap !important;  /* Mozilla, since 1999 */
+     white-space: -pre-wrap !important;      /* Opera 4-6 */
+     white-space: -o-pre-wrap !important;    /* Opera 7 */
+     word-wrap: break-word !important;       /* Internet Explorer 5.5+ */
+    }
+    html,body{margin:0;padding:4px;}
+}
 
-  
 
 
+div.code-toolbar {
+  position: relative;
+}
 
+div.code-toolbar > .toolbar {
+  position: absolute;
+  z-index: 10;
+  top: .3em;
+  right: .2em;
+  transition: opacity 0.3s ease-in-out;
+  opacity: 0;
+}
 
+div.code-toolbar:hover > .toolbar {
+  opacity: 1;
+}
 
+/* Separate line b/c rules are thrown out if selector is invalid.
+   IE11 and old Edge versions don't support :focus-within. */
+div.code-toolbar:focus-within > .toolbar {
+  opacity: 1;
+}
 
+div.code-toolbar > .toolbar > .toolbar-item {
+  display: inline-block;
+}
 
+div.code-toolbar > .toolbar > .toolbar-item > a {
+  cursor: pointer;
+}
 
+div.code-toolbar > .toolbar > .toolbar-item > button {
+  background: none;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  line-height: normal;
+  overflow: visible;
+  padding: 0;
+  -webkit-user-select: none; /* for button */
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
 
+div.code-toolbar > .toolbar > .toolbar-item > a,
+div.code-toolbar > .toolbar > .toolbar-item > button,
+div.code-toolbar > .toolbar > .toolbar-item > span {
+  color: inherit;
+  font-size: .8em;
+  padding: 4px .5em;
+  background: #f5f2f0;
+  background: rgba(224, 224, 224, 0.4);
+  box-shadow: 0 2px 0 0 rgba(0,0,0,0.2);
+  border-radius: .5em;
+}
 
-
-
-
+div.code-toolbar > .toolbar > .toolbar-item > a:hover,
+div.code-toolbar > .toolbar > .toolbar-item > a:focus,
+div.code-toolbar > .toolbar > .toolbar-item > button:hover,
+div.code-toolbar > .toolbar > .toolbar-item > button:focus,
+div.code-toolbar > .toolbar > .toolbar-item > span:hover,
+div.code-toolbar > .toolbar > .toolbar-item > span:focus {
+  color: inherit;
+  text-decoration: none;
+}
+</style><script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script><script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/line-numbers/prism-line-numbers.min.js"></script><script>!function(){if("undefined"!=typeof Prism&&"undefined"!=typeof document){var e=[],t={},n=function(){};Prism.plugins.toolbar={};var a=Prism.plugins.toolbar.registerButton=function(n,a){var r;r="function"==typeof a?a:function(e){var t;return"function"==typeof a.onClick?((t=document.createElement("button")).type="button",t.addEventListener("click",(function(){a.onClick.call(this,e)}))):"string"==typeof a.url?(t=document.createElement("a")).href=a.url:t=document.createElement("span"),a.className&&t.classList.add(a.className),t.textContent=a.text,t},n in t?console.warn('There is a button with the key "'+n+'" registered already.'):e.push(t[n]=r)},r=Prism.plugins.toolbar.hook=function(a){var r=a.element.parentNode;var l=a.element.classList;if(l.contains('language-mermaid') || l.contains('language-echarts') || l.contains('language-plantuml')){return;} if(r&&/pre/i.test(r.nodeName)&&!r.parentNode.classList.contains("code-toolbar")){var o=document.createElement("div");o.classList.add("code-toolbar"),r.parentNode.insertBefore(o,r),o.appendChild(r);var i=document.createElement("div");i.classList.add("toolbar");var l=e,d=function(e){for(;e;){var t=e.getAttribute("data-toolbar-order");if(null!=t)return(t=t.trim()).length?t.split(/\s*,\s*/g):[];e=e.parentElement}}(a.element);d&&(l=d.map((function(e){return t[e]||n}))),l.forEach((function(e){var t=e(a);if(t){var n=document.createElement("div");n.classList.add("toolbar-item"),n.appendChild(t),i.appendChild(n)}})),o.appendChild(i)}};a("label",(function(e){var t=e.element.parentNode;if(t&&/pre/i.test(t.nodeName)&&t.hasAttribute("data-label")){var n,a,r=t.getAttribute("data-label");try{a=document.querySelector("template#"+r)}catch(e){}return a?n=a.content:(t.hasAttribute("data-url")?(n=document.createElement("a")).href=t.getAttribute("data-url"):n=document.createElement("span"),n.textContent=r),n}})),Prism.hooks.add("complete",r)}}();</script><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/toolbar/prism-toolbar.min.css"><script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/copy-to-clipboard/prism-copy-to-clipboard.min.js"></script><script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/autoloader/prism-autoloader.min.js"></script><style>div.code-toolbar > .toolbar > .toolbar-item > a, div.code-toolbar > .toolbar > .toolbar-item > button, div.code-toolbar > .toolbar > .toolbar-item > span {padding: 4px .5em; background: #f5f2f0; background: rgba(224, 224, 224, 0.4);}</style>
 
 <style type="text/css">
 figure{margin: 1em 0;padding: 0;}

@@ -124,85 +124,33 @@
 	<article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
 		<div class="meta">
 			<div class="date">
-				<time datetime="2017-04-05T09:00:45+08:00" itemprop="datePublished">2017/04/05</time>
+				<time datetime="2016-07-19T09:00:45+08:00" itemprop="datePublished">2016/07/19</time>
 			</div>
 			
 			 
 			
 		</div>
-		<h1 class="title" itemprop="name"><a href="16661412450896.html" itemprop="url">
-		MySql 空间索引</a></h1>
+		<h1 class="title" itemprop="name"><a href="16661412450247.html" itemprop="url">
+		ubuntu部分软件不能使用中文输入法</a></h1>
 		<div class="entry-content" itemprop="articleBody">
 			
-			<p>Mysql5.7版本之后支持空间索引，试用下实现离我最近的功能。<br />
-感觉查询速度还是没有es快，但是小数据量也是一个可用的办法。</p>
-<pre><code class="language-sql">create database geo_test default charset = utf8mb4;
-use geo_test;
-
-create table t_dealer
-(
-    id bigint not null auto_increment primary key,
-    dealer_name varchar(255) not null,
-    city_code varchar(45) null,
-    phone varchar(32) null,
-    lat decimal(10,7) null,
-    lon decimal(10,7) null,
-    create_time datetime null
-)default charset = utf8mb4;
-create index idx_name on t_dealer (dealer_name);
-comment on table t_dealer is '基本信息表';
-comment on column dealer_name is '@cname:名称';
-comment on column address is '@cname:地址';
-comment on column city_code is '@cname:城市编码';
-comment on column phone is '@cname:电话';
-comment on column lat is '@cname:纬度';
-comment on column lon is '@cname:经度';
-comment on column create_time is '@cname:创建时间';
-
-# 添加geo点
-alter table t_dealer
-add pnt POINT NULL comment '经纬度的geo点';
-# 从经纬度中补全数据
-update t_dealer set pnt = point(lat,lon);
-# 改为not null之后才能添加索引
-alter table t_dealer MODIFY pnt POINT not null;
-# 添加索引，这种索引要求字段not null
-ALTER TABLE t_dealer ADD SPATIAL INDEX spatIdx(pnt);
-
- 
-# 几种空间对象比较方法 
-SET @g1 = GEOMFROMTEXT('Polygon((30.7108682140 114.0961681600,30.6890070000 114.5951950000,
-30.2507470000 114.5767980000,30.2507470000 114.1030670000,30.7108682140 114.0961681600))');
-SET @g2 = pointfromtext('Point(30.476421 114.403866)');
- 
-# 注意：比较的都是外包络几何类型对象 
-# 包含
-select * from t_dealer where MBRCONTAINS(@g1,pnt);
-SELECT MBRCONTAINS(@g1,@g2), MBRCONTAINS(@g2,@g1), MBRCONTAINS(@g1,@g1);
-# 被包含
-select * from t_dealer where MBRWITHIN(pnt,@g1);
-SELECT MBRWITHIN(@g2,@g1),MBRWITHIN(@g1,@g2);
-# 不相交 
-SELECT MBRDISJOINT(@g1,@g2);
-# 相等 
-SELECT MBREQUAL(@g1,@g2);
-# 相交 
-SELECT MBRINTERSECTS(@g1,@g2);
-# 重叠 
-SELECT MBROVERLAPS(@g1,@g2);
-# 相切 
-SELECT MBRTOUCHES(@g1,@g2);
-# 距离 单位 m
-select id,dealer_name,city_code,phone,lat,lon,
-  GLength(LineStringFromWKB(linestring(pnt,pointfromtext('Point(30.476421 114.403866)'))))*100*1000 as distance
-from t_dealer
-order by distance asc;
-
-
+			<p>ubuntu安装了fcitx之后，安装了搜狗输入法，但是还是不能在wine下的QQ下输入中文，包括Intellij IDEA有时候也不行。<br />
+看网上的教程，好像是因为有ibus的存在，而且默认为ibus，所以才不行的，有一个简单的解决办法，就是在这些软件的启动脚本前加一行命令，就可以解决了。<br />
+例如：<br />
+Intellij IDEA，启动脚本是 <code>/home/methol/software/idea-IU-162.1121.32/bin/idea.sh</code>，使用vim编辑，在下面这段文字前加上这段话。</p>
+<pre><code class="language-plain_text"># ---------------------------------------------------------------------
+# Run the IDE.
+# ---------------------------------------------------------------------
 </code></pre>
-<p><img src="https://pic.xsf.me/upic/20210418/214849-WBvCWV.png" alt="离我最近查询实例" /></p>
-<p>数据下载:<br />
-<a href="media/16661412450896/dealer_insert.zip">dealer_insert.zip</a></p>
+<p>加上：</p>
+<pre><code class="language-plain_text">XMODIFIERS=&quot;@im=fcitx&quot;
+export XMODIFIERS
+</code></pre>
+<p>如图：<br />
+<img src="https://f1.xsf.me/img/20240105/dSYXPB.jpg" alt="IDEA脚本示例" /></p>
+<p>Wine QQ的启动脚本是<code>/opt/longene/qq/qq.sh</code><br />
+如图：<br />
+<img src="https://f1.xsf.me/img/20240105/OW716w.jpg" alt="Wine QQ 脚本示例" /></p>
 
 
 			
@@ -233,21 +181,89 @@ Theme by <a href="http://shashankmehta.in/archive/2012/greyshade.html">Shashank 
 	</div>
 
 
+<style>.mweb-charts{background:#fff;}
+body{ box-sizing: border-box;
+    margin: 0 auto;}
+@media print{
+    pre, code, pre code {
+     overflow: visible !important;
+     white-space: pre-wrap !important;       /* css-3 */
+     white-space: -moz-pre-wrap !important;  /* Mozilla, since 1999 */
+     white-space: -pre-wrap !important;      /* Opera 4-6 */
+     white-space: -o-pre-wrap !important;    /* Opera 7 */
+     word-wrap: break-word !important;       /* Internet Explorer 5.5+ */
+    }
+    html,body{margin:0;padding:4px;}
+}
 
-  
 
 
+div.code-toolbar {
+  position: relative;
+}
 
+div.code-toolbar > .toolbar {
+  position: absolute;
+  z-index: 10;
+  top: .3em;
+  right: .2em;
+  transition: opacity 0.3s ease-in-out;
+  opacity: 0;
+}
 
+div.code-toolbar:hover > .toolbar {
+  opacity: 1;
+}
 
+/* Separate line b/c rules are thrown out if selector is invalid.
+   IE11 and old Edge versions don't support :focus-within. */
+div.code-toolbar:focus-within > .toolbar {
+  opacity: 1;
+}
 
+div.code-toolbar > .toolbar > .toolbar-item {
+  display: inline-block;
+}
 
+div.code-toolbar > .toolbar > .toolbar-item > a {
+  cursor: pointer;
+}
 
+div.code-toolbar > .toolbar > .toolbar-item > button {
+  background: none;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  line-height: normal;
+  overflow: visible;
+  padding: 0;
+  -webkit-user-select: none; /* for button */
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
 
+div.code-toolbar > .toolbar > .toolbar-item > a,
+div.code-toolbar > .toolbar > .toolbar-item > button,
+div.code-toolbar > .toolbar > .toolbar-item > span {
+  color: inherit;
+  font-size: .8em;
+  padding: 4px .5em;
+  background: #f5f2f0;
+  background: rgba(224, 224, 224, 0.4);
+  box-shadow: 0 2px 0 0 rgba(0,0,0,0.2);
+  border-radius: .5em;
+}
 
-
-
-
+div.code-toolbar > .toolbar > .toolbar-item > a:hover,
+div.code-toolbar > .toolbar > .toolbar-item > a:focus,
+div.code-toolbar > .toolbar > .toolbar-item > button:hover,
+div.code-toolbar > .toolbar > .toolbar-item > button:focus,
+div.code-toolbar > .toolbar > .toolbar-item > span:hover,
+div.code-toolbar > .toolbar > .toolbar-item > span:focus {
+  color: inherit;
+  text-decoration: none;
+}
+</style><script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script><script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/line-numbers/prism-line-numbers.min.js"></script><script>!function(){if("undefined"!=typeof Prism&&"undefined"!=typeof document){var e=[],t={},n=function(){};Prism.plugins.toolbar={};var a=Prism.plugins.toolbar.registerButton=function(n,a){var r;r="function"==typeof a?a:function(e){var t;return"function"==typeof a.onClick?((t=document.createElement("button")).type="button",t.addEventListener("click",(function(){a.onClick.call(this,e)}))):"string"==typeof a.url?(t=document.createElement("a")).href=a.url:t=document.createElement("span"),a.className&&t.classList.add(a.className),t.textContent=a.text,t},n in t?console.warn('There is a button with the key "'+n+'" registered already.'):e.push(t[n]=r)},r=Prism.plugins.toolbar.hook=function(a){var r=a.element.parentNode;var l=a.element.classList;if(l.contains('language-mermaid') || l.contains('language-echarts') || l.contains('language-plantuml')){return;} if(r&&/pre/i.test(r.nodeName)&&!r.parentNode.classList.contains("code-toolbar")){var o=document.createElement("div");o.classList.add("code-toolbar"),r.parentNode.insertBefore(o,r),o.appendChild(r);var i=document.createElement("div");i.classList.add("toolbar");var l=e,d=function(e){for(;e;){var t=e.getAttribute("data-toolbar-order");if(null!=t)return(t=t.trim()).length?t.split(/\s*,\s*/g):[];e=e.parentElement}}(a.element);d&&(l=d.map((function(e){return t[e]||n}))),l.forEach((function(e){var t=e(a);if(t){var n=document.createElement("div");n.classList.add("toolbar-item"),n.appendChild(t),i.appendChild(n)}})),o.appendChild(i)}};a("label",(function(e){var t=e.element.parentNode;if(t&&/pre/i.test(t.nodeName)&&t.hasAttribute("data-label")){var n,a,r=t.getAttribute("data-label");try{a=document.querySelector("template#"+r)}catch(e){}return a?n=a.content:(t.hasAttribute("data-url")?(n=document.createElement("a")).href=t.getAttribute("data-url"):n=document.createElement("span"),n.textContent=r),n}})),Prism.hooks.add("complete",r)}}();</script><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/toolbar/prism-toolbar.min.css"><script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/copy-to-clipboard/prism-copy-to-clipboard.min.js"></script><script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/autoloader/prism-autoloader.min.js"></script><style>div.code-toolbar > .toolbar > .toolbar-item > a, div.code-toolbar > .toolbar > .toolbar-item > button, div.code-toolbar > .toolbar > .toolbar-item > span {padding: 4px .5em; background: #f5f2f0; background: rgba(224, 224, 224, 0.4);}</style>
 
 <style type="text/css">
 figure{margin: 1em 0;padding: 0;}

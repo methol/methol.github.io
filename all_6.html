@@ -124,233 +124,229 @@
 	<article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
 		<div class="meta">
 			<div class="date">
-				<time datetime="2017-08-19T09:00:45+08:00" itemprop="datePublished">2017/08/19</time>
+				<time datetime="2017-05-21T09:00:44+08:00" itemprop="datePublished">2017/05/21</time>
 			</div>
 			
 			 
 			
 		</div>
-		<h1 class="title" itemprop="name"><a href="16661412451143.html" itemprop="url">
-		CountDownLatch和CyclicBarrier</a></h1>
+		<h1 class="title" itemprop="name"><a href="16661412449263.html" itemprop="url">
+		设计模式 简单工厂 工厂方法 抽象工厂</a></h1>
 		<div class="entry-content" itemprop="articleBody">
 			
-			<h2><a id="%E4%BD%BF%E7%94%A8%E5%9C%BA%E6%99%AF" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>使用场景</h2>
-<h3><a id="%E5%9C%BA%E6%99%AF%E4%B8%80" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>场景一</h3>
-<p>工作中需要在web服务对外之前，spring的bean初始化的时候加载数据到缓存中。<br />
-但是由于数据量过大，需要多线程加载。要求所有的缓存加载成功之后，这个bean才初始化成功，程序继续往下走。</p>
-<h3><a id="%E5%9C%BA%E6%99%AF%E4%BA%8C" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>场景二</h3>
-<p>商务合作的需求，需要显示的数据来自合作方和我们自己的数据库中。<br />
-之前是只显示我们数据库点数据，现在合作方提供了一个接口让我实时调用对方的接口，并把两部分的数据合并后返回给前端。<br />
-但是由于合作方的接口不是特别稳定，而且也不能保证高可用，所以可以考虑同时从我们和合作方取数据，设置超时时间，如果都返回了数据就合并给前端，如果对方未能返回数据，还是有我们自己的数据能显示给用户的。</p>
-<h2><a id="countdownlatch%E5%92%8Ccyclicbarrier" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>CountDownLatch和CyclicBarrier</h2>
-<p>综合上述两个场景，我看了CountDownLatch和CyclicBarrier，看说明觉得比较适合我的使用。</p>
-<h3><a id="countdownlatch" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>CountDownLatch</h3>
-<pre><code class="language-plain_text">package countdownlatchtest;
+			<p>针对实体user，希望写一系列的功能，能够实现数据库的增删改查等功能。</p>
+<pre><code class="language-java">    public static void main(String[] args) {
+        User u = new User();
+        u.setName(&quot;methol&quot;);
 
-import com.google.common.collect.Maps;
-
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.CountDownLatch;
-
-public class CountDownLatchService {
-
-    private CountDownLatch countDownLatch = new CountDownLatch(4);
-
-    /**
-     * 用来存储所有线程的运行结果
-     */
-    private ConcurrentMap&lt;String, String&gt; resultMap = Maps.newConcurrentMap();
-
-
-
-    public CountDownLatch getCountDownLatch() {
-        return countDownLatch;
+        add(u);
+        edit(u);
     }
+    
+    public static void add(User user){
+        System.out.println(&quot;save user【&quot; + user.getName() + &quot;】 to db&quot;);
+    }
+    
+    public static void edit(User user){
+        System.out.println(&quot;edit user【&quot; + user.getName() + &quot;】, and save to db&quot;);
+    }
+</code></pre>
+<p>上面的方法虽然基本上实现了功能，但是不利于程序以后的扩展和复用，代码也不容易维护。<br />
+通过封装、继承、多态把程序的耦合度降低，使用设计模式可以使得程序更加灵活，后期容易修改，也更加易于复用。<br />
+有了如下的代码：</p>
+<pre><code class="language-plain_text">package mode.factory.simple;
 
-    public ConcurrentMap&lt;String, String&gt; getResultMap() {
-        return resultMap;
+import mode.factory.bean.User;
+
+public interface Operation {
+
+    void operate(User user);
+
+}
+</code></pre>
+<pre><code class="language-plain_text">
+package mode.factory.simple;
+
+import mode.factory.bean.User;
+
+public class AddOperate implements Operation {
+
+    @Override
+    public void operate(User user) {
+        System.out.println(&quot;save user【&quot; + user.getName() + &quot;】 to db&quot;);
     }
 }
 </code></pre>
-<pre><code class="language-plain_text">package countdownlatchtest;
+<pre><code class="language-plain_text">package mode.factory.simple;
 
-import org.apache.commons.lang3.RandomUtils;
+import mode.factory.bean.User;
 
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.CountDownLatch;
+public class EditOperate implements Operation {
 
-public class Worker implements Runnable {
+    @Override
+    public void operate(User user) {
+        System.out.println(&quot;edit user【&quot; + user.getName() + &quot;】, and save to db&quot;);
+    }
+}
+</code></pre>
+<pre><code class="language-plain_text">    public static void main(String[] args) {
+        User u = new User();
+        u.setName(&quot;methol&quot;);
 
-    private ConcurrentMap&lt;String, String&gt; map;
-    private CountDownLatch countDownLatch;
+        // 不同的操作需要new不同的类操作
+        Operation addOperate = new AddOperate();
+        addOperate.operate(u);
+        Operation editOperate = new EditOperate();
+        editOperate.operate(u);
+    }
+</code></pre>
+<p>上述代码已经经过封装，并且也适合之后的代码扩展，但是还是有一个问题，如果后期想通过不同的参数（事先不知道是要执行edit还是add），那么就要通过条件判断要做的操作，这时简单工厂模式可能就是一个比较好的选择。</p>
+<h2><a id="%E7%AE%80%E5%8D%95%E5%B7%A5%E5%8E%82%E6%A8%A1%E5%BC%8F%E4%B8%8E%E5%B7%A5%E5%8E%82%E6%A8%A1%E5%BC%8F" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>简单工厂模式与工厂模式</h2>
+<pre><code class="language-plain_text">package mode.factory.simple;
 
-    public Worker(ConcurrentMap&lt;String, String&gt; map, CountDownLatch countDownLatch) {
-        this.map = map;
-        this.countDownLatch = countDownLatch;
+public class OperateFactory {
+    public static Operation findOperation(String operation) {
+        switch (operation) {
+            case &quot;add&quot;:
+                return new AddOperate();
+            case &quot;edit&quot;:
+                return new EditOperate();
+            default:
+                return null;
+        }
+    }
+}
+</code></pre>
+<p>通过工厂类来帮我们new一个对象，而不是直接在代码中需要的地方new一个对象，在同一个地方管理，后期的代码维护和扩展性都强了很多。<br />
+或者这时想增加一个delete方法，只需要继承<code>Operation</code>类，写一个方法，然后在<code>OperateFactory</code>增加一个case即可。<br />
+<strong>简单工厂模式</strong>，就是一个简单的创建产品(<code>Operation</code>)的工具，可以是<code>AddOperate</code>类，也可以是<code>EditOperate</code>类，甚至他们之间没有任何关系也是没问题的。<br />
+<strong>工厂模式</strong>，他也是一个简单的创建产品(<code>Operation</code>)的工具，但是他有一个区别是所有的产品(<code>AddOperate</code>，<code>EditOperate</code>)都是继承(实现)<code>Operation</code>这个父类的，父类中有抽象的方法，之后都是调用同一个方法来做操作。<br />
+使用中，很少使用简单工厂模式，大多都是工厂模式，谈到工厂模式，基本上都是指的工厂模式。</p>
+<pre><code class="language-java">    public static void main(String[] args) {
+        User u = new User();
+        u.setName(&quot;methol&quot;);
+
+        // 不同的操作需要new不同的类操作
+        Operation addOperate = new AddOperate();
+        addOperate.operate(u);
+        Operation editOperate = new EditOperate();
+        editOperate.operate(u);
+
+        // 使用一个简单的工厂，让工厂来帮我们选择
+        OperateFactory.findOperation(&quot;add&quot;).operate(u);
+        OperateFactory.findOperation(&quot;edit&quot;).operate(u);
+    }
+</code></pre>
+<h2><a id="%E5%B7%A5%E5%8E%82%E6%96%B9%E6%B3%95" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>工厂方法</h2>
+<p>对<code>Operation</code>做了一些小的修改，增加了一个方法</p>
+<pre><code class="language-plain_text">public interface Operation {
+
+    void operate(User user);
+
+    Operation createDefault(String operationType);
+}
+</code></pre>
+<pre><code class="language-plain_text">public class AddOperate implements Operation {
+
+    @Override
+    public void operate(User user) {
+        System.out.println(&quot;save user【&quot; + user.getName() + &quot;】 to db&quot;);
     }
 
     @Override
-    public void run() {
-
-        // 这里写代码做某些事
-        System.out.println(Thread.currentThread().getName() + &quot;\t开始了...&quot;);
-        final int sleep = RandomUtils.nextInt(5, 20);
-        try {
-            Thread.sleep(sleep * 1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-        // 添加结果到map中
-        map.putIfAbsent(Thread.currentThread().getName(), String.valueOf(sleep));
-
-        // 告诉 countDownLatch ，当前线程完成了
-        System.out.println(Thread.currentThread().getName() + &quot;\t结束了...&quot;);
-        countDownLatch.countDown();
+    public Operation createDefault(String operationType) {
+        return OperateFactory.findOperation(operationType);
     }
 }
-
 </code></pre>
-<pre><code class="language-plain_text">package countdownlatchtest;
-
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
-public class Main {
-
-    public static void main(String[] args) {
-        final ExecutorService executorService = Executors.newFixedThreadPool(6);
-        for (int i = 0; i &lt; 3; i++) {
-            // 模拟多次执行任务
-            doTask(executorService);
-        }
-    }
-
-    private static void doTask(ExecutorService executorService) {
-        CountDownLatchService countDownLatchService = new CountDownLatchService();
-        for (int i = 0; i &lt; 4; i++) {
-            Worker worker = new Worker(countDownLatchService.getResultMap(), countDownLatchService.getCountDownLatch());
-            executorService.submit(worker);
-        }
-        try {
-            // 阻塞在这里，等待其他线程执行完成
-            countDownLatchService.getCountDownLatch().await();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        System.out.println(&quot;所有线程执行成功&quot;);
-        System.out.println(&quot;打印结果如下：\n&quot; + countDownLatchService.getResultMap());
-    }
-
-}
-</code></pre>
-<h3><a id="cyclicbarrier" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>CyclicBarrier</h3>
-<pre><code class="language-plain_text">package cyclicbarriertest;
-
-import com.google.common.collect.Maps;
-
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.CyclicBarrier;
-
-public class CyclicBarrierService implements Runnable {
-
-    /**
-     * 表示当有4个线程执行完的时候，会调用第二个参数 barrierAction 的start()方法
-     *
-     * 所以本类实现 Runnable 接口，传入this
-     */
-    private CyclicBarrier cyclicBarrier = new CyclicBarrier(4, this);
-
-    /**
-     * 用来存储所有线程的运行结果
-     */
-    private ConcurrentMap&lt;String, String&gt; resultMap = Maps.newConcurrentMap();
+<pre><code class="language-plain_text">public class EditOperate implements Operation {
 
     @Override
-    public void run() {
-        System.out.println(&quot;所有线程执行成功&quot;);
-        System.out.println(&quot;打印结果如下：\n&quot; + resultMap);
-    }
-
-    public ConcurrentMap&lt;String, String&gt; getResultMap() {
-        return resultMap;
-    }
-
-    public CyclicBarrier getCyclicBarrier() {
-        return cyclicBarrier;
-    }
-}
-</code></pre>
-<pre><code class="language-plain_text">package cyclicbarriertest;
-
-import org.apache.commons.lang3.RandomUtils;
-
-import java.util.concurrent.BrokenBarrierException;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.CyclicBarrier;
-
-public class Worker implements Runnable {
-
-    private ConcurrentMap&lt;String, String&gt; map;
-    private CyclicBarrier cyclicBarrier;
-
-    public Worker(ConcurrentMap&lt;String, String&gt; map, CyclicBarrier cyclicBarrier) {
-        this.map = map;
-        this.cyclicBarrier = cyclicBarrier;
+    public void operate(User user) {
+        System.out.println(&quot;edit user【&quot; + user.getName() + &quot;】, and save to db&quot;);
     }
 
     @Override
-    public void run() {
-
-        // 这里写代码做某些事
-        System.out.println(Thread.currentThread().getName() + &quot;\t开始了...&quot;);
-        final int sleep = RandomUtils.nextInt(5, 20);
-        try {
-            Thread.sleep(sleep * 1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-        // 添加结果到map中
-        map.putIfAbsent(Thread.currentThread().getName(), String.valueOf(sleep));
-
-        try {
-            // 告诉 cyclicBarrier ，当前线程完成了
-            System.out.println(Thread.currentThread().getName() + &quot;\t结束了...&quot;);
-            cyclicBarrier.await();
-        } catch (InterruptedException | BrokenBarrierException e) {
-            e.printStackTrace();
-        }
+    public Operation createDefault(String operationType) {
+        return OperateFactory.findOperation(operationType);
     }
 }
 </code></pre>
-<pre><code class="language-plain_text">package cyclicbarriertest;
+<p>工厂方法主要系是两个元素，产品(<code>Operation</code>)和创建者(<code>OperateFactory</code>)。<br />
+而工厂方法就是一个创建者这个类的一个方法而已，这个方法就是用来封装产品的创建。<br />
+和工厂模式的区别是，工厂模式的最大优点在于工厂类中包含了逻辑判断，根据(客户端)传入的参数动态实例化相关的类，那么对于客户端来说，他是不需要关心产品(<code>Operation</code>)的，他只需要关心传入的参数。而工厂模式这时把这一动作延后，接口定义了一个用来创建对象的接口，让子类决定实例化哪个类，工厂方法使一个类的实例化过程延迟到其子类。</p>
+<h2><a id="%E6%8A%BD%E8%B1%A1%E5%B7%A5%E5%8E%82" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>抽象工厂</h2>
+<p>抽象工厂，顾名思义，就是对工厂进行抽象。<br />
+工厂方法和工厂模式都是对产品抽象封装，通过一个工厂，生产多种产品。<br />
+抽象工厂就是通过不同的工厂生产不同的产品。<br />
+还是上面的例子，<code>OperateFactory</code>创建了新增和修改两种操作(产品)，此时有一个新的需求来了，之前用的数据库使mysql，现在想改成oracle，此时就对OperateFactory进行抽象。</p>
+<pre><code class="language-plain_text">package mode.factory.abstracs;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import mode.factory.bean.User;
+import mode.factory.simple.Operation;
 
-public class Main {
+public interface Factory {
 
-    public static void main(String[] args) {
-        final ExecutorService executorService = Executors.newFixedThreadPool(6);
-        for (int j = 0; j &lt; 3; j++) {
-            // 模拟多次任务执行
-            doTask(executorService);
-        }
+    void add(User user);
+
+    void edit(User user);
+
+    Operation createDefault(String operationType);
+}
+</code></pre>
+<p>接口申明了，不管是申明工厂，都需要有add和edit这两种产品的生产。不同的接口只需要实现这个接口，做自己的操作即可。同时不同的工厂还可以实现自己独有的产品的生产。</p>
+<pre><code class="language-plain_text">package mode.factory.abstracs;
+
+import mode.factory.bean.User;
+import mode.factory.simple.Operation;
+
+public class MysqlOperateFactory implements Factory {
+    @Override
+    public void add(User user) {
+        createDefault(&quot;add&quot;).operate(user);
     }
 
-    private static void doTask(ExecutorService executorService) {
-        CyclicBarrierService cyclicBarrierService = new CyclicBarrierService();
-        for (int i = 0; i &lt; 4; i++) {
-            Worker worker = new Worker(cyclicBarrierService.getResultMap(), cyclicBarrierService.getCyclicBarrier());
-            executorService.submit(worker);
-        }
+    @Override
+    public void edit(User user) {
+        createDefault(&quot;edit&quot;).operate(user);
+    }
+
+    @Override
+    public Operation createDefault(String operationType) {
+        return new MysqlOperate().findOperation(operationType);
     }
 }
-
 </code></pre>
-<h2><a id="%E6%80%BB%E7%BB%93" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>总结</h2>
-<p>写了上面两个例子，后面发现场景一适合用<code>CountDownLatch</code>，场景二适合用<code>CyclicBarrier</code>。场景一我们基本上不存在有任务不能执行完的情况，基本上做到计数器不归0，即使服务启动了也没办法正常使用，场景二很多情况都是任务不能正常的执行完成。</p>
+<pre><code class="language-plain_text">package mode.factory.abstracs;
+
+import mode.factory.bean.User;
+import mode.factory.simple.Operation;
+
+public class OracleOperateFactory implements Factory {
+    @Override
+    public void add(User user) {
+        createDefault(&quot;add&quot;).operate(user);
+    }
+
+    @Override
+    public void edit(User user) {
+        createDefault(&quot;edit&quot;).operate(user);
+    }
+
+    @Override
+    public Operation createDefault(String operationType) {
+        return new OracleOperate().findOperation(operationType);
+    }
+}
+</code></pre>
+<p>这里也用了工厂方法的思想，抽象工厂的模式实现了工厂线的扩展。</p>
+<h2><a id="%E5%B0%8F%E7%BB%93" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>小结</h2>
+<ol>
+<li>工厂模式就是一个类，它用来根据客户端(参数)具体的实例化某个对象。</li>
+<li>工厂方法也是实例化对象，但是他把这个过程延迟到了子类，由子类决定具体实例化哪个对象。</li>
+<li>抽象工厂是对工厂的扩展。他是在工厂方法的上面做的进一步的抽象。</li>
+<li>工厂模式是用来生产产品的，不能增加产品；工厂方法是用来生产产品，同时也可以增加产品（实现接口，增加产品）；抽象工厂用来增加工厂的，他不能增加产品。</li>
+</ol>
 
 
 			
@@ -381,21 +377,89 @@ Theme by <a href="http://shashankmehta.in/archive/2012/greyshade.html">Shashank 
 	</div>
 
 
+<style>.mweb-charts{background:#fff;}
+body{ box-sizing: border-box;
+    margin: 0 auto;}
+@media print{
+    pre, code, pre code {
+     overflow: visible !important;
+     white-space: pre-wrap !important;       /* css-3 */
+     white-space: -moz-pre-wrap !important;  /* Mozilla, since 1999 */
+     white-space: -pre-wrap !important;      /* Opera 4-6 */
+     white-space: -o-pre-wrap !important;    /* Opera 7 */
+     word-wrap: break-word !important;       /* Internet Explorer 5.5+ */
+    }
+    html,body{margin:0;padding:4px;}
+}
 
-  
 
 
+div.code-toolbar {
+  position: relative;
+}
 
+div.code-toolbar > .toolbar {
+  position: absolute;
+  z-index: 10;
+  top: .3em;
+  right: .2em;
+  transition: opacity 0.3s ease-in-out;
+  opacity: 0;
+}
 
+div.code-toolbar:hover > .toolbar {
+  opacity: 1;
+}
 
+/* Separate line b/c rules are thrown out if selector is invalid.
+   IE11 and old Edge versions don't support :focus-within. */
+div.code-toolbar:focus-within > .toolbar {
+  opacity: 1;
+}
 
+div.code-toolbar > .toolbar > .toolbar-item {
+  display: inline-block;
+}
 
+div.code-toolbar > .toolbar > .toolbar-item > a {
+  cursor: pointer;
+}
 
+div.code-toolbar > .toolbar > .toolbar-item > button {
+  background: none;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  line-height: normal;
+  overflow: visible;
+  padding: 0;
+  -webkit-user-select: none; /* for button */
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
 
+div.code-toolbar > .toolbar > .toolbar-item > a,
+div.code-toolbar > .toolbar > .toolbar-item > button,
+div.code-toolbar > .toolbar > .toolbar-item > span {
+  color: inherit;
+  font-size: .8em;
+  padding: 4px .5em;
+  background: #f5f2f0;
+  background: rgba(224, 224, 224, 0.4);
+  box-shadow: 0 2px 0 0 rgba(0,0,0,0.2);
+  border-radius: .5em;
+}
 
-
-
-
+div.code-toolbar > .toolbar > .toolbar-item > a:hover,
+div.code-toolbar > .toolbar > .toolbar-item > a:focus,
+div.code-toolbar > .toolbar > .toolbar-item > button:hover,
+div.code-toolbar > .toolbar > .toolbar-item > button:focus,
+div.code-toolbar > .toolbar > .toolbar-item > span:hover,
+div.code-toolbar > .toolbar > .toolbar-item > span:focus {
+  color: inherit;
+  text-decoration: none;
+}
+</style><script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script><script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/line-numbers/prism-line-numbers.min.js"></script><script>!function(){if("undefined"!=typeof Prism&&"undefined"!=typeof document){var e=[],t={},n=function(){};Prism.plugins.toolbar={};var a=Prism.plugins.toolbar.registerButton=function(n,a){var r;r="function"==typeof a?a:function(e){var t;return"function"==typeof a.onClick?((t=document.createElement("button")).type="button",t.addEventListener("click",(function(){a.onClick.call(this,e)}))):"string"==typeof a.url?(t=document.createElement("a")).href=a.url:t=document.createElement("span"),a.className&&t.classList.add(a.className),t.textContent=a.text,t},n in t?console.warn('There is a button with the key "'+n+'" registered already.'):e.push(t[n]=r)},r=Prism.plugins.toolbar.hook=function(a){var r=a.element.parentNode;var l=a.element.classList;if(l.contains('language-mermaid') || l.contains('language-echarts') || l.contains('language-plantuml')){return;} if(r&&/pre/i.test(r.nodeName)&&!r.parentNode.classList.contains("code-toolbar")){var o=document.createElement("div");o.classList.add("code-toolbar"),r.parentNode.insertBefore(o,r),o.appendChild(r);var i=document.createElement("div");i.classList.add("toolbar");var l=e,d=function(e){for(;e;){var t=e.getAttribute("data-toolbar-order");if(null!=t)return(t=t.trim()).length?t.split(/\s*,\s*/g):[];e=e.parentElement}}(a.element);d&&(l=d.map((function(e){return t[e]||n}))),l.forEach((function(e){var t=e(a);if(t){var n=document.createElement("div");n.classList.add("toolbar-item"),n.appendChild(t),i.appendChild(n)}})),o.appendChild(i)}};a("label",(function(e){var t=e.element.parentNode;if(t&&/pre/i.test(t.nodeName)&&t.hasAttribute("data-label")){var n,a,r=t.getAttribute("data-label");try{a=document.querySelector("template#"+r)}catch(e){}return a?n=a.content:(t.hasAttribute("data-url")?(n=document.createElement("a")).href=t.getAttribute("data-url"):n=document.createElement("span"),n.textContent=r),n}})),Prism.hooks.add("complete",r)}}();</script><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/toolbar/prism-toolbar.min.css"><script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/copy-to-clipboard/prism-copy-to-clipboard.min.js"></script><script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/autoloader/prism-autoloader.min.js"></script><style>div.code-toolbar > .toolbar > .toolbar-item > a, div.code-toolbar > .toolbar > .toolbar-item > button, div.code-toolbar > .toolbar > .toolbar-item > span {padding: 4px .5em; background: #f5f2f0; background: rgba(224, 224, 224, 0.4);}</style>
 
 <style type="text/css">
 figure{margin: 1em 0;padding: 0;}

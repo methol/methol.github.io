@@ -4,7 +4,7 @@
   <title><![CDATA[Methol]]></title>
   <link href="https://tuzhihao.com/atom.xml" rel="self"/>
   <link href="https://tuzhihao.com/"/>
-  <updated>2022-12-12T14:44:11+08:00</updated>
+  <updated>2024-01-05T13:49:30+08:00</updated>
   <id>https://tuzhihao.com/</id>
   <author>
     <name><![CDATA[]]></name>
@@ -201,7 +201,7 @@ async function device_status(user_agent_info) {
 </code></pre>
 <h3><a id="%E6%A3%80%E6%9F%A5%E6%98%AF%E5%90%A6%E6%90%AD%E5%BB%BA%E6%88%90%E5%8A%9F" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>检查是否搭建成功</h3>
 <p>访问如下地址(host替换为你自己的)：<br />
-<a href="https://synocommunity-packages.tuzhihao.com/?build=42962&amp;language=enu&amp;arch=apollolake">https://synocommunity-packages.tuzhihao.com/?build=42962&amp;language=enu&amp;arch=apollolake</a></p>
+<a href="https://synocommunity-packages.xsf.me/?build=42962&amp;language=enu&amp;arch=apollolake">https://synocommunity-packages.xsf.me/?build=42962&amp;language=enu&amp;arch=apollolake</a></p>
 <p>检查返回的json里面的link地址是否已经被替换，成功替换就代表搭建成功，恭喜🎉<br />
 <img src="https://f1.xsf.me/20221208/WHITjf.png" alt="" /></p>
 
@@ -308,9 +308,9 @@ async function handleRequest(request) {
 <a href="https://github.com/pppscn/SmsForwarder">https://github.com/pppscn/SmsForwarder</a><br />
 <a href="https://github.com/telegram-sms/telegram-sms-china">https://github.com/telegram-sms/telegram-sms-china</a></p>
 <p>第一个是一个短信转发的软件，可以对接各种通知渠道，我用的是bark，体验非常好。<br />
-<img src="https://file1.tuzhihao.com/20221020/z6m8nF.png" alt="" /></p>
+<img src="https://f1.xsf.me/20221020/z6m8nF.png" alt="" /></p>
 <p>第二个是一个tg的软件，比单纯的转发短信多了手机状态的监控，还可以用它来发短信<br />
-<img src="https://file1.tuzhihao.com/20221020/wf8XHi.png" alt="" /><br />
+<img src="https://f1.xsf.me/20221020/wf8XHi.png" alt="" /><br />
 使用手机自带的4g网络，不连接wifi，即使家里断网也不用担心。tg无法国内直接访问，可以参考<a href="./16662544966970.html">这篇文章</a>，部署一个代理即可。</p>
 <p>安装两个的原因也很简单，主备比较可靠，第一个送达快，第二个有更多功能。<br />
 然后就是注意设置开机自启，防止清后台，就可以了。</p>
@@ -333,7 +333,7 @@ async function handleRequest(request) {
     <updated>2022-10-19T09:24:04+08:00</updated>
     <id>https://tuzhihao.com/16661426449923.html</id>
     <content type="html"><![CDATA[
-<p><img src="https://file1.tuzhihao.com/20221019/Ybv0U0.jpg" alt="" /></p>
+<p><img src="https://f1.xsf.me/20221019/Ybv0U0.jpg" alt="" /></p>
 <h2><a id="%E4%B8%BA%E4%BB%80%E4%B9%88%E4%BD%BF%E7%94%A8bcakblaze-b2" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>为什么使用bcakblaze B2</h2>
 <ul>
 <li>免费，有10G的免费空间</li>
@@ -343,13 +343,13 @@ async function handleRequest(request) {
 <p>怎么传图片就不赘述了，我用的是uPic，你可以用你喜欢的工具</p>
 <h2><a id="%E4%BD%BF%E7%94%A8bcakblaze-b2" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>使用bcakblaze B2</h2>
 <p>先注册，创建一个bucket<br />
-<img src="https://file1.tuzhihao.com/20221019/wIbtCx.png" alt="" /><br />
+<img src="https://f1.xsf.me/20221019/wIbtCx.png" alt="" /><br />
 然后上传一张图(也可以配置使用你的工具上传，或者网页上传)，然后记录如下信息</p>
 <ol>
 <li>Bucket Name</li>
 <li>Friendly URL里面的host</li>
 </ol>
-<p><img src="https://file1.tuzhihao.com/20221019/q1ZnJ9.png" alt="" /></p>
+<p><img src="https://f1.xsf.me/20221019/q1ZnJ9.png" alt="" /></p>
 <h2><a id="%E4%BD%BF%E7%94%A8cloudflare-workers" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>使用Cloudflare Workers</h2>
 <p>为什么使用wokers而不用cname的方式接入</p>
 <ul>
@@ -486,14 +486,14 @@ async function fileReq(event){
 <ol>
 <li>带有红外的智能手机请下载「IR Service Remote」的APP。</li>
 </ol>
-<p><a href="https://file1.tuzhihao.com/file/Service_Remote_Control_1.2.apk">Service_Remote_Control_1.2.apk</a></p>
+<p><a href="https://f1.xsf.me/file/Service_Remote_Control_1.2.apk">Service_Remote_Control_1.2.apk</a></p>
 <p>在电视处于亮屏的状态下，打开「IR Service remote」依次按下「S1」-「S2」即可进入工程模式菜单</p>
-<p><img src="https://pic.xsf.me/upic/20210418/214505-x5fw8P.png" alt="image-20210418212716653" /></p>
+<p><img src="https://f1.xsf.me/img/20240105/1lFb5v.jpg" alt="image-20210418212716653" /></p>
 <ol start="2">
 <li>
 <p>使用电视遥控器「方向键」将光标移动到「Option」选项，按一下「确定键」进入，然后使用手机拍照当前画面。进入之后可以看到「Local Set」选项是「CHI_DTV」，意味当前系统是国区。</p>
 <p>将光标移动到「Local Set」选项并按下「确定键」进入，在弹出的「Local Set List」列表里移到你想要切换的地区代码，美区选择「AD_AU2」，港区选择「HKG_DTV」，之后按下遥控器「确定键」后会自动返回。</p>
-<p><img src="https://pic.xsf.me/upic/20210418/214529-8B2zzw.png" alt="image-20210418212855744" /></p>
+<p><img src="https://f1.xsf.me/img/20240105/Tv1PoF.jpg" alt="image-20210418212855744" /></p>
 </li>
 <li>
 <p>再次进入到「MRT Option」选项，进入「Language Set」选项并确保此处参数显示为「China」，返回并进入「Region」确保此处参数显示为「asia_dtv」，其余的参数按照之前拍的照片依次复原即可。「Production Option」和「Engineer Option」同理。</p>
@@ -503,56 +503,26 @@ async function fileReq(event){
 </li>
 <li>
 <p>使用遥控器依次选择「设置」-「支持」-「自诊断」-「重置 Smart Hub」，输入 PIN 码「0000」后系统桌面会重启。</p>
-<p><img src="https://pic.xsf.me/upic/20210418/214531-b2YyAM.png" alt="image-20210418213026402" /></p>
+<p><img src="https://f1.xsf.me/img/20240105/tvutHc.jpg" alt="image-20210418213026402" /></p>
 </li>
 <li>
 <p>重启之后光标移动到「apps」会弹出「同意条款」页面，注意即便当前电视的系统语言为简体中文，但此页面应为英文界面。使用电视原厂遥控器在「同意条款」页面以此按下「静音」-「音量 +」-「频道 +」-「静音」按键，电视会弹出「Internet 服务位置设置」选项。选择香港。</p>
-<p><img src="https://pic.xsf.me/upic/20210418/214533-6bqY6X.png" alt="image-20210418213101873" /></p>
+<p><img src="https://f1.xsf.me/img/20240105/HvxepK.jpg" alt="image-20210418213101873" /></p>
 </li>
 <li>
 <p>最后同意协议，安装app就行了！</p>
-<p><img src="https://pic.xsf.me/upic/20210418/214535-hHG7r1.png" alt="image-20210418213749906" /></p>
+<p><img src="https://f1.xsf.me/img/20240105/q6Z7Mw.jpg" alt="image-20210418213749906" /></p>
 </li>
 </ol>
 <h2><a id="%E5%A4%87%E4%BB%BD%E5%8F%82%E6%95%B0%E6%88%AA%E5%9B%BE" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>备份参数截图</h2>
 <h3><a id="%E4%BF%AE%E6%94%B9%E5%89%8D%E5%9B%BD%E5%8C%BA" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>修改前(国区)</h3>
-<p><img src="https://pic.xsf.me/upic/20210418/214540-9KWi3f.png" alt="image-20210418213525967" /></p>
-<p><img src="https://pic.xsf.me/upic/20210418/214545-wC0kFH.png" alt="image-20210418213536752" /></p>
-<p><img src="https://pic.xsf.me/upic/20210418/214549-zvrLvw.png" alt="image-20210418213549420" /></p>
+<p><img src="https://f1.xsf.me/img/20240105/FwYhOw.jpg" alt="image-20210418213525967" /></p>
+<p><img src="https://f1.xsf.me/img/20240105/JObp1k.jpg" alt="image-20210418213536752" /></p>
+<p><img src="https://f1.xsf.me/img/20240105/YBIIEx.jpg" alt="image-20210418213549420" /></p>
 <h3><a id="%E4%BF%AE%E6%94%B9%E5%90%8E%E6%B8%AF%E5%8C%BA" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>修改后(港区)</h3>
-<p><img src="https://pic.xsf.me/upic/20210418/214551-2jMHOy.png" alt="image-20210418213446438" /></p>
-<p><img src="https://pic.xsf.me/upic/20210418/214554-aMRDcj.png" alt="image-20210418213500655" /></p>
-<p><img src="https://pic.xsf.me/upic/20210418/214558-B0a473.png" alt="image-20210418213510547" /></p>
-
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[防止iPhone自动下载iOS11升级]]></title>
-    <link href="https://tuzhihao.com/16661412450320.html"/>
-    <updated>2022-10-19T09:00:45+08:00</updated>
-    <id>https://tuzhihao.com/16661412450320.html</id>
-    <content type="html"><![CDATA[
-<h3><a id="%E5%AE%89%E8%A3%85tvos-beta%E6%8F%8F%E8%BF%B0%E6%96%87%E4%BB%B6" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>安装tvOS Beta描述文件</h3>
-<p>使用 iOS 端的 Safari 浏览器点击  <strong><a href="https://tuzhihao.com/upload/tvos/tvos11.mobileconfig">https://tuzhihao.com/upload/tvos/tvos11.mobileconfig</a></strong> 安装，或是使用 PC 下载后邮件发送到 iOS 设备，用自带的 Mail 打开也可安装。安装完成后重启手机，便不会再收到任何的系统更新了。</p>
-<h2><a id="%E5%B1%8F%E8%94%BD%E6%9B%B4%E6%96%B0%E7%9A%84%E5%8E%9F%E7%90%86" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>屏蔽更新的原理</h2>
-<p>安装了<code>tvOS 11 Beta Software Profile</code>，设备便会去检测 tvOS 10 Beta 版的更新，显而易见的是，tvOS 系统仅能适用于 Apple TV，iOS 设备安装该描述文件后，检测到的更新无法适用，便会显示 : 您的软件是最新版本。</p>
-<h2><a id="%E6%B3%A8%E6%84%8F%E4%BA%8B%E9%A1%B9" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>注意事项</h2>
-<ol>
-<li>
-<p>该描述文件能用到2019年，估计到时候应该有tvOS 12的Beta文件了。</p>
-</li>
-<li>
-<p>如果之前装了可以升级测试版系统的描述文件，删除原来安装的描述文件，再安装本文件。</p>
-</li>
-<li>
-<p>安装之后连接 iTunes 时依然会提示有系统更新，忽略即可。</p>
-</li>
-<li>
-<p>已经自动下载好安装包的用户，可以进入设置——通用里面，找到【储存空间与iCloud用量】——【管理储存空间与iCloud用量】里面删除掉已安装的升级包，然后再安装描述文件。</p>
-<p>​</p>
-</li>
-</ol>
+<p><img src="https://f1.xsf.me/img/20240105/9AhrmZ.jpg" alt="image-20210418213446438" /></p>
+<p><img src="https://f1.xsf.me/img/20240105/hrmdIQ.jpg" alt="image-20210418213500655" /></p>
+<p><img src="https://f1.xsf.me/img/20240105/ONd3Bx.jpg" alt="image-20210418213510547" /></p>
 
 ]]></content>
   </entry>
@@ -1022,7 +992,7 @@ public class OracleOperateFactory implements Factory {
 </ul>
 <h2><a id="%E5%8E%9F%E7%90%86" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>原理</h2>
 <p>布隆过滤器的核心实现是一个超大的位数组和几个哈希函数。假设数组的长度为m，哈希函数的个数为k。<br />
-<img src="https://pic.xsf.me/upic/20210418/214747-djSEpK.png" alt="布隆过滤器原理图" /><br />
+<img src="https://f1.xsf.me/img/20240105/fNIho5.jpg" alt="布隆过滤器原理图" /><br />
 如上图：假设集合里面有x,y,z，通过hash函数计算后的结果为a,b,c，那么w[a],w[b],w[c]都会表标记为1。假设现在有3个hash函数，如图3个不同颜色的线，分别计算出不同的结果，并标记为1。当判断某一个元素是否在一个集合的时候，就通过判断这三个hash的结果，如果都是1，说明该元素在这个集合中。如果有一个为0，说明该元素不在此集合中。因此，这也是存在误判的原因。<br />
 总的来说，bloom filter是以极低的的错误去换取空间和时间。</p>
 <h2><a id="%E4%BC%98%E7%82%B9" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>优点</h2>
@@ -1470,7 +1440,7 @@ order by distance asc;
 
 
 </code></pre>
-<p><img src="https://pic.xsf.me/upic/20210418/214849-WBvCWV.png" alt="离我最近查询实例" /></p>
+<p><img src="https://f1.xsf.me/img/20240105/PGgzEM.jpg" alt="离我最近查询实例" /></p>
 <p>数据下载:<br />
 <a href="media/16661412450896/dealer_insert.zip">dealer_insert.zip</a></p>
 
@@ -1496,10 +1466,10 @@ Intellij IDEA，启动脚本是 <code>/home/methol/software/idea-IU-162.1121.32/
 export XMODIFIERS
 </code></pre>
 <p>如图：<br />
-<img src="https://pic.xsf.me/upic/20210418/214922-q6TJTM.png" alt="IDEA脚本示例" /></p>
+<img src="https://f1.xsf.me/img/20240105/dSYXPB.jpg" alt="IDEA脚本示例" /></p>
 <p>Wine QQ的启动脚本是<code>/opt/longene/qq/qq.sh</code><br />
 如图：<br />
-<img src="https://pic.xsf.me/upic/20210418/214922-q6TJTM.png" alt="Wine QQ 脚本示例" /></p>
+<img src="https://f1.xsf.me/img/20240105/OW716w.jpg" alt="Wine QQ 脚本示例" /></p>
 
 ]]></content>
   </entry>
@@ -2633,7 +2603,7 @@ public class Main {
 <p>题目</p>
 </blockquote>
 <p>有一个由非负整数组成的三角形，第一行只有一个数，除了最下行之外每个数的左下方和右下方各有一个数，如下图：<br />
-<img src="https://pic.xsf.me/upic/20210418/214820-gw8zqJ.jpg" alt="题目" /><br />
+<img src="https://f1.xsf.me/img/20240105/xREB03.jpg" alt="题目" /><br />
 从第一行开始，每次可以往做下或右下走一格，直到走到最下行，把沿途经过的数全部加起来，如何走才能使得这个和最大。</p>
 <blockquote>
 <p>分析</p>
@@ -2797,6 +2767,49 @@ public class Main {
     return a[i][j] + Math.max(d[i+1][j], d[i+1][j+1]);
   }
 
+}
+</code></pre>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[八皇后问题]]></title>
+    <link href="https://tuzhihao.com/16661412449855.html"/>
+    <updated>2022-10-19T09:00:44+08:00</updated>
+    <id>https://tuzhihao.com/16661412449855.html</id>
+    <content type="html"><![CDATA[
+<pre><code class="language-c">#include &lt;iostream&gt;
+#include &lt;algorithm&gt;
+using namespace std;
+const int size=8;
+int eq[]={0,1,2,3,4,5,6,7};
+long cc=0;
+int eightqueen(){
+  while(next_permutation(eq,eq+8)){
+    bool ok=true;
+    int i,j;
+    //不可能存在同行同列，判断是不是相同对角线就可以了
+    for(i=0;i&lt;size &amp;&amp; ok;i++){
+      for(j=0;j&lt;size &amp;&amp; ok;j++){
+        if(i==j) continue;
+        if( (i-eq[i]==j-eq[j])||(i+eq[i]==j+eq[j]) ) //判断是不是在同一对角线
+          ok=false;
+      }
+    }
+    if(ok){
+      cc++;
+      for(i=0;i&lt;size;i++){
+        cout&lt;&lt;eq[i];
+      }
+      cout&lt;&lt;endl;
+    }
+  }
+  return cc;
+}
+int main(){
+  cout&lt;&lt;endl&lt;&lt;eightqueen()&lt;&lt;endl;
+  return 0;
 }
 </code></pre>
 

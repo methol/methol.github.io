@@ -124,397 +124,85 @@
 	<article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
 		<div class="meta">
 			<div class="date">
-				<time datetime="2017-05-14T09:00:44+08:00" itemprop="datePublished">2017/05/14</time>
+				<time datetime="2017-04-05T09:00:45+08:00" itemprop="datePublished">2017/04/05</time>
 			</div>
 			
 			 
 			
 		</div>
-		<h1 class="title" itemprop="name"><a href="16661412449464.html" itemprop="url">
-		布隆过滤器和Guava的实现</a></h1>
+		<h1 class="title" itemprop="name"><a href="16661412450896.html" itemprop="url">
+		MySql 空间索引</a></h1>
 		<div class="entry-content" itemprop="articleBody">
 			
-			<h2><a id="%E4%BB%8B%E7%BB%8D" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>介绍</h2>
-<p>布隆过滤器实际上是一个很长的二进制向量和一系列的随机映射函数。可用于检索一个元素是否在一个集合中。</p>
-<h2><a id="%E4%BD%BF%E7%94%A8%E5%9C%BA%E6%99%AF" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>使用场景</h2>
-<ul>
-<li>一个大型的爬虫网络中，判断某一个网址是否被访问过。</li>
-<li>大数据量的词语(句子)去重。</li>
-</ul>
-<h2><a id="%E5%8E%9F%E7%90%86" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>原理</h2>
-<p>布隆过滤器的核心实现是一个超大的位数组和几个哈希函数。假设数组的长度为m，哈希函数的个数为k。<br />
-<img src="https://pic.xsf.me/upic/20210418/214747-djSEpK.png" alt="布隆过滤器原理图" /><br />
-如上图：假设集合里面有x,y,z，通过hash函数计算后的结果为a,b,c，那么w[a],w[b],w[c]都会表标记为1。假设现在有3个hash函数，如图3个不同颜色的线，分别计算出不同的结果，并标记为1。当判断某一个元素是否在一个集合的时候，就通过判断这三个hash的结果，如果都是1，说明该元素在这个集合中。如果有一个为0，说明该元素不在此集合中。因此，这也是存在误判的原因。<br />
-总的来说，bloom filter是以极低的的错误去换取空间和时间。</p>
-<h2><a id="%E4%BC%98%E7%82%B9" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>优点</h2>
-<ul>
-<li>有很好的空间和时间效率。</li>
-<li>不存在漏报的问题，就是说如果元素存在的话，那必定的到的是正确的结果，这个元素确实是存在的。</li>
-<li>不是用原始数据进行的判断，对于某些敏感的数据也是可以适用的。</li>
-</ul>
-<h2><a id="%E7%BC%BA%E7%82%B9" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>缺点</h2>
-<ul>
-<li>误报率随着元素的增加，误报（将不存在的元素判定为存在）也会越严重。</li>
-<li>不能删除已添加的元素，因为是多个hash函数的结果值对应一个元素。</li>
-</ul>
-<h2><a id="%E8%87%AA%E5%B7%B1%E5%AE%9E%E7%8E%B0%E4%B8%80%E4%B8%AA%E7%AE%80%E5%8D%95%E7%9A%84bloomfilter" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>自己实现一个简单的BloomFilter</h2>
-<pre><code class="language-java">public interface BloomFilter&lt;T&gt; {
+			<p>Mysql5.7版本之后支持空间索引，试用下实现离我最近的功能。<br />
+感觉查询速度还是没有es快，但是小数据量也是一个可用的办法。</p>
+<pre><code class="language-sql">create database geo_test default charset = utf8mb4;
+use geo_test;
 
-    /**
-     * 添加一个数据到bloomfilter内
-     *
-     * @param element 要添加的元素
-     */
-    void add(T element);
+create table t_dealer
+(
+    id bigint not null auto_increment primary key,
+    dealer_name varchar(255) not null,
+    city_code varchar(45) null,
+    phone varchar(32) null,
+    lat decimal(10,7) null,
+    lon decimal(10,7) null,
+    create_time datetime null
+)default charset = utf8mb4;
+create index idx_name on t_dealer (dealer_name);
+comment on table t_dealer is '基本信息表';
+comment on column dealer_name is '@cname:名称';
+comment on column address is '@cname:地址';
+comment on column city_code is '@cname:城市编码';
+comment on column phone is '@cname:电话';
+comment on column lat is '@cname:纬度';
+comment on column lon is '@cname:经度';
+comment on column create_time is '@cname:创建时间';
 
-    /**
-     * 判断该过滤器内是否存在元素
-     *
-     * @param element 被判断的元素
-     * @return 是否存在
-     */
-    boolean contains(T element);
-}
+# 添加geo点
+alter table t_dealer
+add pnt POINT NULL comment '经纬度的geo点';
+# 从经纬度中补全数据
+update t_dealer set pnt = point(lat,lon);
+# 改为not null之后才能添加索引
+alter table t_dealer MODIFY pnt POINT not null;
+# 添加索引，这种索引要求字段not null
+ALTER TABLE t_dealer ADD SPATIAL INDEX spatIdx(pnt);
 
+ 
+# 几种空间对象比较方法 
+SET @g1 = GEOMFROMTEXT('Polygon((30.7108682140 114.0961681600,30.6890070000 114.5951950000,
+30.2507470000 114.5767980000,30.2507470000 114.1030670000,30.7108682140 114.0961681600))');
+SET @g2 = pointfromtext('Point(30.476421 114.403866)');
+ 
+# 注意：比较的都是外包络几何类型对象 
+# 包含
+select * from t_dealer where MBRCONTAINS(@g1,pnt);
+SELECT MBRCONTAINS(@g1,@g2), MBRCONTAINS(@g2,@g1), MBRCONTAINS(@g1,@g1);
+# 被包含
+select * from t_dealer where MBRWITHIN(pnt,@g1);
+SELECT MBRWITHIN(@g2,@g1),MBRWITHIN(@g1,@g2);
+# 不相交 
+SELECT MBRDISJOINT(@g1,@g2);
+# 相等 
+SELECT MBREQUAL(@g1,@g2);
+# 相交 
+SELECT MBRINTERSECTS(@g1,@g2);
+# 重叠 
+SELECT MBROVERLAPS(@g1,@g2);
+# 相切 
+SELECT MBRTOUCHES(@g1,@g2);
+# 距离 单位 m
+select id,dealer_name,city_code,phone,lat,lon,
+  GLength(LineStringFromWKB(linestring(pnt,pointfromtext('Point(30.476421 114.403866)'))))*100*1000 as distance
+from t_dealer
+order by distance asc;
 
-import java.util.BitSet;
-
-public class SimpleBloomFilter implements BloomFilter&lt;String&gt; {
-
-
-    /**
-     * 存储的bit容量
-     */
-    private static final int DEFAULT_SIZE = Integer.MAX_VALUE;
-
-    /**
-     * 存储标志位的bits
-     */
-    private BitSet bits = new BitSet(DEFAULT_SIZE);
-
-    /**
-     * 不同hash函数的种子
-     */
-    private static final int[] seeds = new int[]{113, 213, 3111, 397, 611, 532};
-    /**
-     * hash函数的数组
-     */
-    private SimpleHash[] hashFunction = new SimpleHash[seeds.length];
-
-    public SimpleBloomFilter() {
-        // 默认初始化 hashFunction
-        for (int i = 0; i &lt; seeds.length; i++) {
-            hashFunction[i] = new SimpleHash(DEFAULT_SIZE, seeds[i]);
-        }
-    }
-
-    @Override
-    public void add(String element) {
-        for (SimpleHash function : hashFunction) {
-            final int hash = function.hash(element);
-            bits.set(hash, true);
-        }
-    }
-
-    @Override
-    public boolean contains(String element) {
-        for (SimpleHash function : hashFunction) {
-            if (!bits.get(function.hash(element))) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private static class SimpleHash {
-
-        private int cap;
-        private int seed;
-
-        private SimpleHash(int cap, int seed) {
-            this.cap = cap;
-            this.seed = seed;
-        }
-
-        /**
-         * 简单的写一个hash算法
-         */
-        public int hash(String value) {
-            int result = 0;
-            int len = value.length();
-            for (int i = 0; i &lt; len; i++) {
-                result = seed * result + value.charAt(i) + value.hashCode();
-            }
-            // 把值的范围控制在cap内
-            return (cap - 1) &amp; result;
-        }
-    }
-}
 
 </code></pre>
-<h2><a id="guava%E4%B8%AD%E7%9A%84bloomfilter" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>Guava中的BloomFilter</h2>
-<p>主要是两个类，<code>com.google.common.hash.BloomFilter</code>和<code>com.google.common.hash.BloomFilterStrategies</code>。</p>
-<pre><code class="language-java">  /** The bit set of the BloomFilter (not necessarily power of 2!) */
-  private final BitArray bits;
-
-  /** Number of hashes per element */
-  private final int numHashFunctions;
-
-  /** The funnel to translate Ts to bytes */
-  private final Funnel&lt;? super T&gt; funnel;
-
-  /**
-   * The strategy we employ to map an element T to {@code numHashFunctions} bit indexes.
-   */
-  private final Strategy strategy;
-</code></pre>
-<p>四个成员变量，<code>BitArray</code>是<code>BloomFilterStrategies</code>中的静态内部类。作用和上面的<code>BitSet</code>类似。有基本的get和set方法，同时提供了一些其他常用的方法。</p>
-<pre><code class="language-java">  static final class BitArray {
-    final long[] data;
-    long bitCount;
-
-    BitArray(long bits) {
-      this(new long[Ints.checkedCast(LongMath.divide(bits, 64, RoundingMode.CEILING))]);
-    }
-
-    // Used by serialization
-    BitArray(long[] data) {
-      checkArgument(data.length &gt; 0, &quot;data length is zero!&quot;);
-      this.data = data;
-      long bitCount = 0;
-      for (long value : data) {
-        bitCount += Long.bitCount(value);
-      }
-      this.bitCount = bitCount;
-    }
-
-    /** Returns true if the bit changed value. */
-    boolean set(long index) {
-      if (!get(index)) {
-        data[(int) (index &gt;&gt;&gt; 6)] |= (1L &lt;&lt; index);
-        bitCount++;
-        return true;
-      }
-      return false;
-    }
-
-    boolean get(long index) {
-      return (data[(int) (index &gt;&gt;&gt; 6)] &amp; (1L &lt;&lt; index)) != 0;
-    }
-
-    /** Number of bits */
-    long bitSize() {
-      return (long) data.length * Long.SIZE;
-    }
-
-    /** Number of set bits (1s) */
-    long bitCount() {
-      return bitCount;
-    }
-
-    BitArray copy() {
-      return new BitArray(data.clone());
-    }
-
-    /** Combines the two BitArrays using bitwise OR. */
-    void putAll(BitArray array) {
-      checkArgument(
-          data.length == array.data.length,
-          &quot;BitArrays must be of equal length (%s != %s)&quot;,
-          data.length,
-          array.data.length);
-      bitCount = 0;
-      for (int i = 0; i &lt; data.length; i++) {
-        data[i] |= array.data[i];
-        bitCount += Long.bitCount(data[i]);
-      }
-    }
-
-    @Override
-    public boolean equals(@Nullable Object o) {
-      if (o instanceof BitArray) {
-        BitArray bitArray = (BitArray) o;
-        return Arrays.equals(data, bitArray.data);
-      }
-      return false;
-    }
-
-    @Override
-    public int hashCode() {
-      return Arrays.hashCode(data);
-    }
-  }
-</code></pre>
-<p><code>numHashFunctions</code>是表示一个元素对应了几个hash函数，和上面<code>hashFunction.length</code>是一个意思。<br />
-<code>strategy</code>是把元素映射为hash值的策略，类似上面的<code>hashFunction</code>。<code>BloomFilter</code>定了了<code>Strategy</code>接口。<code>put</code>方法把<code>numHashFunctions</code>个通过计算后的值放入bitArray中。<code>mightContain</code>返回该过滤器是否可能含有元素T。<code>ordinal</code>就是枚举类的<code>ordinal()</code>。</p>
-<pre><code class="language-java">  interface Strategy extends java.io.Serializable {
-
-    /**
-     * Sets {@code numHashFunctions} bits of the given bit array, by hashing a user element.
-     *
-     * &lt;p&gt;Returns whether any bits changed as a result of this operation.
-     */
-    &lt;T&gt; boolean put(T object, Funnel&lt;? super T&gt; funnel, int numHashFunctions, BitArray bits);
-
-    /**
-     * Queries {@code numHashFunctions} bits of the given bit array, by hashing a user element;
-     * returns {@code true} if and only if all selected bits are set.
-     */
-    &lt;T&gt; boolean mightContain(
-        T object, Funnel&lt;? super T&gt; funnel, int numHashFunctions, BitArray bits);
-
-    /**
-     * Identifier used to encode this strategy, when marshalled as part of a BloomFilter. Only
-     * values in the [-128, 127] range are valid for the compact serial form. Non-negative values
-     * are reserved for enums defined in BloomFilterStrategies; negative values are reserved for any
-     * custom, stateful strategy we may define (e.g. any kind of strategy that would depend on user
-     * input).
-     */
-    int ordinal();
-  }
-</code></pre>
-<p>并在<code>BloomFilterStrategies</code>中给出了两个实现的枚举。</p>
-<pre><code class="language-java">  MURMUR128_MITZ_32() {
-    @Override
-    public &lt;T&gt; boolean put(
-        T object, Funnel&lt;? super T&gt; funnel, int numHashFunctions, BitArray bits) {
-      long bitSize = bits.bitSize();
-      long hash64 = Hashing.murmur3_128().hashObject(object, funnel).asLong();
-      int hash1 = (int) hash64;
-      int hash2 = (int) (hash64 &gt;&gt;&gt; 32);
-
-      boolean bitsChanged = false;
-      for (int i = 1; i &lt;= numHashFunctions; i++) {
-        int combinedHash = hash1 + (i * hash2);
-        // Flip all the bits if it's negative (guaranteed positive number)
-        if (combinedHash &lt; 0) {
-          combinedHash = ~combinedHash;
-        }
-        bitsChanged |= bits.set(combinedHash % bitSize);
-      }
-      return bitsChanged;
-    }
-
-    @Override
-    public &lt;T&gt; boolean mightContain(
-        T object, Funnel&lt;? super T&gt; funnel, int numHashFunctions, BitArray bits) {
-      long bitSize = bits.bitSize();
-      long hash64 = Hashing.murmur3_128().hashObject(object, funnel).asLong();
-      int hash1 = (int) hash64;
-      int hash2 = (int) (hash64 &gt;&gt;&gt; 32);
-
-      for (int i = 1; i &lt;= numHashFunctions; i++) {
-        int combinedHash = hash1 + (i * hash2);
-        // Flip all the bits if it's negative (guaranteed positive number)
-        if (combinedHash &lt; 0) {
-          combinedHash = ~combinedHash;
-        }
-        if (!bits.get(combinedHash % bitSize)) {
-          return false;
-        }
-      }
-      return true;
-    }
-  },
-  /**
-   * This strategy uses all 128 bits of {@link Hashing#murmur3_128} when hashing. It looks different
-   * than the implementation in MURMUR128_MITZ_32 because we're avoiding the multiplication in the
-   * loop and doing a (much simpler) += hash2. We're also changing the index to a positive number by
-   * AND'ing with Long.MAX_VALUE instead of flipping the bits.
-   */
-  MURMUR128_MITZ_64() {
-    @Override
-    public &lt;T&gt; boolean put(
-        T object, Funnel&lt;? super T&gt; funnel, int numHashFunctions, BitArray bits) {
-      long bitSize = bits.bitSize();
-      byte[] bytes = Hashing.murmur3_128().hashObject(object, funnel).getBytesInternal();
-      long hash1 = lowerEight(bytes);
-      long hash2 = upperEight(bytes);
-
-      boolean bitsChanged = false;
-      long combinedHash = hash1;
-      for (int i = 0; i &lt; numHashFunctions; i++) {
-        // Make the combined hash positive and indexable
-        bitsChanged |= bits.set((combinedHash &amp; Long.MAX_VALUE) % bitSize);
-        combinedHash += hash2;
-      }
-      return bitsChanged;
-    }
-
-    @Override
-    public &lt;T&gt; boolean mightContain(
-        T object, Funnel&lt;? super T&gt; funnel, int numHashFunctions, BitArray bits) {
-      long bitSize = bits.bitSize();
-      byte[] bytes = Hashing.murmur3_128().hashObject(object, funnel).getBytesInternal();
-      long hash1 = lowerEight(bytes);
-      long hash2 = upperEight(bytes);
-
-      long combinedHash = hash1;
-      for (int i = 0; i &lt; numHashFunctions; i++) {
-        // Make the combined hash positive and indexable
-        if (!bits.get((combinedHash &amp; Long.MAX_VALUE) % bitSize)) {
-          return false;
-        }
-        combinedHash += hash2;
-      }
-      return true;
-    }
-
-    private /* static */ long lowerEight(byte[] bytes) {
-      return Longs.fromBytes(
-          bytes[7], bytes[6], bytes[5], bytes[4], bytes[3], bytes[2], bytes[1], bytes[0]);
-    }
-
-    private /* static */ long upperEight(byte[] bytes) {
-      return Longs.fromBytes(
-          bytes[15], bytes[14], bytes[13], bytes[12], bytes[11], bytes[10], bytes[9], bytes[8]);
-    }
-  };
-</code></pre>
-<p>Guava就是选取了这两个hash算法中的一个，创建一个BloomFilter可以指定其中的一个算法，具体的算法逻辑可以参看<a href="http://www.cyhone.com/2017/02/07/Introduce-to-BloomFilter/">解读BloomFilter算法</a><br />
-使用实例：</p>
-<pre><code class="language-java">    private static void bloomFilter() throws Exception {
-        final BloomFilter&lt;String&gt; dealIdBloomFilter = BloomFilter.create(new Funnel&lt;String&gt;() {
-            @Override
-            public void funnel(String from, PrimitiveSink into) {
-                into.putString(from, Charsets.UTF_8);
-            }
-        }, 3000000, 0.0000001d);
-        BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(new File(&quot;C:\\Users\\Methol\\Desktop\\jiaokao-word.txt&quot;)), &quot;utf-8&quot;));
-        String line;
-        int i = 0;
-        StringBuilder sb = new StringBuilder();
-        while ((line = br.readLine()) != null) {
-            if (!dealIdBloomFilter.mightContain(line)) {
-                dealIdBloomFilter.put(line);
-                sb.append(line).append(&quot;\n&quot;);
-                i++;
-            }
-            if (i % 1000 == 0) {
-                FileUtils.write(new File(&quot;C:\\Users\\Methol\\Desktop\\bloomFilterDistinct.txt&quot;),
-                        sb.toString(), Charsets.UTF_8, true);
-                sb = new StringBuilder();
-            }
-        }
-        FileUtils.write(new File(&quot;C:\\Users\\Methol\\Desktop\\bloomFilterDistinct.txt&quot;),
-                sb.toString(), Charsets.UTF_8, true);
-    }
-</code></pre>
-<h2><a id="%E6%89%A9%E5%B1%95" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>扩展</h2>
-<p>同样对大数据量的内容进行滤重，当时还想到了用spark，不过这个真的有点大炮打小鸟的感觉，用起来代码是非常简单，但是单单就滤重这件事来说，还是BloomFilter好用。<br />
-800w行的句子，滤重后有200w，spark的用时比BloomFilter略多。<br />
-贴一段spark的代码：</p>
-<pre><code class="language-java">    private static void spark() {
-        System.setProperty(&quot;hadoop.home.dir&quot;, &quot;D:\\server\\hadoop-common-2.2.0\\&quot;);
-        SparkConf conf = new SparkConf().setAppName(&quot;Text String Distinct&quot;).setMaster(&quot;local&quot;).set(&quot;spark.executor.memory&quot;, &quot;1g&quot;);
-        JavaSparkContext sc = new JavaSparkContext(conf);
-        JavaRDD&lt;String&gt; textFile = sc.textFile(&quot;C:\\Users\\Methol\\Desktop\\jiaokao-word.txt&quot;);
-        final JavaRDD&lt;String&gt; distinct = textFile.distinct();
-        final long count = distinct.count();
-        System.out.println(count);
-        distinct.coalesce(1).saveAsTextFile(&quot;C:\\Users\\Methol\\Desktop\\distinct&quot;);
-    }
-</code></pre>
+<p><img src="https://f1.xsf.me/img/20240105/PGgzEM.jpg" alt="离我最近查询实例" /></p>
+<p>数据下载:<br />
+<a href="media/16661412450896/dealer_insert.zip">dealer_insert.zip</a></p>
 
 
 			
@@ -545,21 +233,89 @@ Theme by <a href="http://shashankmehta.in/archive/2012/greyshade.html">Shashank 
 	</div>
 
 
+<style>.mweb-charts{background:#fff;}
+body{ box-sizing: border-box;
+    margin: 0 auto;}
+@media print{
+    pre, code, pre code {
+     overflow: visible !important;
+     white-space: pre-wrap !important;       /* css-3 */
+     white-space: -moz-pre-wrap !important;  /* Mozilla, since 1999 */
+     white-space: -pre-wrap !important;      /* Opera 4-6 */
+     white-space: -o-pre-wrap !important;    /* Opera 7 */
+     word-wrap: break-word !important;       /* Internet Explorer 5.5+ */
+    }
+    html,body{margin:0;padding:4px;}
+}
 
-  
 
 
+div.code-toolbar {
+  position: relative;
+}
 
+div.code-toolbar > .toolbar {
+  position: absolute;
+  z-index: 10;
+  top: .3em;
+  right: .2em;
+  transition: opacity 0.3s ease-in-out;
+  opacity: 0;
+}
 
+div.code-toolbar:hover > .toolbar {
+  opacity: 1;
+}
 
+/* Separate line b/c rules are thrown out if selector is invalid.
+   IE11 and old Edge versions don't support :focus-within. */
+div.code-toolbar:focus-within > .toolbar {
+  opacity: 1;
+}
 
+div.code-toolbar > .toolbar > .toolbar-item {
+  display: inline-block;
+}
 
+div.code-toolbar > .toolbar > .toolbar-item > a {
+  cursor: pointer;
+}
 
+div.code-toolbar > .toolbar > .toolbar-item > button {
+  background: none;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  line-height: normal;
+  overflow: visible;
+  padding: 0;
+  -webkit-user-select: none; /* for button */
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
 
+div.code-toolbar > .toolbar > .toolbar-item > a,
+div.code-toolbar > .toolbar > .toolbar-item > button,
+div.code-toolbar > .toolbar > .toolbar-item > span {
+  color: inherit;
+  font-size: .8em;
+  padding: 4px .5em;
+  background: #f5f2f0;
+  background: rgba(224, 224, 224, 0.4);
+  box-shadow: 0 2px 0 0 rgba(0,0,0,0.2);
+  border-radius: .5em;
+}
 
-
-
-
+div.code-toolbar > .toolbar > .toolbar-item > a:hover,
+div.code-toolbar > .toolbar > .toolbar-item > a:focus,
+div.code-toolbar > .toolbar > .toolbar-item > button:hover,
+div.code-toolbar > .toolbar > .toolbar-item > button:focus,
+div.code-toolbar > .toolbar > .toolbar-item > span:hover,
+div.code-toolbar > .toolbar > .toolbar-item > span:focus {
+  color: inherit;
+  text-decoration: none;
+}
+</style><script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script><script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/line-numbers/prism-line-numbers.min.js"></script><script>!function(){if("undefined"!=typeof Prism&&"undefined"!=typeof document){var e=[],t={},n=function(){};Prism.plugins.toolbar={};var a=Prism.plugins.toolbar.registerButton=function(n,a){var r;r="function"==typeof a?a:function(e){var t;return"function"==typeof a.onClick?((t=document.createElement("button")).type="button",t.addEventListener("click",(function(){a.onClick.call(this,e)}))):"string"==typeof a.url?(t=document.createElement("a")).href=a.url:t=document.createElement("span"),a.className&&t.classList.add(a.className),t.textContent=a.text,t},n in t?console.warn('There is a button with the key "'+n+'" registered already.'):e.push(t[n]=r)},r=Prism.plugins.toolbar.hook=function(a){var r=a.element.parentNode;var l=a.element.classList;if(l.contains('language-mermaid') || l.contains('language-echarts') || l.contains('language-plantuml')){return;} if(r&&/pre/i.test(r.nodeName)&&!r.parentNode.classList.contains("code-toolbar")){var o=document.createElement("div");o.classList.add("code-toolbar"),r.parentNode.insertBefore(o,r),o.appendChild(r);var i=document.createElement("div");i.classList.add("toolbar");var l=e,d=function(e){for(;e;){var t=e.getAttribute("data-toolbar-order");if(null!=t)return(t=t.trim()).length?t.split(/\s*,\s*/g):[];e=e.parentElement}}(a.element);d&&(l=d.map((function(e){return t[e]||n}))),l.forEach((function(e){var t=e(a);if(t){var n=document.createElement("div");n.classList.add("toolbar-item"),n.appendChild(t),i.appendChild(n)}})),o.appendChild(i)}};a("label",(function(e){var t=e.element.parentNode;if(t&&/pre/i.test(t.nodeName)&&t.hasAttribute("data-label")){var n,a,r=t.getAttribute("data-label");try{a=document.querySelector("template#"+r)}catch(e){}return a?n=a.content:(t.hasAttribute("data-url")?(n=document.createElement("a")).href=t.getAttribute("data-url"):n=document.createElement("span"),n.textContent=r),n}})),Prism.hooks.add("complete",r)}}();</script><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/toolbar/prism-toolbar.min.css"><script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/copy-to-clipboard/prism-copy-to-clipboard.min.js"></script><script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/autoloader/prism-autoloader.min.js"></script><style>div.code-toolbar > .toolbar > .toolbar-item > a, div.code-toolbar > .toolbar > .toolbar-item > button, div.code-toolbar > .toolbar > .toolbar-item > span {padding: 4px .5em; background: #f5f2f0; background: rgba(224, 224, 224, 0.4);}</style>
 
 <style type="text/css">
 figure{margin: 1em 0;padding: 0;}

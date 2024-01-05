@@ -124,49 +124,49 @@
 	<article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
 		<div class="meta">
 			<div class="date">
-				<time datetime="2015-03-29T09:00:44+08:00" itemprop="datePublished">2015/03/29</time>
+				<time datetime="2015-03-20T09:00:45+08:00" itemprop="datePublished">2015/03/20</time>
 			</div>
 			
 			 
 			
 		</div>
-		<h1 class="title" itemprop="name"><a href="16661412449855.html" itemprop="url">
-		八皇后问题</a></h1>
+		<h1 class="title" itemprop="name"><a href="16661412451218.html" itemprop="url">
+		Class.forName的作用以及为什么要用它</a></h1>
 		<div class="entry-content" itemprop="articleBody">
 			
-			<pre><code class="language-c">#include &lt;iostream&gt;
-#include &lt;algorithm&gt;
-using namespace std;
-const int size=8;
-int eq[]={0,1,2,3,4,5,6,7};
-long cc=0;
-int eightqueen(){
-  while(next_permutation(eq,eq+8)){
-    bool ok=true;
-    int i,j;
-    //不可能存在同行同列，判断是不是相同对角线就可以了
-    for(i=0;i&lt;size &amp;&amp; ok;i++){
-      for(j=0;j&lt;size &amp;&amp; ok;j++){
-        if(i==j) continue;
-        if( (i-eq[i]==j-eq[j])||(i+eq[i]==j+eq[j]) ) //判断是不是在同一对角线
-          ok=false;
-      }
-    }
-    if(ok){
-      cc++;
-      for(i=0;i&lt;size;i++){
-        cout&lt;&lt;eq[i];
-      }
-      cout&lt;&lt;endl;
-    }
-  }
-  return cc;
-}
-int main(){
-  cout&lt;&lt;endl&lt;&lt;eightqueen()&lt;&lt;endl;
-  return 0;
-}
-</code></pre>
+			<p><code>Class.forName(xxx.xx.xx)</code> 返回的是一个类</p>
+<p>首先你要明白在java里面任何class都要装载在虚拟机上才能运行。这句话就是装载类用的(和new 不一样，要分清楚)。</p>
+<p>至于什么时候用，你可以考虑一下这个问题，给你一个字符串变量，它代表一个类的包名和类名，你怎么实例化它？只有你提到的这个方法了，不过要再加一点。<br />
+<code>A a = (A)Class.forName(“pacage.A”).newInstance();</code><br />
+这和你<br />
+<code>A a = new A()；</code><br />
+是一样的效果。</p>
+<p>关于补充的问题<br />
+答案是肯定的，jvm会执行静态代码段，你要记住一个概念，静态代码是和class绑定的，class装载成功就表示执行了你的静态代码了。而且以后不会再走这段静态代码了。</p>
+<p><code>Class.forName(xxx.xx.xx);</code> 返回的是一个类<br />
+<code>Class.forName(xxx.xx.xx);</code>的作用是要求JVM查找并加载指定的类，也就是说JVM会执行该类的静态代码段</p>
+<p>动态加载和创建Class 对象，比如想根据用户输入的字符串来创建对象<br />
+String str = 用户输入的字符串<br />
+<code>Class t = Class.forName(str);</code><br />
+<code>t.newInstance();</code></p>
+<p>在初始化一个类，生成一个实例的时候，newInstance()方法和new关键字除了一个是方法，一个是关键字外，最主要有什么区别？它们的区别在于创建对象的方式不一样，前者是使用类加载机制，后者是创建一个新类。那么为什么会有两种创建对象方式？这主要考虑到软件的可伸缩、可扩展和可重用等软件设计思想。</p>
+<p>Java中工厂模式经常使用newInstance()方法来创建对象，因此从为什么要使用工厂模式上可以找到具体答案。 例如：<br />
+class c = Class.forName(“Example”);<br />
+factory = (ExampleInterface)c.newInstance();</p>
+<p>其中ExampleInterface是Example的接口，可以写成如下形式：<br />
+String className = “Example”;<br />
+class c = Class.forName(className);<br />
+factory = (ExampleInterface)c.newInstance();</p>
+<p>进一步可以写成如下形式：<br />
+String className = readfromXMlConfig;//从xml 配置文件中获得字符串<br />
+class c = Class.forName(className);<br />
+factory = (ExampleInterface)c.newInstance();</p>
+<p>上面代码已经不存在Example的类名称，它的优点是，无论Example类怎么变化，上述代码不变，甚至可以更换Example的兄弟类Example2 , Example3 , Example4……，只要他们继承ExampleInterface就可以。</p>
+<p>从JVM的角度看，我们使用关键字new创建一个类的时候，这个类可以没有被加载。但是使用newInstance()方法的时候，就必须保证：1、这个类已经加载；2、这个类已经连接了。而完成上面两个步骤的正是Class的静态方法forName()所完成的，这个静态方法调用了启动类加载器，即加载java API的那个加载器。</p>
+<p>现在可以看出，newInstance()实际上是把new这个方式分解为两步，即首先调用Class加载方法加载某个类，然后实例化。 这样分步的好处是显而易见的。我们可以在调用class的静态加载方法forName时获得更好的灵活性，提供给了一种降耦的手段。</p>
+<p>最后用最简单的描述来区分new关键字和newInstance()方法的区别：<br />
+<strong>newInstance: 弱类型。低效率。只能调用无参构造。<br />
+new: 强类型。相对高效。能调用任何public构造。</strong></p>
 
 
 			
@@ -197,21 +197,89 @@ Theme by <a href="http://shashankmehta.in/archive/2012/greyshade.html">Shashank 
 	</div>
 
 
+<style>.mweb-charts{background:#fff;}
+body{ box-sizing: border-box;
+    margin: 0 auto;}
+@media print{
+    pre, code, pre code {
+     overflow: visible !important;
+     white-space: pre-wrap !important;       /* css-3 */
+     white-space: -moz-pre-wrap !important;  /* Mozilla, since 1999 */
+     white-space: -pre-wrap !important;      /* Opera 4-6 */
+     white-space: -o-pre-wrap !important;    /* Opera 7 */
+     word-wrap: break-word !important;       /* Internet Explorer 5.5+ */
+    }
+    html,body{margin:0;padding:4px;}
+}
 
-  
 
 
+div.code-toolbar {
+  position: relative;
+}
 
+div.code-toolbar > .toolbar {
+  position: absolute;
+  z-index: 10;
+  top: .3em;
+  right: .2em;
+  transition: opacity 0.3s ease-in-out;
+  opacity: 0;
+}
 
+div.code-toolbar:hover > .toolbar {
+  opacity: 1;
+}
 
+/* Separate line b/c rules are thrown out if selector is invalid.
+   IE11 and old Edge versions don't support :focus-within. */
+div.code-toolbar:focus-within > .toolbar {
+  opacity: 1;
+}
 
+div.code-toolbar > .toolbar > .toolbar-item {
+  display: inline-block;
+}
 
+div.code-toolbar > .toolbar > .toolbar-item > a {
+  cursor: pointer;
+}
 
+div.code-toolbar > .toolbar > .toolbar-item > button {
+  background: none;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  line-height: normal;
+  overflow: visible;
+  padding: 0;
+  -webkit-user-select: none; /* for button */
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
 
+div.code-toolbar > .toolbar > .toolbar-item > a,
+div.code-toolbar > .toolbar > .toolbar-item > button,
+div.code-toolbar > .toolbar > .toolbar-item > span {
+  color: inherit;
+  font-size: .8em;
+  padding: 4px .5em;
+  background: #f5f2f0;
+  background: rgba(224, 224, 224, 0.4);
+  box-shadow: 0 2px 0 0 rgba(0,0,0,0.2);
+  border-radius: .5em;
+}
 
-
-
-
+div.code-toolbar > .toolbar > .toolbar-item > a:hover,
+div.code-toolbar > .toolbar > .toolbar-item > a:focus,
+div.code-toolbar > .toolbar > .toolbar-item > button:hover,
+div.code-toolbar > .toolbar > .toolbar-item > button:focus,
+div.code-toolbar > .toolbar > .toolbar-item > span:hover,
+div.code-toolbar > .toolbar > .toolbar-item > span:focus {
+  color: inherit;
+  text-decoration: none;
+}
+</style>
 
 <style type="text/css">
 figure{margin: 1em 0;padding: 0;}

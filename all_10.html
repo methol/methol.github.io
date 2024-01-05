@@ -124,33 +124,263 @@
 	<article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
 		<div class="meta">
 			<div class="date">
-				<time datetime="2016-07-19T09:00:45+08:00" itemprop="datePublished">2016/07/19</time>
+				<time datetime="2016-04-11T09:00:45+08:00" itemprop="datePublished">2016/04/11</time>
 			</div>
 			
 			 
 			
 		</div>
-		<h1 class="title" itemprop="name"><a href="16661412450247.html" itemprop="url">
-		ubuntu部分软件不能使用中文输入法</a></h1>
+		<h1 class="title" itemprop="name"><a href="16661412450064.html" itemprop="url">
+		web上传文件夹</a></h1>
 		<div class="entry-content" itemprop="articleBody">
 			
-			<p>ubuntu安装了fcitx之后，安装了搜狗输入法，但是还是不能在wine下的QQ下输入中文，包括Intellij IDEA有时候也不行。<br />
-看网上的教程，好像是因为有ibus的存在，而且默认为ibus，所以才不行的，有一个简单的解决办法，就是在这些软件的启动脚本前加一行命令，就可以解决了。<br />
-例如：<br />
-Intellij IDEA，启动脚本是 <code>/home/methol/software/idea-IU-162.1121.32/bin/idea.sh</code>，使用vim编辑，在下面这段文字前加上这段话。</p>
-<pre><code class="language-plain_text"># ---------------------------------------------------------------------
-# Run the IDE.
-# ---------------------------------------------------------------------
+			<p>使用html5的api来上传文件夹，只有chrome支持。</p>
+<pre><code class="language-html">&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;head&gt;
+  &lt;meta charset=&quot;UTF-8&quot;&gt;
+  &lt;title&gt;Title&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;input id=&quot;upload&quot; type='file' name=&quot;file&quot; webkitdirectory&gt;
+&lt;button id=&quot;button&quot;&gt;按钮&lt;/button&gt;
+&lt;/body&gt;
+&lt;script src=&quot;//libs.useso.com/js/jquery/1.11.1/jquery.min.js&quot; type=&quot;text/javascript&quot;&gt;&lt;/script&gt;
+&lt;script type=&quot;text/javascript&quot;&gt;
+  function Map() {
+    /**
+     * 结构
+     * @param key
+     * @param value
+     */
+    function Struct(key, value) {
+      this.key = key;
+      this.value = value;
+    }
+
+    /**
+     * 数据存放数组
+     */
+    this.arr = [];
+    /**
+     * 增加数据
+     * @param key {String}
+     * @param value {Object}
+     */
+    this.put = function (key, value) {
+      for (var i = 0; i &lt; this.arr.length; i++) {
+        if (this.arr[i].key === key) {
+          this.arr[i].value = value;
+          return;
+        }
+      }
+      this.arr[this.arr.length] = new Struct(key, value);
+    };
+    /**
+     * 通过key获取数据
+     * @param key {String}
+     * @returns {Object}
+     */
+    this.get = function (key) {
+      for (var i = 0; i &lt; this.arr.length; i++) {
+        if (this.arr[i].key === key) {
+          return this.arr[i].value;
+        }
+      }
+      return null;
+    };
+    /**
+     * 删除数据
+     * @param key{String}
+     */
+    this.remove = function (key) {
+      var v;
+      for (var i = 0; i &lt; this.arr.length; i++) {
+        v = this.arr[i];
+        if (v.key === key) {
+          this.arr.splice(i, 1);
+          return;
+        }
+      }
+    };
+    /**
+     * 是否存在key
+     * @param key {String}
+     * @returns {boolean}
+     */
+    this.containsKey = function (key) {
+      var v;
+      for (var i = 0; i &lt; this.arr.length; i++) {
+        v = this.arr[i];
+        if (v.key === key) {
+          return true;
+        }
+      }
+      return false;
+    };
+    /**
+     * 获取map数据量
+     * @returns {Number}
+     */
+    this.size = function () {
+      return this.arr.length;
+    };
+    /**
+     * 判断Map是否为空
+     * @returns {boolean}
+     */
+    this.isEmpty = function () {
+      return this.arr.length &lt;= 0;
+    };
+    /**
+     * 全部清空
+     */
+    this.removeAll = function () {
+      this.arr = [];
+    };
+  }
+&lt;/script&gt;
+&lt;script type=&quot;text/javascript&quot;&gt;
+  var host = &quot;http://example.com&quot;;  // 远程服务器地址
+  var map = new Map();  // 用来存放文件夹路径和id的键值对
+  var files = [];
+
+  $(&quot;#upload&quot;).change(function () {
+    files = this.files;
+    console.log(files);
+  });
+
+  $(&quot;#button&quot;).on(&quot;click&quot;, function () {
+    for (var i = 0; i &lt; files.length; i++) {
+      var file = files[i];
+      console.log(file);
+      var path = getFolder(file.webkitRelativePath);
+      var folderId = getFolderIdFromMap(path);
+      // 创建文件
+      uploadResource(file, folderId, 10001);
+    }
+  });
+
+  function uploadResource(file, folderId, projectId) {
+    var filepath = null;
+    var formData = new FormData();
+    formData.append(&quot;text&quot;, file);
+    $.ajax({
+      url: host + &quot;/sys/upload/uploadProjectResource&quot;,
+      type: &quot;POST&quot;,
+      data: formData,
+      xhrFields: {
+        withCredentials: true // 确保请求会携带上Cookie
+      },
+      enctype: 'multipart/form-data',
+      processData: false,  // tell jQuery not to process the data
+      contentType: false,
+      complete: function (respResult) {
+        if (respResult.status == 200) {
+          filepath = respResult.responseText;
+          $.ajax({
+            url: host + &quot;/project/resource/create&quot;,
+            type: &quot;post&quot;,
+            dataType: &quot;json&quot;,
+            xhrFields: {
+              withCredentials: true
+            },
+            beforeSend: function (xhr) {
+              xhr.setRequestHeader(&quot;Content-Type&quot;, &quot;application/json&quot;);
+            },
+            data: JSON.stringify({
+              &quot;projectId&quot;: projectId,
+              &quot;resourceContent&quot;: filepath,
+              &quot;resourceName&quot;: file.name,
+              &quot;folderId&quot;: folderId,
+              &quot;type&quot;: 20  // 当前是文件资源
+            }),
+            success: function (data) {
+              console.log(data);
+            },
+            error: function (respResult) {
+            }
+          });
+        } else {
+        }
+      }
+    });
+  }
+
+  function getFolderIdFromMap(path) {
+    var folderId = map.get(path);
+    var folderName = path.substring(path.lastIndexOf(&quot;/&quot;) + 1, path.length);
+    var localFolder = 0;
+    if (path.indexOf(&quot;/&quot;) &gt; 0) {
+      // 说明当前不是最高级目录，是子目录
+      localFolder = getFolderIdFromMap(path.substring(0, path.lastIndexOf(&quot;/&quot;)));
+    }
+    if (folderId == null) {
+      $.ajax({
+        async: false,
+        url: host + &quot;/project/resource/create/folder&quot;,
+        type: &quot;post&quot;,
+        dataType: &quot;json&quot;,
+        xhrFields: {
+          withCredentials: true
+        },
+        beforeSend: function (xhr) {
+          xhr.setRequestHeader(&quot;Content-Type&quot;, &quot;application/json&quot;);
+        },
+        data: JSON.stringify({
+          &quot;projectId&quot;: 10001,
+          &quot;folderName&quot;: folderName,
+          &quot;folderId&quot;: localFolder
+        }),
+        success: function (data) {
+          console.log(data);
+          folderId = data.id;
+          map.put(path, folderId);
+        },
+        error: function (respResult) {
+        }
+      });
+    }
+    return folderId;
+  }
+
+  function getFolder(path) {
+    console.log(path);
+    var index = path.lastIndexOf(&quot;/&quot;);
+    return path.substring(0, index);
+  }
+&lt;/script&gt;
+
+&lt;/html&gt;
 </code></pre>
-<p>加上：</p>
-<pre><code class="language-plain_text">XMODIFIERS=&quot;@im=fcitx&quot;
-export XMODIFIERS
+<p>服务器采用java，用了接受文件和创建文件夹。<br />
+文件夹也是虚拟的，采用在当前记录增加parentId来存储父节点，实现树的结构。<br />
+表结构：</p>
+<pre><code class="language-sql">CREATE TABLE t_project_resource_folder
+(
+    id BIGINT(20) PRIMARY KEY NOT NULL COMMENT '主键',
+    folder_name VARCHAR(255) DEFAULT '' COMMENT '文件夹名',
+    parent_id BIGINT(20) DEFAULT '0' NOT NULL COMMENT '父文件夹id,0表示顶级目录'
+)
+CREATE TABLE t_project_resource
+(
+    id BIGINT(20) PRIMARY KEY NOT NULL COMMENT '主键',
+    resource_name VARCHAR(255) NOT NULL COMMENT '资源名',
+    resource_content VARCHAR(255) COMMENT '资源内容,通常是放在oss文件的url',
+    resource_folder_id BIGINT(20) DEFAULT '0' COMMENT '资源文件夹ID,0表示文件处于顶级目录'
+)
 </code></pre>
-<p>如图：<br />
-<img src="https://pic.xsf.me/upic/20210418/214922-q6TJTM.png" alt="IDEA脚本示例" /></p>
-<p>Wine QQ的启动脚本是<code>/opt/longene/qq/qq.sh</code><br />
-如图：<br />
-<img src="https://pic.xsf.me/upic/20210418/214922-q6TJTM.png" alt="Wine QQ 脚本示例" /></p>
+<p>服务器端接口的代码：</p>
+<pre><code class="language-java">@RequestMapping(value = &quot;&quot;, method = RequestMethod.POST)
+public ResponseEntity&lt;String&gt; upload(MultipartFile text) throws Exception {
+  String fileName = text.getOriginalFilename();
+  int lastDot = fileName.lastIndexOf(&quot;.&quot;);
+  String type = fileName.substring(lastDot + 1);
+  String sb = &quot;uploads&quot; + &quot;/&quot; + UUID.randomUUID().toString() + &quot;.&quot; + type;
+  String uploadPath = storageProvider.upload(sb, text);  // 调用service接口把文件存到oss中，返回文件在oss的地址
+  return ResponseEntity.ok(uploadPath);
+}
+</code></pre>
 
 
 			
@@ -181,21 +411,89 @@ Theme by <a href="http://shashankmehta.in/archive/2012/greyshade.html">Shashank 
 	</div>
 
 
+<style>.mweb-charts{background:#fff;}
+body{ box-sizing: border-box;
+    margin: 0 auto;}
+@media print{
+    pre, code, pre code {
+     overflow: visible !important;
+     white-space: pre-wrap !important;       /* css-3 */
+     white-space: -moz-pre-wrap !important;  /* Mozilla, since 1999 */
+     white-space: -pre-wrap !important;      /* Opera 4-6 */
+     white-space: -o-pre-wrap !important;    /* Opera 7 */
+     word-wrap: break-word !important;       /* Internet Explorer 5.5+ */
+    }
+    html,body{margin:0;padding:4px;}
+}
 
-  
 
 
+div.code-toolbar {
+  position: relative;
+}
 
+div.code-toolbar > .toolbar {
+  position: absolute;
+  z-index: 10;
+  top: .3em;
+  right: .2em;
+  transition: opacity 0.3s ease-in-out;
+  opacity: 0;
+}
 
+div.code-toolbar:hover > .toolbar {
+  opacity: 1;
+}
 
+/* Separate line b/c rules are thrown out if selector is invalid.
+   IE11 and old Edge versions don't support :focus-within. */
+div.code-toolbar:focus-within > .toolbar {
+  opacity: 1;
+}
 
+div.code-toolbar > .toolbar > .toolbar-item {
+  display: inline-block;
+}
 
+div.code-toolbar > .toolbar > .toolbar-item > a {
+  cursor: pointer;
+}
 
+div.code-toolbar > .toolbar > .toolbar-item > button {
+  background: none;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  line-height: normal;
+  overflow: visible;
+  padding: 0;
+  -webkit-user-select: none; /* for button */
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
 
+div.code-toolbar > .toolbar > .toolbar-item > a,
+div.code-toolbar > .toolbar > .toolbar-item > button,
+div.code-toolbar > .toolbar > .toolbar-item > span {
+  color: inherit;
+  font-size: .8em;
+  padding: 4px .5em;
+  background: #f5f2f0;
+  background: rgba(224, 224, 224, 0.4);
+  box-shadow: 0 2px 0 0 rgba(0,0,0,0.2);
+  border-radius: .5em;
+}
 
-
-
-
+div.code-toolbar > .toolbar > .toolbar-item > a:hover,
+div.code-toolbar > .toolbar > .toolbar-item > a:focus,
+div.code-toolbar > .toolbar > .toolbar-item > button:hover,
+div.code-toolbar > .toolbar > .toolbar-item > button:focus,
+div.code-toolbar > .toolbar > .toolbar-item > span:hover,
+div.code-toolbar > .toolbar > .toolbar-item > span:focus {
+  color: inherit;
+  text-decoration: none;
+}
+</style><script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script><script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/line-numbers/prism-line-numbers.min.js"></script><script>!function(){if("undefined"!=typeof Prism&&"undefined"!=typeof document){var e=[],t={},n=function(){};Prism.plugins.toolbar={};var a=Prism.plugins.toolbar.registerButton=function(n,a){var r;r="function"==typeof a?a:function(e){var t;return"function"==typeof a.onClick?((t=document.createElement("button")).type="button",t.addEventListener("click",(function(){a.onClick.call(this,e)}))):"string"==typeof a.url?(t=document.createElement("a")).href=a.url:t=document.createElement("span"),a.className&&t.classList.add(a.className),t.textContent=a.text,t},n in t?console.warn('There is a button with the key "'+n+'" registered already.'):e.push(t[n]=r)},r=Prism.plugins.toolbar.hook=function(a){var r=a.element.parentNode;var l=a.element.classList;if(l.contains('language-mermaid') || l.contains('language-echarts') || l.contains('language-plantuml')){return;} if(r&&/pre/i.test(r.nodeName)&&!r.parentNode.classList.contains("code-toolbar")){var o=document.createElement("div");o.classList.add("code-toolbar"),r.parentNode.insertBefore(o,r),o.appendChild(r);var i=document.createElement("div");i.classList.add("toolbar");var l=e,d=function(e){for(;e;){var t=e.getAttribute("data-toolbar-order");if(null!=t)return(t=t.trim()).length?t.split(/\s*,\s*/g):[];e=e.parentElement}}(a.element);d&&(l=d.map((function(e){return t[e]||n}))),l.forEach((function(e){var t=e(a);if(t){var n=document.createElement("div");n.classList.add("toolbar-item"),n.appendChild(t),i.appendChild(n)}})),o.appendChild(i)}};a("label",(function(e){var t=e.element.parentNode;if(t&&/pre/i.test(t.nodeName)&&t.hasAttribute("data-label")){var n,a,r=t.getAttribute("data-label");try{a=document.querySelector("template#"+r)}catch(e){}return a?n=a.content:(t.hasAttribute("data-url")?(n=document.createElement("a")).href=t.getAttribute("data-url"):n=document.createElement("span"),n.textContent=r),n}})),Prism.hooks.add("complete",r)}}();</script><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/toolbar/prism-toolbar.min.css"><script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/copy-to-clipboard/prism-copy-to-clipboard.min.js"></script><script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/autoloader/prism-autoloader.min.js"></script><style>div.code-toolbar > .toolbar > .toolbar-item > a, div.code-toolbar > .toolbar > .toolbar-item > button, div.code-toolbar > .toolbar > .toolbar-item > span {padding: 4px .5em; background: #f5f2f0; background: rgba(224, 224, 224, 0.4);}</style>
 
 <style type="text/css">
 figure{margin: 1em 0;padding: 0;}
