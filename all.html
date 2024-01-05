@@ -138,10 +138,10 @@
 <p><a href="https://synocommunity.com/">Synocommunity</a>提供了非常丰富和有用的第三方应用，具体可以去该网站查看。</p>
 <p>在中国由于众所周知的原因，访问和下载packages.synocommunity.com里面的内容非常慢。安装、更新应用一直无法正常访问。最简单的想法就是使用镜像网站，发现并没有，所以就通过Cloudflare Workers自己搭建了一个。</p>
 <p>搭建过程非常简单，我找到了一个专门用来反向代理的<a href="https://github.com/aD4wn/Workers-Proxy">GitHub项目</a>，然后修改了配置就可以使用了。</p>
-<p>你可以使用我搭建的 <code>https://synocommunity-packages.xsf.me</code> 直接配置在你的群晖使用，参考下图：<br />
-<img src="https://f1.xsf.me/20221208/YToVHb.png" alt="" /></p>
+<p>你可以使用我搭建的 <code>https://synocommunity-packages.tuzhihao.com</code> 直接配置在你的群晖使用，参考下图：<br />
+<img src="https://f1.465798.xyz/20221208/YToVHb.png" alt="" /></p>
 <p>之后你就可以在社群里面找到丰富的插件，按需下载：<br />
-<img src="https://f1.xsf.me/20221208/IzyeNy.png" alt="" /></p>
+<img src="https://f1.465798.xyz/20221208/IzyeNy.png" alt="" /></p>
 <h2><a id="%E8%87%AA%E8%A1%8C%E6%90%AD%E5%BB%BA" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>自行搭建</h2>
 <h3><a id="%E8%84%9A%E6%9C%AC" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>脚本</h3>
 <p>当然你可以自己搭建一个，创建一个wokers，在线编辑，填入如下脚本内容。</p>
@@ -316,9 +316,9 @@ async function device_status(user_agent_info) {
 </code></pre>
 <h3><a id="%E6%A3%80%E6%9F%A5%E6%98%AF%E5%90%A6%E6%90%AD%E5%BB%BA%E6%88%90%E5%8A%9F" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>检查是否搭建成功</h3>
 <p>访问如下地址(host替换为你自己的)：<br />
-<a href="https://synocommunity-packages.xsf.me/?build=42962&amp;language=enu&amp;arch=apollolake">https://synocommunity-packages.xsf.me/?build=42962&amp;language=enu&amp;arch=apollolake</a></p>
+<a href="https://synocommunity-packages.tuzhihao.com/?build=42962&amp;language=enu&amp;arch=apollolake">https://synocommunity-packages.tuzhihao.com/?build=42962&amp;language=enu&amp;arch=apollolake</a></p>
 <p>检查返回的json里面的link地址是否已经被替换，成功替换就代表搭建成功，恭喜🎉<br />
-<img src="https://f1.xsf.me/20221208/WHITjf.png" alt="" /></p>
+<img src="https://f1.465798.xyz/20221208/WHITjf.png" alt="" /></p>
 
 
 			
